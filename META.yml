@@ -1,0 +1,57 @@
+---
+abstract: 'interface to linguistic structures and processing units in Treex'
+author:
+  - 'Treex team <treex@ufal.mff.cuni.cz>'
+build_requires:
+  File::Find: 0
+  File::Temp: 0
+  Test::More: 0
+  Test::Output: 0
+  autodie: 0
+configure_requires:
+  ExtUtils::MakeMaker: 6.31
+  File::ShareDir::Install: 0.03
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.102400'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Treex-Core
+requires:
+  Carp: 0
+  Cwd: 0
+  Data::Dumper: 0
+  English: 0
+  Exporter: 0
+  File::Basename: 0
+  File::HomeDir: 0
+  File::Path: 0
+  File::ShareDir: 0
+  File::Slurp: 0
+  File::Spec: 0
+  IO::Handle: 0
+  LWP::Simple: 0
+  List::MoreUtils: 0
+  List::Util: 0
+  Locale::Language: 0
+  Module::Reload: 0
+  Moose: 0
+  Moose::Exporter: 0
+  Moose::Role: 0
+  Moose::Util::TypeConstraints: 0
+  MooseX::Getopt: 0
+  MooseX::NonMoose: 0
+  MooseX::Params::Validate: 0
+  MooseX::SemiAffordanceAccessor: 0
+  MooseX::SemiAffordanceAccessor::Role::Attribute: 0
+  Readonly: 0
+  Scalar::Util: 0
+  Tk::DialogBox: 0
+  Treex::PML: 0
+  Treex::PML::Factory: 0
+  Treex::PML::Node: 0
+  Treex::PML::Struct: 0
+  integer: 0
+  utf8: 0
+version: 0.05222
