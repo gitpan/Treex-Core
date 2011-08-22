@@ -1,6 +1,6 @@
 package Treex::Core::Node;
 BEGIN {
-  $Treex::Core::Node::VERSION = '0.06441';
+  $Treex::Core::Node::VERSION = '0.06442';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -654,7 +654,7 @@ sub get_attrs {
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.06441';
+  $Treex::Core::Node::Removed::VERSION = '0.06442';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -732,7 +732,7 @@ Treex::Core::Node
 
 =head1 VERSION
 
-version 0.06441
+version 0.06442
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Treex::Core::Bundle;
 BEGIN {
-  $Treex::Core::Bundle::VERSION = '0.06441';
+  $Treex::Core::Bundle::VERSION = '0.06442';
 }
 
 use Moose;
@@ -233,7 +233,7 @@ __END__
 
 =head1 VERSION
 
-version 0.06441
+version 0.06442
 Treex::Core::Bundle - a set of equivalent sentences (translations, or variants)
 and their linguistic representations in the Treex framework
 

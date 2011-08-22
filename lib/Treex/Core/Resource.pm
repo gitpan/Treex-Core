@@ -1,6 +1,6 @@
 package Treex::Core::Resource;
 BEGIN {
-  $Treex::Core::Resource::VERSION = '0.06441';
+  $Treex::Core::Resource::VERSION = '0.06442';
 }
 use strict;
 use warnings;
@@ -80,7 +80,7 @@ Treex::Core::Resources
 
 =head1 VERSION
 
-version 0.06441
+version 0.06442
 
 =head1 DESCRIPTION
 
