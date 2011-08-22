@@ -235,3 +235,9 @@ terminal_funcs = log_fatal
 
 # at least temporarily, esp. because of conditioning pos_validate...
 [-Variables::ProhibitPackageVars]
+
+
+[Subroutines::ProhibitUnusedPrivateSubroutines]
+# allow builders for Moose private attributes
+private_name_regex = _(?!build_)\w
+

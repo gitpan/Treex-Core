@@ -1,6 +1,6 @@
 package Treex::Block::Util::Eval;
 BEGIN {
-  $Treex::Block::Util::Eval::VERSION = '0.05222';
+  $Treex::Block::Util::Eval::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -25,7 +25,7 @@ sub BUILD {
     $arg_ref->{_bundle} = any { $arg_ref->{$_} } qw(bundle _zone);
 
     if ( !any { $arg_ref->{$_} } qw(document _bundle) ) {
-        log_fatal "You must specify at least one of the parameters:"
+        log_fatal "At least one of the following parameters must be non-empty:"
             . " document, bundle, zone, [atnp]tree, [atnp]node.";
     }
 
@@ -44,9 +44,8 @@ sub BUILD {
 sub process_document {
     my ( $self, $document ) = @_;
     if ( $self->document ) {
-        if ( !eval $self->document . ';1;' ) {
-            log_fatal "Eval error: $@";
-        }
+        my $to_eval = $self->document . ';1;';
+        eval($to_eval) or log_fatal("While evaluating '$to_eval' got error: $@");
     }
 
     if ( $self->_args->{_bundle} ) {
@@ -59,6 +58,10 @@ sub process_document {
 
 sub process_bundle {
     my ( $self, $bundle ) = @_;
+
+    # Extract variables $document ($doc), so they can be used in eval code
+    my $document = $bundle->get_document();
+    my $doc      = $document;
     if ( $self->bundle ) {
         if ( !eval $self->bundle . ';1;' ) {
             log_fatal "Eval error: $@";
@@ -87,6 +90,11 @@ sub process_bundle {
 
 sub process_zone {
     my ( $self, $zone ) = @_;
+
+    # Extract variables $bundle, $document ($doc), so they can be used in eval code
+    my $bundle   = $zone->get_bundle();
+    my $document = $bundle->get_document();
+    my $doc      = $document;
     if ( $self->zone ) {
         if ( !eval $self->zone . ';1;' ) {
             log_fatal "Eval error: $@";
@@ -122,7 +130,7 @@ Treex::Block::Util::Eval - Special block for evaluating code given by parameters
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 SYNOPSIS
 

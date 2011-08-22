@@ -4,6 +4,8 @@
   <revision>1.0.0</revision>
   <description>Subschema for a-layer trees</description>
 
+  <import type="iset.type" schema="treex_subschema_interset.xml"/>
+
  <!--  a-layer representation (merged with m-layer) -->
 
   <type name="a-root.type">
@@ -17,6 +19,7 @@
       <!-- Should the sentence be parsed once again?
            This is useful when tags has been fixed (with the knowledge of the parse). Popel 23.5.2009 -->
       <member name="reparse" type="bool.type"/>
+      <member name="wild_dump"><cdata format="any"/></member>
     </structure>
   </type>
 
@@ -32,6 +35,8 @@
       <member name="form"><cdata format="any"/></member>
       <member name="lemma"><cdata format="any"/></member>
       <member name="tag"><cdata format="any"/></member>
+      <!-- detailed list of morphosyntactic features (may correspond to the tag attribute) -->
+      <member name="iset" type="iset.type"/>
       <member name="no_space_after" type="bool.type"/>
       <member name="translit"><cdata format="any"/></member>
 
@@ -39,7 +44,20 @@
       <member name="ord" role="#ORDER" required="1"><cdata format="nonNegativeInteger"/></member>
       <member name="afun" type="afun.type" />
       <member name="is_member" type="bool.type"/>
-      <member name="conll_deprel"><cdata format="any"/></member>
+      
+      <!-- attribute conll_deprel is now deprecated, you should use the new structured conll/deprel instead
+          which is accessible through
+          my $deprel = $node->conll_deprel;
+          $node->set_conll_deprel($deprel);
+          (i.e. the getter and setter are the same as for the old attribute, so no code changes are needed).
+          The old unstructured attribute is left here as optional because of backward compatibility
+          (so you can open older treex files without warnings.)
+          It will be deleted in future.
+      -->
+      <member name="conll_deprel" required="0"><cdata format="any"/></member>
+
+      <!-- CoNLL shared task attributes (deprel, pos, cpos, feat) are grouped in one structure -->
+      <member name="conll" type="a-conll.type"/>
 
       <!-- attributes for conversion to t-tree -->
       <member name="edge_to_collapse" type="bool.type"/>
@@ -55,8 +73,8 @@
       <!-- surface coreference -->
       <member name="coref" type="a_coreference.type"/>
 
-      <!-- links to p-layer -->
-      <member name="p" type="a-p.type"/>
+      <!-- link to p-layer -->
+      <member name="p_terminal.rf"><cdata format="PMLREF"/></member>
 
       <!-- ??? -->
       <member name="is_parenthesis_root" type="bool.type" />
@@ -66,10 +84,24 @@
       </member>
 
       <!-- tentative -->
-      <member name="align"><cdata format="PMLREF"/></member>  
+      <member name="align"><cdata format="PMLREF"/></member>
+      <member name="chunks"><list ordered="0"><cdata format="any"/></list>
+      </member>  
+
+      <member name="wild_dump"><cdata format="any"/></member>
 
     </structure>
   </type>
+
+  <type name="a-conll.type">
+    <structure>
+      <member name="deprel"><cdata format="any"/></member> <!--dependency relation-->
+      <member name="cpos"><cdata format="any"/></member>   <!--coarse-grained part-of-speech tag-->
+      <member name="pos"><cdata format="any"/></member>    <!--fine-grained part-of-speech tag-->
+      <member name="feat"><cdata format="any"/></member>   <!--various other features separated by |-->
+    </structure>
+  </type>
+      
 
 
   <type name="a_coreference.type"> <!-- analyticka koreference pro Jirku Mirovskeho -->
@@ -80,20 +112,6 @@
        <member name="target-node.rf"> <cdata format="PMLREF"/> </member>
        <member name="type"> <cdata format="any"/> </member>
        <member name="src"> <cdata format="any"/> </member>
-    </structure>
-  </type>
-
-
-  <type name="a-p.type">
-    <structure>
-       <member name="terminal.rf">
-         <cdata format="PMLREF"/>
-       </member>
-       <member name="nonterminals.rf">
-          <list ordered="0">
-             <cdata format="PMLREF"/>
-          </list>
-       </member>
     </structure>
   </type>
 
@@ -137,6 +155,12 @@
       <value>AuxM</value>
       <value>AuxE</value>
       <value>Ante</value>
+      <!-- values added because of Tamil Dependency Treebank (TamilTB.v0.1) by Loganathan Ramasamy -->
+      <value>AAdjn</value>
+      <value>AComp</value>
+      <value>AdjAtr</value>
+      <value>CC</value>
+      <value>Comp</value>
       <!-- afun for unrecognized value -->
       <value>NR</value>
     </choice>

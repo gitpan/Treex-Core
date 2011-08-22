@@ -1,6 +1,6 @@
 package Treex::Core::Common;
 BEGIN {
-  $Treex::Core::Common::VERSION = '0.05222';
+  $Treex::Core::Common::VERSION = '0.06441';
 }
 use utf8;
 use Moose;
@@ -86,14 +86,24 @@ subtype 'Message'                                                       #nonempt
     => where { $_ ne '' }
 => message {"Message must be nonempty"};
 
+#preparation for possible future constraints
 subtype 'Id'
-    => as 'Str';                                                        #preparation for possible future constraints
+    => as 'Str';
+
+# TODO: Should this be named ZoneCode or ZoneLabel?
+subtype 'ZoneCode'
+    => as 'Str'
+    => where { my ( $l, $s ) = split /_/, $_; is_lang_code($l) && ( !defined $s || $s =~ /^[a-z\d]*$/i ) }
+=> message {'ZoneCode must be LangCode or LangCode_Selector, e.g. "en_src"'};
 
 # ISO 639-1 language code with some extensions from ISO 639-2
+# Added code for Modern Greek which comes under ISO 639-3
 use Locale::Language;
 my %EXTRA_LANG_CODES = (
     'bxr'     => "Buryat",
     'dsb'     => "Lower Sorbian",
+    'ell'     => "ISO 639-3 code for Modern Greek",
+    'grc'     => "ISO 639-2 code for Ancient Greek",
     'hsb'     => "Upper Sorbian",
     'hak'     => "Hakka",
     'kaa'     => "Karakalpak",
@@ -105,11 +115,17 @@ my %EXTRA_LANG_CODES = (
     'sah'     => "Yakut",
     'und'     => "ISO 639-2 code for undetermined/unknown language",
     'xal'     => "Kalmyk",
-    'yue'     => "Cantonese"
+    'yue'     => "Cantonese",
+    'mul'     => "ISO 639-2 code for multiple languages",
 );
 
 my %IS_LANG_CODE = map { $_ => 1 } ( all_language_codes(), keys %EXTRA_LANG_CODES );
-enum 'LangCode' => keys %IS_LANG_CODE;
+
+#enum 'LangCode' => keys %IS_LANG_CODE;
+subtype 'LangCode'
+    => as 'Str'
+    => where { defined $IS_LANG_CODE{$_} }
+=> message {'LangCode must be valid ISO 639-1 code. E.g. en, de, cs'};
 sub is_lang_code { return $IS_LANG_CODE{ $_[0] }; }
 
 sub get_lang_name {
@@ -125,11 +141,11 @@ __END__
 
 =head1 NAME
 
-Treex::Core::Common - shorten the "use" part of your Perl codes
+Treex::Core::Common - shorten the "C<use>" part of your Perl codes
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 SYNOPSIS
 
@@ -166,10 +182,11 @@ Instead of
 
 =item pos_validated_list
 
-This subroutine is automatically exported.
-Depending on the value of C<$Treex::Core::Config::params_validate>
-it is either the (slow) one from L<MooseX::Params::Validate>
-or a fast one, that does no type checking.
+This subroutine is automatically exported. Depending on the value of 
+L<$Treex::Core::Config::params_validate|Treex::Core::Config/params_validate> 
+it is either the (slow) one from 
+L<MooseX::Params::Validate> or a fast one, that does 
+no type checking.
 
 =back
 

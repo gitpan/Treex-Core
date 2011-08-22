@@ -1,6 +1,6 @@
 package Treex::Core::Bundle;
 BEGIN {
-  $Treex::Core::Bundle::VERSION = '0.05222';
+  $Treex::Core::Bundle::VERSION = '0.06441';
 }
 
 use Moose;
@@ -8,6 +8,7 @@ use Treex::Core::Common;
 use MooseX::NonMoose;
 
 extends 'Treex::PML::Node';
+with 'Treex::Core::WildAttr';
 
 has document => (
     is       => 'ro',
@@ -27,7 +28,7 @@ use Treex::Core::BundleZone;
 
 use Treex::Core::Log;
 
-my @layers = qw(t a n);
+my @layers = qw(t a n p);    # TODO should it be here?
 
 # --------- ACCESS TO ZONES ------------
 
@@ -47,7 +48,8 @@ sub get_zone {
     if ( defined $self->{zones} ) {
         foreach my $element ( $self->{zones}->elements ) {
             my ( undef, $value ) = @$element;    # $name is not needed
-            if ( $value->{language} eq $language and ( $value->{selector} || '' ) eq $selector ) {
+            if ( ($value->{language} eq $language or $language eq 'mul')
+                     and ( $value->{selector} || '' ) eq $selector ) {
                 return $value;
             }
         }
@@ -62,6 +64,10 @@ sub create_zone {
         { isa => 'LangCode' },
         { isa => 'Selector', default => '' },
     );
+
+    log_fatal("Bundle already contains a zone with language='$language' and selector='$selector'")
+        if $self->get_zone( $language, $selector );
+
     my $new_zone = Treex::Core::BundleZone->new(
         {
             'language' => $language,
@@ -93,7 +99,7 @@ sub get_or_create_zone {
         { isa => 'Selector', default => '' },
     );
     my $zone = $self->get_zone( $language, $selector );
-    if ( not defined $zone ) {
+    if ( !defined $zone ) {
         $zone = $self->create_zone( $language, $selector );
     }
     return $zone;
@@ -101,10 +107,30 @@ sub get_or_create_zone {
 
 sub get_all_zones {
     my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
+    if ( $self->{zones} ) {
+        return map { $_->value() } $self->{zones}->elements;
     }
-    return map { $_->value() } $self->{zones}->elements;
+    else {
+        return ();
+    }
+}
+
+sub remove_zone {
+    my ( $self, $language, $selector ) = @_;
+
+    my $zone = $self->get_zone( $language, $selector );
+    if ( !$zone ) {
+        log_fatal "Non-existing zone cannot be removed";
+    }
+
+    # remove all trees first, so that their nodes are correctly removed from the index
+    foreach my $tree ( $zone->get_all_trees ) {
+        $zone->remove_tree( $tree->get_layer );
+    }
+
+    $self->{zones}->delete_value($zone)
+        or log_fatal "Zone to be deleted was not found. This should never happen";
+    return;
 }
 
 # --------- ACCESS TO TREES ------------
@@ -170,60 +196,6 @@ sub has_tree {
     return defined $zone && $zone->has_tree($layer);
 }
 
-# --------- ACCESS TO ATTRIBUTES ------------
-
-sub set_attr {    # deprecated
-    my $self = shift;
-    my ( $attr_name, $attr_value ) = pos_validated_list(
-        \@_,
-        { isa => 'Str' },
-        { isa => 'Any' },
-    );
-
-    if ( $attr_name =~ /^(\S+)$/ ) {
-        return Treex::PML::Node::set_attr( $self, $attr_name, $attr_value );
-    }
-
-    # TODO more selectors than [ST], lang-codes with more letters etc.
-    elsif ( $attr_name =~ /^([ST])([a-z]{2}) (\S+)$/ ) {
-        my ( $selector, $language, $attr_name ) = ( $1, $2, $3 );
-        my $zone = $self->get_or_create_zone( $language, $selector );
-        return $zone->{$attr_name} = $attr_value;
-    }
-
-    else {
-        log_fatal "Attribute name not structured approapriately (e.g.'Sar text'): $attr_name";
-    }
-}
-
-sub get_attr {    # deprecated
-    my $self = shift;
-    my ($attr_name) = pos_validated_list(
-        \@_,
-        { isa => 'Str' },
-    );
-
-    if ( $attr_name =~ /^(\S+)$/ ) {
-        return Treex::PML::Node::attr( $self, $attr_name );
-    }
-
-    elsif ( $attr_name =~ /^([ST])([a-z]{2}) (\S+)$/ ) {
-        my ( $selector, $language, $attr_name ) = ( $1, $2, $3 );
-        my $zone = $self->get_zone( $language, $selector );
-        if ( defined $zone ) {
-            return $zone->{$attr_name};
-        }
-        else {
-            return;
-        }
-    }
-
-    else {
-        log_fatal "Attribute name not structured approapriately (e.g.'Sar sentence'): $attr_name";
-    }
-}
-
-# numbering of bundles starts from 0
 sub get_position {
     my ($self) = @_;
 
@@ -238,7 +210,7 @@ sub get_position {
         }
     }
 
-    if ( not defined $position_of_reference ) {
+    if ( !defined $position_of_reference ) {
         log_fatal "document structure inconsistency: can't detect position of bundle $self";
     }
 
@@ -261,16 +233,17 @@ __END__
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 Treex::Core::Bundle - a set of equivalent sentences (translations, or variants)
 and their linguistic representations in the Treex framework
 
 =head1 DESCRIPTION
 
-A bundle in Treex corresponds to one sentence or more sentences, typically translations
-or variants of each other, with all their linguistic representations. Each bundle
-is divided into zones (instances of Treex::Core::BundleZone), each of them
-containing exactly one sentence and its representations.
+A bundle in Treex corresponds to one sentence or more sentences, typically 
+translations or variants of each other, with all their linguistic 
+representations. Each bundle is divided into zones (instances of 
+L<Treex::Core::BundleZone>), each of them containing 
+exactly one sentence and its representations.
 
 =head1 ATTRIBUTES
 
@@ -280,12 +253,13 @@ Each bundle has two attributes:
 
 =item id
 
-identifier accessible by the getter method C<id()> and by the setter method C<set_id($id)>
+identifier accessible by the getter method C<id()> and by the setter method 
+C<set_id($id)>
 
 =item document
 
-the document (an instance of Treex::Core::Document) which this bundle belongs to;
-accessible only by the getter method C<document()>
+the document (an instance of L<Treex::Core::Document>) 
+which this bundle belongs to; accessible only by the getter method C<document()>
 
 =back
 
@@ -295,8 +269,9 @@ accessible only by the getter method C<document()>
 
 =head2 Construction
 
-You cannot create a bundle by a constructor from scratch. You can create a bundle
-only within an existing documents, using the following methods of Treex::Core::Document:
+You cannot create a bundle by a constructor from scratch. You can create a 
+bundle only within an existing documents, using the following methods of 
+L<Treex::Core::Document>:
 
 =over 4
 
@@ -311,10 +286,10 @@ only within an existing documents, using the following methods of Treex::Core::D
 
 =head2 Access to zones
 
-Bundle zones are instances of Treex::Core::BundleZone, parametrized
-by language code and possibly also by another free label
-called selector, whose purpose is to distinguish zones for the same language
-but from a different source.
+Bundle zones are instances of 
+L<Treex::Core::BundleZone>, parametrized by language 
+code and possibly also by another free label called selector, whose purpose is 
+to distinguish zones for the same language but from a different source.
 
 =over 4
 
@@ -331,8 +306,8 @@ but from a different source.
 
 =head2 Access to trees
 
-Even if trees are not contained directly in bundle (there is the intermediate zone level),
-they can be accessed using the following shortcut methods:
+Even if trees are not contained directly in bundle (there is the intermediate 
+zone level), they can be accessed using the following shortcut methods:
 
 =over 4
 
@@ -354,6 +329,10 @@ they can be accessed using the following shortcut methods:
 =head2 Other
 
 =over 4
+
+=item $bundle->remove_zone( $language, $selector );
+
+delete all zone's trees and remove the zone from the bundle
 
 =item my $position = $bundle->get_position();
 

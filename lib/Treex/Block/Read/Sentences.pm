@@ -1,6 +1,6 @@
 package Treex::Block::Read::Sentences;
 BEGIN {
-  $Treex::Block::Read::Sentences::VERSION = '0.05222';
+  $Treex::Block::Read::Sentences::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -31,11 +31,13 @@ Treex::Block::Read::Sentences
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
 Document reader for plain text format, one sentence per line.
+The sentences are stored into L<bundles|Treex::Core::Bundle> in the 
+L<document|Treex::Core::Document>.
 
 =head1 ATTRIBUTES
 
@@ -56,6 +58,12 @@ space or comma separated list of filenames
 Loads a document.
 
 =back
+
+=head1 SEE
+
+L<Treex::Block::Read::BaseTextReader>
+L<Treex::Core::Document>
+L<Treex::Core::Bundle>
 
 =head1 AUTHOR
 

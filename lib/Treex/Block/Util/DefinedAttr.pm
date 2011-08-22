@@ -1,6 +1,6 @@
 package Treex::Block::Util::DefinedAttr;
 BEGIN {
-  $Treex::Block::Util::DefinedAttr::VERSION = '0.05222';
+  $Treex::Block::Util::DefinedAttr::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -54,10 +54,8 @@ sub check_tree {
         foreach my $name ( split /,/, $attrs ) {
             my $value = $node->get_attr($name);
             if ( !defined $value ) {
-                my $id = $node->id || '?';
-
-                #TODO print doc name, bundle id etc.
-                my $msg = "${layer}node id=$id\tattr_name=$name\t" . $self->message;
+                my $address = $node->get_address();
+                my $msg     = "${layer}node\t$address\tundefined attr_name=$name\t" . $self->message;
                 log_fatal($msg) if $self->on_error eq 'die';
                 log_warn($msg);
             }
@@ -74,11 +72,11 @@ __END__
 
 =head1 NAME
 
-Treex::Block::Util::DefinedAttr - Special block for checking undef attributes
+Treex::Block::Util::DefinedAttr - Special block for checking C<undef> attributes
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 SYNOPSIS
 
@@ -96,8 +94,8 @@ version 0.05222
 
 Warns/dies if a given attribute is undefined (in any node).
 
-One of parameters tnode, anode, nnode, pnode must be always specified.
-By default: on_error=warn and message is empty.
+One of parameters C<tnode>, C<anode>, C<nnode>, C<pnode> must be always specified.
+By default: C<on_error=warn> and C<message> is empty.
 
 
 =head1 COPYRIGHT AND LICENSE

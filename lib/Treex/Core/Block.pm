@@ -1,6 +1,6 @@
 package Treex::Core::Block;
 BEGIN {
-  $Treex::Core::Block::VERSION = '0.05222';
+  $Treex::Core::Block::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -16,17 +16,13 @@ has scenario => (
 );
 
 # If the block name contains language (e.g. W2A::EN::Tokenize contains "en")
-# or target-language (e.g. T2T::CS2EN::FixNEgation contains "en"),
+# or target-language (e.g. T2T::CS2EN::FixNegation contains "en"),
 # it is returned as a default value of the attribute $self->language
 # so it is not necessary to write the line
 #   has '+language' => ( default => 'en' );
 # in all *::EN::* blocks and all *::??2EN::* blocks.
 sub build_language {
     my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
-    }
-
     my ($lang) = $self->get_block_name() =~ /::(?:[A-Z][A-Z]2)?([A-Z][A-Z])::/;
     if ( $lang && Treex::Core::Common::is_lang_code( lc $lang ) ) {
         return lc $lang;
@@ -36,25 +32,39 @@ sub build_language {
     }
 }
 
+sub zone_label {
+    my ($self) = @_;
+    my $label = $self->language or return;
+    if ( defined $self->selector && $self->selector ne '' ) {
+        $label .= '_' . $self->selector;
+    }
+    return $label;
+}
+
 # TODO
 # has robust => ( is=> 'ro', isa=>'Bool', default=>0,
 #                 documentation=>'no fatal errors in robust mode');
 
 sub BUILD {
     my $self = shift;
+    $self->require_files_from_share( $self->get_required_share_files() );
+    return;
+}
 
-    foreach my $rel_path_to_file ( $self->get_required_share_files ) {
-        Treex::Core::Resource::require_file_from_share( $rel_path_to_file, 'the block ' . $self->get_block_name );
+sub require_files_from_share {
+    my ( $self, @rel_paths ) = @_;
+    my $my_name = 'the block ' . $self->get_block_name();
+    foreach my $rel_path (@rel_paths) {
+        Treex::Core::Resource::require_file_from_share( $rel_path, $my_name );
     }
-
     return;
 }
 
 sub get_required_share_files {
-    my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
-    }
+    my ($self) = @_;
+
+    # By default there are no required share files.
+    # The purpose of this method is to be overriden if needed.
     return ();
 }
 
@@ -66,7 +76,7 @@ sub process_document {
     );
 
     if ( !$document->get_bundles() ) {
-        log_fatal "There are no bundles in the document and block " . ref($self) .
+        log_fatal "There are no bundles in the document and block " . $self->get_block_name() .
             " doesn't override the method process_document";
     }
     foreach my $bundle ( $document->get_bundles() ) {
@@ -82,7 +92,7 @@ sub process_bundle {
         { isa => 'Treex::Core::Bundle' },
     );
 
-    log_fatal "Parameter language was not set and block " . ref($self)
+    log_fatal "Parameter language was not set and block " . $self->get_block_name()
         . " doesn't override the method process_bundle" if !$self->language;
     my $zone = $bundle->get_zone( $self->language, $self->selector );
     log_fatal(
@@ -90,7 +100,7 @@ sub process_bundle {
             . $self->language
             . ", selector="
             . $self->selector
-            . ") was not found in a bundle and block " . ref($self)
+            . ") was not found in a bundle and block " . $self->get_block_name()
             . " doesn't override the method process_bundle"
         )
         if !$zone;
@@ -144,9 +154,6 @@ sub process_zone {
 
 sub get_block_name {
     my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
-    }
     return ref($self);
 }
 
@@ -164,7 +171,7 @@ Treex::Core::Block - the basic data-processing unit in the Treex framework
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 SYNOPSIS
 
@@ -196,9 +203,9 @@ C<process_[atnp]tree()> or C<process_[atnp]node()>.
 
 =item my $block = Treex::Block::My::Block->new();
 
-Instance of a block derived from Treex::Core::Block can be created
+Instance of a block derived from C<Treex::Core::Block> can be created
 by the constructor (optionally, a reference to a hash of block parameters
-can be specified as the constructor's argument, see BLOCK PARAMETRIZATION).
+can be specified as the constructor's argument, see L</BLOCK PARAMETRIZATION>).
 However, it is not likely to appear in your code since block initialization
 is usually invoked automatically when initializing a scenario.
 
@@ -212,21 +219,22 @@ You must override one of the following methods:
 
 =item $block->process_document($document);
 
-Applies the block instance on the given instance of C<Treex::Core::Document>.
-The default implementation iterates over all bundles in a document
-and calls C<process_bundle()>.
-So in most cases you don't need to override this method.
+Applies the block instance on the given instance of 
+L<Treex::Core::Document>. The default implementation 
+iterates over all bundles in a document and calls C<process_bundle()>. So in 
+most cases you don't need to override this method.
 
 =item $block->process_bundle($bundle);
 
-Applies the block instance on the given bundle (C<Treex::Core::Bundle>).
-
+Applies the block instance on the given bundle 
+(L<Treex::Core::Bundle>).
 
 =item $block->process_zone($zone);
 
-Applies the block instance on the given bundle zone (C<Treex::Core::BundleZone>).
-Unlike C<process_document> and C<process_bundle>, C<process_zone> requires
-block attribute C<language> (and possibly also C<selector>) to be specified.
+Applies the block instance on the given bundle zone 
+(L<Treex::Core::BundleZone>). Unlike 
+C<process_document> and C<process_bundle>, C<process_zone> requires block 
+attribute C<language> (and possibly also C<selector>) to be specified.
 
 
 =back
@@ -243,7 +251,7 @@ pairs.
 =item my $param_value = $block->get_parameter($param_name);
 
 Parameter values used in block construction can
-be revealed by get_parameter method (but cannot be changed).
+be revealed by C<get_parameter> method (but cannot be changed).
 
 =back
 
@@ -251,24 +259,26 @@ be revealed by get_parameter method (but cannot be changed).
 
 =over 4
 
+=item my $langcode_selector = $block->zone_label();
+
 =item my $block_name = $block->get_block_name();
 
 It returns the name of the block module.
 
 =item my @needed_files = $block->get_required_share_files();
 
-If a block requires some files to be present in the shared part
-of Treex, their list (with relative paths starting in Treex::Core::Config::share_dir) can be specified
-by redefining by this method. By default, an empty list is returned. Presence
-of the files is automatically checked in the block constructor. If some of
-the required file is missing, the constructor tries to download it
-from http://ufallab.ms.mff.cuni.cz.
+If a block requires some files to be present in the shared part of Treex, 
+their list (with relative paths starting in 
+L<Treex::Core::Config::share_dir|Treex::Core::Config/share_dir>) can be 
+specified by redefining by this method. By default, an empty list is returned. 
+Presence of the files is automatically checked in the block constructor. If 
+some of the required file is missing, the constructor tries to download it 
+from L<http://ufallab.ms.mff.cuni.cz>.
 
 This method should be used especially for downloading statistical models,
 but not for installed tools or libraries.
 
  sub get_required_share_files {
-     my $self = shift;
      my $self = shift;
      return (
          'data/models/mytool/'.$self->language.'/features.gz',
@@ -276,15 +286,18 @@ but not for installed tools or libraries.
      );
  }
 
+=item require_files_from_share()
+
+This method checks existence of files given as parameters, it tries to download them if they are not present
 
 =back
 
 =head1 SEE ALSO
 
-L<Treex::Core::Node|Treex::Core::Node>,
-L<Treex::Core::Bundle|Treex::Core::Bundle>,
-L<Treex::Core::Document|Treex::Core::Document>,
-L<Treex::Core::Scenario|Treex::Core::Scenario>,
+L<Treex::Core::Node>,
+L<Treex::Core::Bundle>,
+L<Treex::Core::Document>,
+L<Treex::Core::Scenario>,
 
 =head1 AUTHOR
 

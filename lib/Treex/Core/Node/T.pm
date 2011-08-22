@@ -1,6 +1,6 @@
 package Treex::Core::Node::T;
 BEGIN {
-  $Treex::Core::Node::T::VERSION = '0.05222';
+  $Treex::Core::Node::T::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -31,6 +31,77 @@ sub is_coap_root {
     return ( $self->functor || '' ) =~ /^(CONJ|CONFR|DISJ|GRAD|ADVS|CSQ|REAS|CONTRA|APPS|OPER)$/;
 }
 
+#----------- helpers for reference lists ------------
+
+sub _get_node_list {
+
+    my ( $self, $list, $arg_ref ) = @_;
+    my $doc = $self->get_document();
+
+    $list = $self->get_attr($list);
+    my @nodes = $list ? ( map { $doc->get_node_by_id($_) } @{$list} ) : ();
+
+    return $arg_ref ? $self->_process_switches( $arg_ref, @nodes ) : @nodes;
+}
+
+sub _set_node_list {
+
+    my $self = shift;
+    my $list = shift;
+
+    $self->set_attr( $list, [ map { $_->get_attr('id') } @_ ] );
+    return;
+}
+
+sub _add_to_node_list {
+
+    my $self = shift;
+    my $list = shift;
+
+    # get the current elements of the list
+    my $cur_ref = $self->get_attr($list);
+    my @cur = $cur_ref ? @{$cur_ref} : ();
+
+    # grep only those that aren't already in the list
+    my @new = grep {
+        my $id = $_;
+        !any { $_ eq $id } @cur
+    } map { $_->get_attr('id') } @_;
+
+    # set the new list value
+    $self->set_attr( $list, [ @cur, @new ] );
+    return;
+}
+
+sub _remove_from_node_list {
+
+    my $self = shift;
+    my $list = shift;
+    my @prev = $self->_get_node_list($list);
+    my @remain;
+
+    foreach my $node (@prev) {
+        if ( !grep { $_ == $node } @_ ) {
+            push @remain, $node;
+        }
+    }
+    $self->_set_node_list( $list, @remain );
+    return;
+}
+
+# remove unindexed IDs from a list attribute
+sub _update_list {
+
+    my ( $self, $list ) = @_;
+    my $doc = $self->get_document();
+
+    my $ref = $self->get_attr($list);
+    my @nodes = $ref ? ( grep { $doc->id_is_indexed($_) } @{$ref} ) : ();
+
+    $self->set_attr( $list, @nodes > 0 ? [@nodes] : undef );
+    return;
+}
+
 #----------- a-layer (analytical) nodes -------------
 
 sub get_lex_anode {
@@ -50,28 +121,26 @@ sub set_lex_anode {
 
 sub get_aux_anodes {
     my ( $self, $arg_ref ) = @_;
-    ##my @nodes  = $self->get_r_attr('a/aux.rf');
-    my $doc    = $self->get_document();
-    my $aux_rf = $self->get_attr('a/aux.rf');
-    my @nodes  = $aux_rf ? ( map { $doc->get_node_by_id($_) } @{$aux_rf} ) : ();
-    return @nodes if !$arg_ref;
+
     log_fatal('Switches preceding_only and following_only cannot be used with get_aux_anodes (t-nodes vs. a-nodes).')
-        if $arg_ref->{preceding_only} || $arg_ref->{following_only};
-    return $self->_process_switches( $arg_ref, @nodes );
+        if $arg_ref and ( $arg_ref->{preceding_only} or $arg_ref->{following_only} );
+
+    return $self->_get_node_list( 'a/aux.rf', $arg_ref );
 }
 
 sub set_aux_anodes {
-    my $self       = shift;
-    my @aux_anodes = @_;
-    $self->set_attr( 'a/aux.rf', [ map { $_->get_attr('id') } @aux_anodes ] );
-    return;
+    my $self = shift;
+    return $self->_set_node_list( 'a/aux.rf', @_ );
 }
 
 sub add_aux_anodes {
     my $self = shift;
-    my @prev = $self->get_aux_anodes();
-    $self->set_aux_anodes( @prev, @_ );
-    return;
+    return $self->_add_to_node_list( 'a/aux.rf', @_ );
+}
+
+sub remove_aux_anodes {
+    my $self = shift;
+    return $self->_remove_from_node_list( 'a/aux.rf', @_ );
 }
 
 sub get_anodes {
@@ -82,6 +151,50 @@ sub get_anodes {
     log_fatal('Switches preceding_only and following_only cannot be used with get_anodes (t-nodes vs. a-nodes).')
         if $arg_ref->{preceding_only} || $arg_ref->{following_only};
     return $self->_process_switches( $arg_ref, @nodes );
+}
+
+#------------ coreference nodes -------------------
+
+sub get_coref_nodes {
+    my ( $self, $arg_ref ) = @_;
+    my @nodes = ( $self->_get_node_list('coref_gram.rf'), $self->_get_node_list('coref_text.rf') );
+    return $self->_process_switches( $arg_ref, @nodes );
+}
+
+sub get_coref_gram_nodes {
+    my ( $self, $arg_ref ) = @_;
+    return $self->_get_node_list( 'coref_gram.rf', $arg_ref );
+}
+
+sub get_coref_text_nodes {
+    my ( $self, $arg_ref ) = @_;
+    return $self->_get_node_list( 'coref_text.rf', $arg_ref );
+}
+
+sub add_coref_gram_nodes {
+    my $self = shift;
+    return $self->_add_to_node_list( 'coref_gram.rf', @_ );
+}
+
+sub add_coref_text_nodes {
+    my $self = shift;
+    return $self->_add_to_node_list( 'coref_text.rf', @_ );
+}
+
+sub remove_coref_nodes {
+    my $self = shift;
+    $self->_remove_from_node_list( 'coref_gram.rf', @_ );
+    $self->_remove_from_node_list( 'coref_text.rf', @_ );
+    return;
+}
+
+# remove unindexed IDs from coreference lists
+sub update_coref_nodes {
+    my $self = shift;
+
+    $self->_update_list('coref_gram.rf');
+    $self->_update_list('coref_text.rf');
+    return;
 }
 
 #----------- n-layer (named entity) nodes -------------
@@ -106,54 +219,50 @@ sub set_src_tnode {
     return;
 }
 
+#----------- grammatemes -------------
+
+#TODO: make these real Moose attributes
+sub gram_sempos        { return $_[0]->get_attr('gram/sempos'); }
+sub gram_gender        { return $_[0]->get_attr('gram/gender'); }
+sub gram_number        { return $_[0]->get_attr('gram/number'); }
+sub gram_degcmp        { return $_[0]->get_attr('gram/degcmp'); }
+sub gram_verbmod       { return $_[0]->get_attr('gram/verbmod'); }
+sub gram_deontmod      { return $_[0]->get_attr('gram/deontmod'); }
+sub gram_tense         { return $_[0]->get_attr('gram/tense'); }
+sub gram_aspect        { return $_[0]->get_attr('gram/aspect'); }
+sub gram_resultative   { return $_[0]->get_attr('gram/resultative'); }
+sub gram_dispmod       { return $_[0]->get_attr('gram/dispmod'); }
+sub gram_iterativeness { return $_[0]->get_attr('gram/iterativeness'); }
+sub gram_indeftype     { return $_[0]->get_attr('gram/indeftype'); }
+sub gram_person        { return $_[0]->get_attr('gram/person'); }
+sub gram_numertype     { return $_[0]->get_attr('gram/numertype'); }
+sub gram_politeness    { return $_[0]->get_attr('gram/politeness'); }
+sub gram_negation      { return $_[0]->get_attr('gram/negation'); }
+sub gram_definiteness  { return $_[0]->get_attr('gram/definiteness'); }
+sub gram_diathesis     { return $_[0]->get_attr('gram/diathesis'); }
+
+sub set_gram_sempos        { return $_[0]->set_attr( 'gram/sempos',        $_[1] ); }
+sub set_gram_gender        { return $_[0]->set_attr( 'gram/gender',        $_[1] ); }
+sub set_gram_number        { return $_[0]->set_attr( 'gram/number',        $_[1] ); }
+sub set_gram_degcmp        { return $_[0]->set_attr( 'gram/degcmp',        $_[1] ); }
+sub set_gram_verbmod       { return $_[0]->set_attr( 'gram/verbmod',       $_[1] ); }
+sub set_gram_deontmod      { return $_[0]->set_attr( 'gram/deontmod',      $_[1] ); }
+sub set_gram_tense         { return $_[0]->set_attr( 'gram/tense',         $_[1] ); }
+sub set_gram_aspect        { return $_[0]->set_attr( 'gram/aspect',        $_[1] ); }
+sub set_gram_resultative   { return $_[0]->set_attr( 'gram/resultative',   $_[1] ); }
+sub set_gram_dispmod       { return $_[0]->set_attr( 'gram/dispmod',       $_[1] ); }
+sub set_gram_iterativeness { return $_[0]->set_attr( 'gram/iterativeness', $_[1] ); }
+sub set_gram_indeftype     { return $_[0]->set_attr( 'gram/indeftype',     $_[1] ); }
+sub set_gram_person        { return $_[0]->set_attr( 'gram/person',        $_[1] ); }
+sub set_gram_numertype     { return $_[0]->set_attr( 'gram/numertype',     $_[1] ); }
+sub set_gram_politeness    { return $_[0]->set_attr( 'gram/politeness',    $_[1] ); }
+sub set_gram_negation      { return $_[0]->set_attr( 'gram/negation',      $_[1] ); }
+sub set_gram_definiteness  { return $_[0]->set_attr( 'gram/definiteness',  $_[1] ); }
+sub set_gram_diathesis     { return $_[0]->set_attr( 'gram/diathesis',     $_[1] ); }
+
 1;
 
 __END__
-
-######## QUESTIONABLE / DEPRECATED METHODS ###########
-
-# deprecated, use get_coap_members
-sub get_transitive_coap_members {    # analogy of PML_T::ExpandCoord
-    my ($self) = @_;
-    log_fatal("Incorrect number of arguments") if @_ != 1;
-    if ( $self->is_coap_root ) {
-        return (
-            map { $_->is_coap_root ? $_->get_transitive_coap_members : ($_) }
-                grep { $_->is_member } $self->get_children
-        );
-    }
-    else {
-
-        #log_warn("The node ".$self->get_attr('id')." is not root of a coordination/apposition construction\n");
-        return ($self);
-    }
-}
-
-# deprecated,  get_coap_members({direct_only})
-sub get_direct_coap_members {
-    my ($self) = @_;
-    log_fatal("Incorrect number of arguments") if @_ != 1;
-    if ( $self->is_coap_root ) {
-        return ( grep { $_->is_coap_member } $self->get_children );
-    }
-    else {
-
-        #log_warn("The node ".$self->get_attr('id')." is not root of a coordination/apposition construction\n");
-        return ($self);
-    }
-}
-
-# too easy to implement and too rarely used to be a part of API
-sub get_transitive_coap_root {    # analogy of PML_T::GetNearestNonMember
-    my ($self) = @_;
-    log_fatal("Incorrect number of arguments") if @_ != 1;
-    while ( $self->is_coap_member ) {
-        $self = $self->get_parent;
-    }
-    return $self;
-}
-
-
 
 =encoding utf-8
 
@@ -163,7 +272,7 @@ Treex::Core::Node::T
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
@@ -200,6 +309,38 @@ Set the auxiliary a-nodes (to C<a/aux.rf>).
 
 Set the lexical a-node (to C<a/lex.rf>).
 
+=item $node->remove_aux_anodes(@to_remove)
+
+Remove the specifed a-nodes from C<a/aux.rf> (if they are contained in it).
+
+=item $node->get_coref_nodes()
+
+Return textual and grammatical coreference nodes (from C<coref_gram.rf> and C<coref_text.rf>).
+
+=item $node->get_coref_gram_nodes()
+
+Return grammatical coreference nodes (from C<coref_gram.rf>).
+
+=item $node->get_coref_text_nodes()
+
+Return textual coreference nodes (from C<coref_text.rf>).
+
+=item $node->add_coref_gram_nodes(@nodes)
+
+Add grammatical coreference nodes (to C<coref_gram.rf>).
+
+=item $node->add_coref_gram_nodes(@nodes)
+
+Add textual coreference nodes (to C<coref_text.rf>).
+
+=item $node->remove_coref_nodes()
+
+Remove the specified nodes from C<coref_gram.rf> or C<coref_text.rf> (if they are contained in one or both of them). 
+
+=item $node->update_coref_nodes()
+
+Remove all invalid coreferences from C<coref_gram.rf> and C<coref_text.rf>.
+
 =back
 
 =head2 Access to source language t-layer (in MT)
@@ -225,12 +366,13 @@ You must set the link from n-node to a a-node.
 
 =item $node->get_n_node()
 
-This is a shortcut for  $self->get_lex_anode()->n_node;
+This is a shortcut for C<< $self->get_lex_anode()->n_node; >>
 If this t-node is a part of a named entity,
 this method returns the corresponding n-node (L<Treex::Core::Node::N>).
 If this node is a part of more than one named entities,
 only the most nested one is returned.
 For example: "Bank of China"
+
  $n_node_for_china = $t_node_china->get_n_node();
  print $n_node_for_china->get_attr('normalized_name'); # China
  $n_node_for_bank_of_china = $n_node_for_china->get_parent();

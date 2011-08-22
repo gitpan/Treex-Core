@@ -4,7 +4,7 @@ use warnings;
 
 
 
-use ExtUtils::MakeMaker 6.31;
+use ExtUtils::MakeMaker 6.30;
 
 use File::ShareDir::Install;
 install_share dist => "share";
@@ -15,13 +15,12 @@ my %WriteMakefileArgs = (
   'AUTHOR' => 'Treex team <treex@ufal.mff.cuni.cz>',
   'BUILD_REQUIRES' => {
     'File::Find' => '0',
-    'File::Temp' => '0',
     'Test::More' => '0',
     'Test::Output' => '0',
-    'autodie' => '0'
+    'constant' => '0'
   },
   'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.31',
+    'ExtUtils::MakeMaker' => '6.30',
     'File::ShareDir::Install' => '0.03'
   },
   'DISTNAME' => 'Treex-Core',
@@ -43,6 +42,8 @@ my %WriteMakefileArgs = (
     'File::ShareDir' => '0',
     'File::Slurp' => '0',
     'File::Spec' => '0',
+    'File::Temp' => '0',
+    'File::chdir' => '0',
     'IO::Handle' => '0',
     'LWP::Simple' => '0',
     'List::MoreUtils' => '0',
@@ -58,17 +59,19 @@ my %WriteMakefileArgs = (
     'MooseX::Params::Validate' => '0',
     'MooseX::SemiAffordanceAccessor' => '0',
     'MooseX::SemiAffordanceAccessor::Role::Attribute' => '0',
+    'Parse::RecDescent' => '0',
     'Readonly' => '0',
     'Scalar::Util' => '0',
-    'Tk::DialogBox' => '0',
     'Treex::PML' => '0',
     'Treex::PML::Factory' => '0',
     'Treex::PML::Node' => '0',
     'Treex::PML::Struct' => '0',
+    'autodie' => '0',
     'integer' => '0',
-    'utf8' => '0'
+    'utf8' => '0',
+    'vars' => '0'
   },
-  'VERSION' => '0.05222',
+  'VERSION' => '0.06441',
   'test' => {
     'TESTS' => 't/*.t'
   }

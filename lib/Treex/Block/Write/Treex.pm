@@ -1,6 +1,6 @@
 package Treex::Block::Write::Treex;
 BEGIN {
-  $Treex::Block::Write::Treex::VERSION = '0.05222';
+  $Treex::Block::Write::Treex::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -29,8 +29,7 @@ has filenames => (
 sub _build_filenames {
     my $self = shift;
     log_fatal "Parameter 'to' must be defined!" if !defined $self->to;
-    $self->set_filenames( [ split /[ ,]+/, $self->to ] );
-    return;
+    return [ split /[ ,]+/, $self->to ];
 }
 
 sub process_document {
@@ -70,12 +69,12 @@ Treex::Block::Write::Treex
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
 Document writer for the Treex file format (C<*.treex>),
-which is actually a PML instance which is a XML-based format.
+which is actually a PML instance which is an XML-based format.
 
 
 =head1 ATTRIBUTES
@@ -88,7 +87,9 @@ space or comma separated list of filenames
 
 =item file_stem path
 
-overrides the respective attributes in documents (filled in by a DocumentReader)
+overrides the respective attributes in documents
+(filled in by a L<DocumentReader|Treex::Core::DocumentReader>),
+which are used for generating output file names
 
 =back
 

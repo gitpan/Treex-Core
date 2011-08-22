@@ -1,0 +1,65 @@
+{
+use File::Slurp;
+use File::Basename;
+## no critic (Miscellanea::ProhibitUnrestrictedNoCritic)
+## no critic Generated code follows
+no strict;
+no warnings;
+}
+startrule:  SCEN EOF                            {$return = $item{SCEN}}
+SCEN:       LINE SCEN                           {$return = [@{$item{LINE}},@{$item{SCEN}}]}
+SCEN:       LINE                                {$return = [@{$item{LINE}}]}
+LINE:       BLOCK COMMENT                       {$return = [@{$item{BLOCK}}]}
+LINE:       BLOCK                               {$return = [@{$item{BLOCK}}]}
+LINE:       COMMENT                             {$return = []}
+EOF:        /^\Z/
+BLOCK:      INCLUDE                             {
+                                                    my $included = read_file( $item{INCLUDE} );
+                                                    my $result = $thisparser->startrule( $included, 1, $item{INCLUDE} );
+                                                    if (defined $result and ref $result eq 'ARRAY') {
+                                                        $return = [@$result];
+                                                    } else {
+                                                        $return = undef;
+                                                    }
+                                                }
+BLOCK:      TBNAME PARAMS                       {$return = [{
+                                                        block_name=>$item{TBNAME},
+                                                        block_parameters=>$item{PARAMS},
+                                                    }]
+                                                }
+BLOCK:      TBNAME                              {$return = [{
+                                                        block_name=>$item{TBNAME},
+                                                        block_parameters=>[],
+                                                    }]
+                                                }
+INCLUDE:    /\/\S+\.scen/                       {$return = $item[1]}
+INCLUDE:    /[^\/#]\S+\.scen/                    {   my $from_file = $arg[0];
+                                                    if ($from_file =~ /./) {
+                                                        $return = dirname($from_file) . "/$item[1]";
+                                                    } else {
+                                                        $return = "./$item[1]";
+                                                    }
+                                                }
+TBNAME:     /::/ BNAME                          {$return = $item{BNAME}}                    #absolute block path starts with '::' eg. ::Lingua::EN::ExampleTreexBlock will be resolved as Lingua::EN::ExampleTreexBlock
+TBNAME:     BNAME                               {$return = "Treex::Block::$item{BNAME}"}    #relative block path starts directly  eg. W2A::Example                    will be resolved as Treex::Block::W2A::Example
+BNAME:      /[A-Z]\w*::/ BNAME                  {$return = $item[1].$item[2]}
+BNAME:      /[A-Z]\w*/                          {$return = $item[1]}
+PARAMS:     PARAM PARAMS                        {$return = [$item{PARAM}, @{$item{PARAMS}}]}
+PARAMS:     PARAM                               {$return = [$item{PARAM}]}
+PARAM:      PNAME '=' <skip: qr//> PVALUE       {$return = $item{PNAME}.'='.$item{PVALUE}}
+PNAME:      /\w+/                               {$return = $item[1]}
+PVALUE:     /'/ PSQUOTE /'/                     {$return = $item{PSQUOTE}}
+PVALUE:     /"/ PDQUOTE /"/                     {$return = $item{PDQUOTE}}
+PVALUE:     /`/ PTICKED /`/                     {$return = $item[1].$item[2].$item[3]}
+PVALUE:     PNOTQUOTED                          {$return = $item{PNOTQUOTED}}
+PSQUOTE:    NOTSQUOTE SLASHEDSQUOTE PSQUOTE     {$return = $item{NOTSQUOTE}.$item{SLASHEDSQUOTE}.$item{PSQUOTE}}
+PSQUOTE:    NOTSQUOTE
+NOTSQUOTE:  /[^']*[^'\\]/
+SLASHEDSQUOTE: /\\'/                            {$return = "'"}
+PDQUOTE:    /[^"]*/                             {$return = $item[1]}
+PNOTQUOTED: /\S+/                               {$return = $item[1]}
+PNOTQUOTED: EMPTY                               {$return = ''}
+PTICKED:    /[^`]+/                             {$return = $item[1]}
+COMMENT:    /#[^\n]*/                           {$return = ''}
+SPACE:      /\s+/                               {$return = $item[1]}
+EMPTY:      //                                 

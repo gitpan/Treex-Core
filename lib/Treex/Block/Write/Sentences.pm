@@ -1,18 +1,13 @@
 package Treex::Block::Write::Sentences;
 BEGIN {
-  $Treex::Block::Write::Sentences::VERSION = '0.05222';
+  $Treex::Block::Write::Sentences::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
 extends 'Treex::Core::Block';
+with 'Treex::Block::Write::Redirectable';
 
 has '+language' => ( required => 1 );
-
-has encoding => (
-    is            => 'ro',
-    default       => 'utf8',
-    documentation => 'Output encoding. By default utf8.',
-);
 
 has join_resegmented => (
     is            => 'ro',
@@ -22,20 +17,14 @@ has join_resegmented => (
         . ' by W2A::ResegmentSentences on one line.',
 );
 
-sub BUILD {
-    my ($self) = @_;
-    binmode STDOUT, ':encoding(' . $self->encoding . ')';
-    return;
-}
-
 sub process_zone {
     my ( $self, $zone ) = @_;
     my $bundle_id = $zone->get_bundle()->id;
     if ( $self->join_resegmented && $bundle_id =~ /_(\d+)of(\d+)$/ && $1 != $2 ) {
-        print $zone->sentence, " ";
+        print { $self->_file_handle } $zone->sentence, " ";
     }
     else {
-        print $zone->sentence, "\n";
+        print { $self->_file_handle } $zone->sentence, "\n";
     }
     return;
 }
@@ -50,11 +39,12 @@ Treex::Block::Write::Sentences
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
-Document writer for plain text format, one sentence per line.
+Document writer for plain text format, one sentence
+(L<bundle|Treex::Core::Bundle>) per line.
 
 
 =head1 ATTRIBUTES
@@ -63,12 +53,16 @@ Document writer for plain text format, one sentence per line.
 
 =item encoding
 
-Output encoding. By default utf8.
+Output encoding. C<utf8> by default.
 
 =item join_resegmented
 
 Print the sentences re-segmented
-by C<W2A::ResegmentSentences> on one line.
+by L<Treex::Block::W2A::ResegmentSentences> on one line.
+
+=item to
+
+The name of the output file, STDOUT by default.
 
 =back
 

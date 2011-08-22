@@ -1,6 +1,6 @@
 package Treex::Core::Document;
 BEGIN {
-  $Treex::Core::Document::VERSION = '0.05222';
+  $Treex::Core::Document::VERSION = '0.06441';
 }
 
 use Moose;
@@ -12,6 +12,8 @@ use Treex::Core::Bundle;
 use Treex::PML;
 Treex::PML::UseBackends('PMLBackend');
 Treex::PML::AddResourcePath( Treex::Core::Config::pml_schema_dir() );
+
+with 'Treex::Core::WildAttr';
 
 use Scalar::Util qw( weaken );
 
@@ -28,7 +30,7 @@ has _pmldoc => (
     handles  => {
         set_filename => 'changeFilename',
         map { $_ => $_ }
-            qw( load clone save writeFile writeTo filename URL
+            qw( clone writeFile writeTo filename URL
             changeFilename changeURL fileFormat changeFileFormat
             backend changeBackend encoding changeEncoding userData
             changeUserData metaData changeMetaData listMetaData
@@ -86,11 +88,9 @@ sub build_file_number {
 
 # Full filename without the extension
 sub full_filename {
+    log_fatal 'Incorrect number of arguments' if @_ != 1;
     my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
-    }
-    return ( $self->path ? $self->path : '' ) . $self->file_stem . $self->file_number;
+    return ( $self->path ? $self->path . "/" : '' ) . $self->file_stem . $self->file_number;
 }
 
 sub BUILD {
@@ -126,6 +126,17 @@ sub BUILD {
         }
         $self->_rebless_and_index();
     }
+
+    $self->deserialize_wild;
+    foreach my $bundle ( $self->get_bundles ) {
+        $bundle->deserialize_wild;
+        foreach my $bundlezone ( $bundle->get_all_zones ) {
+            foreach my $node ( map { $_->get_descendants( { add_self => 1 } ) } $bundlezone->get_all_trees ) {
+                $node->deserialize_wild;
+            }
+        }
+    }
+
     return;
 }
 
@@ -133,6 +144,7 @@ sub _rebless_and_index {
     my $self = shift;
     foreach my $bundle ( $self->get_bundles ) {
         bless $bundle, 'Treex::Core::Bundle';
+
         $bundle->_set_document($self);
 
         if ( defined $bundle->{zones} ) {
@@ -172,13 +184,11 @@ sub _rebless_and_index {
             }
         }
     }
+    return;
 }
 
 sub _pml_attribute_hash {
     my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
-    }
     return $self->metaData('pml_root')->{meta};
 }
 
@@ -190,7 +200,7 @@ if ( not -f $_treex_schema_file ) {
 
 my $_treex_schema = Treex::PML::Schema->new( { filename => $_treex_schema_file } );
 
-sub _create_empty_pml_doc { ## no critic (ProhibitUnusedPrivateSubroutines)
+sub _create_empty_pml_doc {    ## no critic (ProhibitUnusedPrivateSubroutines)
     my $fsfile = Treex::PML::Document->create
         (
         name => "x",                         #$filename,  ???
@@ -267,28 +277,21 @@ sub get_node_by_id {
 }
 
 sub get_all_node_ids {
+    log_fatal('Incorrect number of arguments') if @_ != 1;
     my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
-    }
     return ( keys %{ $self->_index } );
 }
 
 # ----------------- ACCESS TO BUNDLES ----------------------
 
 sub get_bundles {
+    log_fatal('Incorrect number of arguments') if @_ != 1;
     my $self = shift;
-    if ($Treex::Core::Config::params_validate) {    ## no critic (ProhibitPackageVars)
-        pos_validated_list( \@_ );
-    }
     return $self->trees;
 }
 
 sub create_bundle {
     my ( $self, $arg_ref ) = @_;
-
-    #    pos_validated_list( \@_ );
-
     my $fsfile = $self->_pmldoc();
     my $new_bundle;
     my $position_of_new;
@@ -316,21 +319,12 @@ sub create_bundle {
 # -------------- ACCESS TO ZONES ---------------------------------------
 
 sub create_zone {
-
-    #Now it doesn't support compound Zone selector as Scs
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
         { isa => 'LangCode' },
         { isa => 'Selector', default => '' },
     );
-
-    #my ( $self, $language, $selector ) = @_;
-    #
-    #if ( $language =~ /(.+)(..)/ ) {
-    #    $language = $2;
-    #    $selector = $1;
-    #}
 
     my $new_zone = Treex::Core::DocZone->new(
         {
@@ -353,21 +347,12 @@ sub create_zone {
 }
 
 sub get_zone {
-
-    #Now it doesn't support compound Zone selector as Scs
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
         { isa => 'LangCode' },
         { isa => 'Selector', default => '' },
     );
-
-    #my ( $self, $language, $selector ) = @_;
-
-    #if ( $language =~ /(.+)(..)/ ) {    # temporarily expecting just two-letter language codes !!!
-    #    $language = $2;
-    #    $selector = $1;
-    #}
 
     my $meta = $self->metaData('pml_root')->{meta};
     if ( defined $meta->{zones} ) {
@@ -396,6 +381,32 @@ sub get_or_create_zone {
     return $fs_zone;
 }
 
+# -------------- LOADING AND SAVING ---------------------------------------
+
+sub load {
+    my $self = shift;
+    return $self->_pmldoc->load(@_);
+
+    # TODO: this is unfinished: should be somehow connected with the code in BUILD
+}
+
+sub save {
+    my $self = shift;
+
+    # the following para should be some
+    $self->serialize_wild;
+    foreach my $bundle ( $self->get_bundles ) {
+        $bundle->serialize_wild;
+        foreach my $bundlezone ( $bundle->get_all_zones ) {
+            foreach my $node ( map { $_->get_descendants( { add_self => 1 } ) } $bundlezone->get_all_trees ) {
+                $node->serialize_wild;
+            }
+        }
+    }
+
+    return $self->_pmldoc->save(@_);
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;
@@ -414,7 +425,7 @@ Treex::Core::Document - representation of a text and its linguistic analyses in 
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
@@ -425,7 +436,7 @@ can be attached to a document as a whole.
 
 =head1 ATTRIBUTES
 
-Treex::Core::Document's instances have the following attributes:
+C<Treex::Core::Document>'s instances have the following attributes:
 
 =over 4
 
@@ -445,7 +456,7 @@ Textual description of the file's content that is stored in the file.
 
 The attributes can be accessed using semi-affordance accessors:
 getters have the same names as attributes, while setters start with
-'set_'. For example by getter C<path()> and setter C<set_path($path)>
+C<set_>. For example, the attribute C<path> has a getter C<path()> and a setter C<set_path($path)>
 
 
 
@@ -461,18 +472,18 @@ creates a new empty document object.
 
 =item  my $new_document = Treex::Core::Document->new( { pmldoc => $pmldoc } );
 
-creates a Treex::Core::Document instance from an already existing Treex::PML::Document instance
+creates a C<Treex::Core::Document> instance from an already existing L<Treex::PML::Document> instance
 
 =item  my $new_document = Treex::Core::Document->new( { filename => $filename } );
 
-loads a Treex::Core::Document instance from a .treex file
+loads a C<Treex::Core::Document> instance from a .treex file
 
 =back
 
 
 =head2 Access to zones
 
-Document zones are instances of Treex::Core::DocZone, parametrized
+Document zones are instances of L<Treex::Core::DocZone>, parametrized
 by language code and possibly also by another free label
 called selector, whose purpose is to distinguish zones for the same language
 but from a different source.
@@ -521,15 +532,15 @@ after the existing bundle.
 
 =item  $document->index_node_by_id( $id, $node );
 
-The node is added to the id2node hash table (as mentioned above, it
-is done automatically in $node->set_attr() if the attribute name
-is 'id'). When using undef in the place of the second argument, the entry
-for the given id is deleted from the hash.
+The node is added to the document's indexing table C<id2node> (it is done
+automatically in L<Treex::Core::Node::set_attr()|Treex::Core::Node/set_attr>
+if the attribute name is 'C<id>'). When using C<undef> in the place of the
+second argument, the entry for the given id is deleted from the hash.
 
 
 =item my $node = $document->get_node_by_id( $id );
 
-Return the node which has the value $id in its 'id' attribute,
+Return the node which has the value C<$id> in its 'C<id>' attribute,
 no matter to which tree and to which bundle in the given document
 the node belongs to.
 
@@ -539,7 +550,7 @@ documents differently or hack it by dropping the problematic links.
 
 =item $document->id_is_indexed( $id );
 
-Return true if the given id is already present in the indexing table.
+Return C<true> if the given C<id> is already present in the indexing table.
 
 =item $document->get_all_node_ids();
 

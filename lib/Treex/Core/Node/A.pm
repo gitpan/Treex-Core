@@ -1,6 +1,6 @@
 package Treex::Core::Node::A;
 BEGIN {
-  $Treex::Core::Node::A::VERSION = '0.05222';
+  $Treex::Core::Node::A::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -8,6 +8,7 @@ extends 'Treex::Core::Node';
 with 'Treex::Core::Node::Ordered';
 with 'Treex::Core::Node::InClause';
 with 'Treex::Core::Node::EffectiveRelations';
+#with 'Treex::Core::Node::Interset';
 
 # _set_n_node is called only from Treex::Core::Node::N
 # (automatically, when a new n-node is added to the n-tree).
@@ -18,8 +19,7 @@ has [qw(form lemma tag no_space_after)] => ( is => 'rw' );
 
 # Original a-layer attributes
 has [
-    qw(afun is_parenthesis_root conll_deprel
-        edge_to_collapse is_auxiliary)
+    qw(afun is_parenthesis_root edge_to_collapse is_auxiliary)
 ] => ( is => 'rw' );
 
 sub get_pml_type_name {
@@ -34,13 +34,177 @@ sub is_coap_root {
     return defined $self->afun && $self->afun =~ /^(Coord|Apos)$/;
 }
 
+#------------------------------------------------------------------------------
+# Figures out the real function of the subtree. If its own afun is AuxP or
+# AuxC, finds the first descendant with a real afun and returns it. If this is
+# a coordination or apposition root, finds the first member and returns its
+# afun (but note that members of the same coordination can differ in afuns if
+# some of them have 'ExD').
+#------------------------------------------------------------------------------
+sub get_real_afun
+{
+    my $self     = shift;
+    my $warnings = shift;
+    my $afun     = $self->afun();
+    if ( not defined($afun) ) {
+        $afun = '';
+    }
+    if ( $afun =~ m/^Aux[PC]$/ )
+    {
+        my @children = $self->children();
+        my $n        = scalar(@children);
+        if ( $n < 1 )
+        {
+            if ($warnings)
+            {
+                my $i_sentence = $self->get_bundle()->get_position() + 1;    # tred numbers from 1
+                my $form       = $self->form();
+                log_warn("$afun node does not have children (sentence $i_sentence, '$form')");
+            }
+        }
+        else
+        {
+            if ( $n > 1 && $warnings )
+            {
+                my $i_sentence = $self->get_bundle()->get_position() + 1;    # tred numbers from 1
+                my $form       = $self->form();
+                log_warn("$afun node has $n children so it is not clear which one bears the real afun (sentence $i_sentence, '$form')");
+            }
+            return $children[0]->get_real_afun();
+        }
+    }
+    elsif ( $self->is_coap_root() )
+    {
+        my @members = $self->get_coap_members();
+        my $n       = scalar(@members);
+        if ( $n < 1 )
+        {
+            if ($warnings)
+            {
+                my $i_sentence = $self->get_bundle()->get_position() + 1;    # tred numbers from 1
+                my $form       = $self->form();
+                log_warn("$afun does not have members (sentence $i_sentence, '$form')");
+            }
+        }
+        else
+        {
+            return $members[0]->get_real_afun();
+        }
+    }
+    return $afun;
+}
+
+#------------------------------------------------------------------------------
+# Sets the real function of the subtree. If its current afun is AuxP or AuxC,
+# finds the first descendant with a real afun replaces it. If this is
+# a coordination or apposition root, finds all the members and replaces their
+# afuns (but note that members of the same coordination can differ in afuns if
+# some of them have 'ExD'; this method can only set the same afun for all).
+#------------------------------------------------------------------------------
+sub set_real_afun
+{
+    my $self     = shift;
+    my $new_afun = shift;
+    my $warnings = shift;
+    my $afun     = $self->afun();
+    if ( not defined($afun) ) {
+        $afun = '';
+    }
+    if ( $afun =~ m/^Aux[PC]$/ )
+    {
+        my @children = $self->children();
+        my $n        = scalar(@children);
+        if ( $n < 1 )
+        {
+            if ($warnings)
+            {
+                my $i_sentence = $self->get_bundle()->get_position() + 1;    # tred numbers from 1
+                my $form       = $self->form();
+                log_warn("$afun node does not have children (sentence $i_sentence, '$form')");
+            }
+        }
+        else
+        {
+            if ( $warnings && $n > 1 )
+            {
+                my $i_sentence = $self->get_bundle()->get_position() + 1;    # tred numbers from 1
+                my $form       = $self->form();
+                log_warn("$afun node has $n children so it is not clear which one bears the real afun (sentence $i_sentence, '$form')");
+            }
+            foreach my $child (@children)
+            {
+                $child->set_real_afun($new_afun);
+            }
+            return;
+        }
+    }
+    elsif ( $self->is_coap_root() )
+    {
+        my @members = $self->get_coap_members();
+        my $n       = scalar(@members);
+        if ( $n < 1 )
+        {
+            if ($warnings)
+            {
+                my $i_sentence = $self->get_bundle()->get_position() + 1;    # tred numbers from 1
+                my $form       = $self->form();
+                log_warn("$afun does not have members (sentence $i_sentence, '$form')");
+            }
+        }
+        else
+        {
+            foreach my $member (@members)
+            {
+                $member->set_real_afun($new_afun);
+            }
+            return;
+        }
+    }
+    $self->set_afun($new_afun);
+    return $afun;
+}
+
+#------------------------------------------------------------------------------
+# Recursively copy children from myself to another node.
+# This function is specific to the A layer because it contains the list of
+# attributes. If we could figure out the list automatically, the function would
+# become general enough to reside directly in Node.pm.
+#------------------------------------------------------------------------------
+sub copy_atree
+{
+    my $self      = shift;
+    my $target    = shift;
+    my @children0 = $self->get_children( { ordered => 1 } );
+    foreach my $child0 (@children0)
+    {
+
+        # Create a copy of the child node.
+        my $child1 = $target->create_child();
+
+        # We should copy all attributes that the node has but it is not easy to figure out which these are.
+        # As a workaround, we list the attributes here directly.
+        foreach my $attribute (
+            'form', 'lemma', 'tag', 'no_space_after', 'ord', 'afun', 'is_member', 'is_parenthesis_root',
+            'conll/deprel', 'conll/cpos', 'conll/pos', 'conll/feat'
+            )
+        {
+            my $value = $child0->get_attr($attribute);
+            $child1->set_attr( $attribute, $value );
+        }
+
+        # Call recursively on the subtrees of the children.
+        $child0->copy_atree($child1);
+    }
+    return;
+}
+
 # -- linking to p-layer --
 
 sub get_terminal_pnode {
     my ($self) = @_;
     my $document = $self->get_document();
-    if ( $self->get_attr('p/terminal.rf') ) {
-        return $document->get_node_by_id( $self->get_attr('p/terminal.rf') );
+    if ( $self->get_attr('p_terminal.rf') ) {
+        return $document->get_node_by_id( $self->get_attr('p_terminal.rf') );
     }
     else {
         log_fatal('SEnglishA node pointing to no SEnglishP node');
@@ -48,14 +212,17 @@ sub get_terminal_pnode {
 }
 
 sub get_nonterminal_pnodes {
-    my ($self) = @_;
-    my $document = $self->get_document();
-    if ( $self->get_attr('p/nonterminals.rf') ) {
-        return grep {$_} map { $document->get_node_by_id($_) } @{ $self->get_attr('p/nonterminals.rf') };
+    my ($self)       = @_;
+    my $document     = $self->get_document();
+    my @nonterminals = ();
+    if ( $self->get_attr('p_terminal.rf') ) {
+        my $node = $document->get_node_by_id( $self->get_attr('p_terminal.rf') );
+        while ( $node->get_attr('is_head') ) {
+            $node = $node->get_parent();
+            push @nonterminals, $node
+        }
     }
-    else {
-        return ();
-    }
+    return @nonterminals;
 }
 
 sub get_pnodes {
@@ -86,6 +253,18 @@ sub get_subtree_string {
     my ($self) = @_;
     return join '', map { $_->form . ( $_->no_space_after ? '' : ' ' ) } $self->get_descendants( { ordered => 1 } );
 }
+
+#----------- CoNLL attributes -------------
+
+sub conll_deprel { return $_[0]->get_attr('conll/deprel'); }
+sub conll_cpos   { return $_[0]->get_attr('conll/cpos'); }
+sub conll_pos    { return $_[0]->get_attr('conll/pos'); }
+sub conll_feat   { return $_[0]->get_attr('conll/feat'); }
+
+sub set_conll_deprel { return $_[0]->set_attr( 'conll/deprel', $_[1] ); }
+sub set_conll_cpos   { return $_[0]->set_attr( 'conll/cpos',   $_[1] ); }
+sub set_conll_pos    { return $_[0]->set_attr( 'conll/pos',    $_[1] ); }
+sub set_conll_feat   { return $_[0]->set_attr( 'conll/feat',   $_[1] ); }
 
 1;
 
@@ -156,7 +335,7 @@ Treex::Core::Node::A
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
@@ -193,12 +372,35 @@ Returns the corresponding terminal node and all non-terminal nodes.
 =item get_pml_type_name
 
 Root and non-root nodes have different PML type in the pml schema
-(a-root.type, a-node.type)
+(C<a-root.type>, C<a-node.type>)
 
 =item is_coap_root
 
 Is this node a root (or head) of a coordination/apposition construction?
 On a-layer this is decided based on C<afun =~ /^(Coord|Apos)$/>.
+
+=item get_real_afun()
+
+Figures out the real function of the subtree. If its own afun is C<AuxP> or
+C<AuxC>, finds the first descendant with a real afun and returns it. If this is
+a coordination or apposition root, finds the first member and returns its
+afun (but note that members of the same coordination can differ in afuns if
+some of them have C<ExD>).
+
+=item set_real_afun($new_afun)
+
+Sets the real function of the subtree. If its current afun is C<AuxP> or C<AuxC>,
+finds the first descendant with a real afun replaces it. If this is
+a coordination or apposition root, finds all the members and replaces their
+afuns (but note that members of the same coordination can differ in afuns if
+some of them have C<ExD>; this method can only set the same afun for all).
+
+=item copy_atree()
+
+Recursively copy children from myself to another node.
+This method is specific to the A layer because it contains the list of
+attributes. If we could figure out the list automatically, the method would
+become general enough to reside directly in Node.pm.
 
 =item get_n_node()
 
@@ -211,7 +413,7 @@ For example: "Bank of China"
  $n_node_for_china = $a_node_china->get_n_node();
  print $n_node_for_china->get_attr('normalized_name'); # China
  $n_node_for_bank_of_china = $n_node_for_china->get_parent();
- print $n_node_for_bank_of_china->get_attr('normalized_name'); # Bank of China 
+ print $n_node_for_bank_of_china->get_attr('normalized_name'); # Bank of China
 
 =item $node->get_subtree_string
 

@@ -1,42 +1,70 @@
 package Treex::Core::Resource;
 BEGIN {
-  $Treex::Core::Resource::VERSION = '0.05222';
+  $Treex::Core::Resource::VERSION = '0.06441';
 }
 use strict;
 use warnings;
 
+#use Moose;
+#use Treex::Core::Common;
 use LWP::Simple;
 use File::Path;
 use Treex::Core::Log;
 use Treex::Core::Config;
 
+use Exporter 'import';
+use vars qw(@EXPORT_OK);
+@EXPORT_OK = qw(require_file_from_share);
+
 sub require_file_from_share {
-    my ( $rel_path_to_file, $who_wants_it ) = @_;
-    my $file = Treex::Core::Config::share_dir() . $rel_path_to_file;
-    if ( not -e $file ) {
-        log_info("Shared file '$rel_path_to_file' is missing by $who_wants_it.");
-        my $url = "http://ufallab.ms.mff.cuni.cz/tectomt/share/$rel_path_to_file";
-        log_info("Trying to download $url");
-
-        # first ensure that the directory exists
-        my $directory = $file;
-        $directory =~ s/[^\/]*$//;
-        File::Path::mkpath($directory);
-
-        # downloading the file using LWP::Simple
-        my $response_code = getstore( $url, $file );
-
-        if ( $response_code == 200 ) {
-            log_info("Successfully downloaded to $file");
+    my ( $rel_path_to_file, $who_wants_it, $make_executable ) = @_;
+    my $writable;    #will store first writable directory found
+    SEARCH:
+    foreach my $resource_dir ( Treex::Core::Config::resource_path() ) {
+        my $file = "$resource_dir/$rel_path_to_file";
+        log_debug("Trying $file\n");
+        if ( -e $file ) {
+            log_debug("Found $file\n");
+            return $file;
         }
-        else {
-            log_fatal(
-                "Error when trying to download "
-                    . "$url and to store it as $file ($response_code)\n"
-            );
+
+        if ( !defined $writable && -w $resource_dir ) {
+            $writable = $resource_dir;
+            log_debug("Found writable directory: $writable");
         }
     }
-    return;
+
+    log_info("Shared file '$rel_path_to_file' is missing by $who_wants_it.");
+    log_fatal("Cannot find writable directory for downloading from share") if !defined $writable;
+
+    my $url = "http://ufallab.ms.mff.cuni.cz/tectomt/share/$rel_path_to_file";
+    log_info("Trying to download $url");
+
+    my $file = "$writable/$rel_path_to_file";
+
+    # first ensure that the directory exists
+    my $directory = $file;
+    $directory =~ s/[^\/]*$//;
+    File::Path::mkpath($directory);
+
+    # downloading the file using LWP::Simple
+    my $response_code = getstore( $url, $file );
+
+    if ( $response_code == 200 ) {
+        log_info("Successfully downloaded to $file");
+    }
+    else {
+        log_fatal(
+            "Error when trying to download "
+                . "$url and to store it as $file ($response_code)\n"
+        );
+    }
+
+    # TODO: better solution
+    if ( $file =~ /installed_tools/ || $make_executable ) {
+        chmod 0755, $file;
+    }
+    return $file;
 }
 
 1;
@@ -52,7 +80,7 @@ Treex::Core::Resources
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
@@ -62,9 +90,10 @@ resources....
 
 =over
 
-=item require_file_from_share($rel_path_to_file, $who_wants_it)
+=item require_file_from_share($rel_path_to_file, $who_wants_it, $make_executable)
 
-Helper method used in L<Treex::Core::Block::get_required_share_files()>,
+Helper method used in
+L<Treex::Core::Block::get_required_share_files()|Treex::Core::Block/get_required_share_files>,
 but it can be used also in Tools.
 
 =back
@@ -72,6 +101,8 @@ but it can be used also in Tools.
 =head1 AUTHOR
 
 Zdeněk Žabokrtský <zabokrtsky@ufal.mff.cuni.cz>
+
+Tomáš Kraut <kraut@ufal.mff.cuni.cz>
 
 =head1 COPYRIGHT AND LICENSE
 

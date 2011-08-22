@@ -1,6 +1,6 @@
 package Treex::Block::Write::Text;
 BEGIN {
-  $Treex::Block::Write::Text::VERSION = '0.05222';
+  $Treex::Block::Write::Text::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -26,13 +26,13 @@ Treex::Block::Write::Text
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
 Document writer for plain text format.
 The text is taken from the document's attribute C<text>,
-if you want to save the sentences stored in bundles,
+if you want to save the sentences stored in L<bundles|Treex::Core::Bundle>,
 use L<Treex::Block::Write::Sentences>.
 
 

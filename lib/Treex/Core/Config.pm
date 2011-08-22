@@ -1,12 +1,15 @@
 package Treex::Core::Config;
 BEGIN {
-  $Treex::Core::Config::VERSION = '0.05222';
+  $Treex::Core::Config::VERSION = '0.06441';
 }
 use strict;
 use warnings;
 
 use File::HomeDir;
 use File::ShareDir;
+use File::Slurp;
+use Cwd qw(realpath);
+use Treex::Core::Log;
 
 # this should be somehow systematized, since there will be probably many switches like this one
 our $debug_run_jobs_locally;    ## no critic (ProhibitPackageVars)
@@ -17,7 +20,36 @@ our %service;                   ## no critic (ProhibitPackageVars)
 # 2: MooseX::Params::Validate::pos_validated_list called always
 our $params_validate = 0;       ## no critic (ProhibitPackageVars)
 
-sub devel_version {
+sub config_dir {
+    return File::HomeDir->my_dist_config( 'Treex-Core', { create => 1 } );
+}
+
+sub default_resource_dir {
+    my @path = ( File::HomeDir->my_dist_data( 'Treex-Core', { create => 1 } ) );
+    if ( defined $ENV{TMT_ROOT} ) {
+        push @path, realpath( $ENV{TMT_ROOT} . '/share' );
+    }
+    return @path if wantarray;
+    return join q{:}, @path;
+}
+
+sub resource_path {
+    my $path_file = config_dir() . '/path';
+    my @lines = read_file( $path_file, err_mode => 'silent' );
+    my @path;
+    foreach my $entry ( map { split /:/ } @lines ) {
+        chomp $entry;
+        push @path, $entry;
+    }
+    if ( not defined $path[0] ) {
+        @path = default_resource_dir();
+        write_file( $path_file, { no_clobber => 1, err_mode => 'silent' }, join q{:}, @path )
+    }
+    return @path if wantarray;
+    return join q{:}, @path;
+}
+
+sub _devel_version {
     return -d lib_core_dir() . "/share/";
 
     # to je otazka, jak to co nejelegantneji poznat, ze jde o work.copy. a ne nainstalovanou distribuci
@@ -26,37 +58,45 @@ sub devel_version {
 sub share_dir {
 
     # return File::HomeDir->my_home."/.treex/share"; # future solution, probably symlink
-    if ( devel_version() ) {
-        return lib_core_dir() . "/../../../../share/";
+    if ( _devel_version() ) {
+        return realpath( lib_core_dir() . "/../../../../share/" );
     }
     else {
-        return File::ShareDir::dist_dir('Treex-Core')
-            . "/";
+        return realpath( File::ShareDir::dist_dir('Treex-Core') );
     }
 }
 
 sub tred_dir {
-    return share_dir() . 'tred/';
+    return realpath( share_dir() . '/tred/' );
 }
 
 sub pml_schema_dir {
 
-    if ( devel_version() ) {
-        return lib_core_dir() . "/share/tred_extension/treex/resources/";
+    if ( _devel_version() ) {
+        return realpath( lib_core_dir() . "/share/tred_extension/treex/resources/" );
     }
     else {
-        return File::ShareDir::dist_dir('Treex-Core')
-            . "/tred_extension/treex/resources/";
+        return realpath( File::ShareDir::dist_dir('Treex-Core') . "/tred_extension/treex/resources/" );
     }
 }
 
 # tenhle adresar ted vubec v balicku neni!
 sub tred_extension_dir {
-    return pml_schema_dir() . "/../../";
+    return realpath( pml_schema_dir() . "/../../" );
 }
 
 sub lib_core_dir {
-    return _caller_dir();
+    return realpath( _caller_dir() );
+}
+
+sub tmp_dir {
+    my $dot_treex = File::HomeDir->my_dist_data( 'Treex-Core', { create => 1 } );
+    my $suffix    = 'tmp';
+    my $tmp_dir   = realpath("$dot_treex/$suffix");
+    if ( !-e $tmp_dir ) {
+        mkdir $tmp_dir or log_fatal("Cannot create temporary directory");
+    }
+    return $tmp_dir;
 }
 
 sub _caller_dir {
@@ -80,12 +120,12 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 SYNOPSIS
 
   use Treex::Core::Config;
-  print "TrEd in availabe in " . Treex::Core::Config::tred_dir . "\n";
+  print "TrEd in available in " . Treex::Core::Config::tred_dir . "\n";
   print "PML schema is available in " . Treex::Core::Config::pml_schema_dir . "\n";
 
 =head1 DESCRIPTION
@@ -97,32 +137,48 @@ for instance paths to its components.
 
 =over 4
 
-=item devel_version()
+=item config_dir()
 
-   returns true iff the current Treex instance is running from the svn working copy
-   (which means that it is the development version, not installed from CPAN)
+returns directory where configuration of Treex will reside (currently just F<path> file)
+
+=item default_resource_dir()
+
+returns default path for resources, it uses dist data for C<Treex-Core> and if $TMT_ROOT variable set also $TMT_ROOT/share
+
+=item resource_path()
+
+return list of directories where resources will be searched
+
+=item tmp_dir()
+
+return temporary directory, shoud be used instead of /tmp or similar
+
+=item _devel_version()
+
+returns C<true> iff the current Treex instance is running from the svn working copy
+(which means that it is the development version, not installed from CPAN)
 
 =item lib_core_dir()
 
-   returns the directory in which this module is located (and where
-   the other Treex::Core modules are expected too)
+returns the directory in which this module is located (and where
+the other L<Treex::Core> modules are expected too)
 
 =item share_dir()
 
-   returns the Treex shared directory (formerly TMT_SHARE)
+returns the Treex shared directory (formerly C<$TMT_SHARE>)
 
 =item pml_schema_dir()
 
-   return the directory in which the PML schemata for .treex files are located
+return the directory in which the PML schemata for .treex files are located
 
 =item tred_dir()
 
-   the directory in which the tree editor TrEd is installed
+the directory in which the tree editor TrEd is installed
 
 
 =item tred_extension_dir
 
-   the directory in which the TrEd extension for Treex files is stored
+the directory in which the TrEd extension for Treex files is stored
 
 =back
 
@@ -130,6 +186,8 @@ for instance paths to its components.
 =head1 AUTHOR
 
 Zdeněk Žabokrtský <zabokrtsky@ufal.mff.cuni.cz>
+
+Tomáš Kraut <kraut@ufal.mff.cuni.cz>
 
 =head1 COPYRIGHT AND LICENSE
 

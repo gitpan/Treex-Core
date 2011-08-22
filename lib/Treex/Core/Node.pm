@@ -1,6 +1,6 @@
 package Treex::Core::Node;
 BEGIN {
-  $Treex::Core::Node::VERSION = '0.05222';
+  $Treex::Core::Node::VERSION = '0.06441';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -9,6 +9,7 @@ use Cwd;
 use Treex::PML;
 
 extends 'Treex::PML::Node';
+with 'Treex::Core::WildAttr';
 
 Readonly my $_SWITCHES_REGEX => qr/^(ordered|add_self|(preceding|following|first|last)_only)$/x;
 my $CHECK_FOR_CYCLES = 1;
@@ -44,25 +45,26 @@ sub _index_my_id {
 
 # ---- access to attributes ----
 
-sub _pml_attribute_hash {
-    log_fatal 'Incorrect number of arguments' if @_ != 1;
-    my $self = shift;
-    return $self;
-}
-
+# unlike attr (implemented in Treex::PML::Instance::get_data)
+# get_attr implements only "plain" and "nested hash" attribute names,
+# i.e. no XPath-like expressions (a/aux.rf[3]) are allowed.
+# This results in much faster code.
 sub get_attr {
     my ( $self, $attr_name ) = @_;
     log_fatal('Incorrect number of arguments') if @_ != 2;
-
-    #simple attributes can be accessed directly
-    if ( $attr_name =~ /^[\w\.]+$/ ) {
-        return $self->{$attr_name};
+    my $val = $self;
+    for my $step ( split /\//, $attr_name ) {
+        if ( !defined $val ) {
+            log_fatal "Attribute '$attr_name' contains strange symbols."
+                . " For XPath like constructs (e.g. 'a/aux.rf[3]') use the 'attr' method."
+                if $attr_name =~ /[^-\w\/.]/;
+        }
+        $val = $val->{$step};
     }
-    else {
-        my $attr_hash = $self->_pml_attribute_hash();
-        return $attr_hash->attr($attr_name);
-    }
+    return $val;
 }
+
+use Treex::PML::Factory;
 
 sub set_attr {
     my ( $self, $attr_name, $attr_value ) = @_;
@@ -78,18 +80,32 @@ sub set_attr {
     }
 
     #simple attributes can be accessed directly
-    if ( $attr_name =~ /^[\w\.]+$/ ) {
-        return $self->{$attr_name} = $attr_value;
+    return $self->{$attr_name} = $attr_value if $attr_name =~ /^[\w\.]+$/;
+    log_fatal "Attribute '$attr_name' contains strange symbols."
+        . " No XPath like constructs (e.g. 'a/aux.rf[3]') are allowed."
+        if $attr_name =~ /[^-\w\/.]/;
+
+    my $val = $self;
+    my @steps = split /\//, $attr_name;
+    while (1) {
+        my $step = shift @steps;
+        if (@steps) {
+            if ( !defined( $val->{$step} ) ) {
+                $val->{$step} = Treex::PML::Factory->createStructure();
+            }
+            $val = $val->{$step};
+        }
+        else {
+            return $val->{$step} = $attr_value;
+        }
     }
-    else {
-        return Treex::PML::Node::set_attr( $self, $attr_name, $attr_value );    # better to find superclass, but speed?
-    }
+    return;
 }
 
 sub get_deref_attr {
     my ( $self, $attr_name ) = @_;
     log_fatal('Incorrect number of arguments') if @_ != 2;
-    my $attr_value = $self->_pml_attribute_hash()->attr($attr_name);
+    my $attr_value = $self->get_attr($attr_name);
 
     return if !$attr_value;
     my $document = $self->get_document();
@@ -102,64 +118,17 @@ sub set_deref_attr {
     my ( $self, $attr_name, $attr_value ) = @_;
     log_fatal('Incorrect number of arguments') if @_ != 3;
     if ( ref($attr_value) eq 'ARRAY' ) {
-        my @list = map { $_->get_attr('id') } @{$attr_value};
+        my @list = map { $_->id } @{$attr_value};
         $attr_value = Treex::PML::List->new(@list);
     }
     else {
-        $attr_value = $attr_value->get_attr('id');
+        $attr_value = $attr_value->id;
     }
 
     # attr setting always through TectoMT set_attr, as it can be overidden (and it is in Node/N.pm)
     #return $fsnode{ ident $self}->set_attr( $attr_name, $attr_value );
     return $self->set_attr( $attr_name, $attr_value );
 }
-
-##-- begin proposal
-# Example usage:
-# Treex::Core::Node::T methods get_lex_anode and get_aux_anodes could use:
-# my $a_lex = $t_node->get_r_attr('a/lex.rf'); # returns the node or undef
-# my @a_aux = $t_node->get_r_attr('a/aux.rf'); # returns the nodes or ()
-sub get_r_attr {
-    my ( $self, $attr_name ) = @_;
-    log_fatal('Incorrect number of arguments') if @_ != 2;
-    my $attr_value = $self->_pml_attribute_hash()->attr($attr_name);
-
-    return if !$attr_value;
-    my $document = $self->get_document();
-    if (wantarray) {
-        log_fatal("Attribute '$attr_name' is not a list, but get_r_attr() called in a list context.")
-            if ref($attr_value) ne 'Treex::PML::List';
-        return map { $document->get_node_by_id($_) } @{$attr_value};
-    }
-
-    log_fatal("Attribute $attr_name is a list, but get_r_attr() not called in a list context.")
-        if ref($attr_value) eq 'Treex::PML::List';
-    return $document->get_node_by_id($attr_value);
-}
-
-# Example usage:
-# $t_node->set_r_attr('a/lex.rf', $a_lex);
-# $t_node->set_r_attr('a/aux.rf', @a_aux);
-sub set_r_attr {
-    my ( $self, $attr_name, @attr_values ) = @_;
-    log_fatal('Incorrect number of arguments') if @_ < 3;
-    my $fs = $self->_pml_attribute_hash();
-
-    # TODO $fs->type nefunguje - asi protoze se v konstruktorech nenastavuje typ
-    if ( $fs->type($attr_name) eq 'Treex::PML::List' ) {
-        my @list = map { $_->get_attr('id') } @attr_values;
-
-        # TODO: overriden Node::N::set_attr is bypassed by this call
-        return $fs->set_attr( $attr_name, Treex::PML::List->new(@list) );
-    }
-    log_fatal("Attribute '$attr_name' is not a list, but set_r_attr() called with @attr_values values.")
-        if @attr_values > 1;
-
-    # TODO: overriden Node::N::set_attr is bypassed by this call
-    return $fs->set_attr( $attr_name, $attr_values[0]->get_attr('id') );
-}
-
-# ---------------------
 
 sub get_bundle {
     log_fatal 'Incorrect number of arguments' if @_ != 1;
@@ -302,8 +271,8 @@ sub get_document {
     log_fatal 'Incorrect number of arguments' if @_ != 1;
     my $self   = shift;
     my $bundle = $self->get_bundle();
-    log_fatal('Cannot call get_document on a node which is in no bundle') if not defined $bundle;
-    return $self->get_bundle->get_document();
+    log_fatal('Cannot call get_document on a node which is in no bundle') if !defined $bundle;
+    return $bundle->get_document();
 }
 
 sub get_root {
@@ -336,6 +305,9 @@ sub set_parent {
     #    log_fatal("Cannot move a node from one document to another");
     #}
 
+    # We cannot detach a node by setting an undefined parent. The if statement below will die.
+    # Let's inform the user where the bad call is.
+    log_fatal('Cannot attach the node to an undefined parent') if ( !defined($parent) );
     if ( $self == $parent || $CHECK_FOR_CYCLES && $parent->is_descendant_of($self) ) {
         my $id   = $self->id;
         my $p_id = $parent->id;
@@ -560,7 +532,7 @@ sub _normalize_node_ordering {
 
 sub disconnect {
     my $self = shift;
-    log_debug( '$node->disconnect is deprecated, use $node->remove', 1 );
+    log_warn( '$node->disconnect is deprecated, use $node->remove', 1 );
     return $self->remove();
 }
 
@@ -581,23 +553,25 @@ sub set_ordering_value {
     return;
 }
 
-sub get_fposition {
+# proposal
+sub get_address {
     log_fatal 'Incorrect number of arguments' if @_ != 1;
+    my $self     = shift;
+    my $id       = $self->id;
+    my $bundle   = $self->get_bundle();
+    my $doc      = $bundle->get_document();
+    my $file     = $doc->loaded_from || ( $doc->full_filename . '.treex' );
+    my $position = $bundle->get_position() + 1;
+
+    #my $filename = Cwd::abs_path($file);
+    return "$file##$position.$id";
+}
+
+# deprecated
+sub get_fposition {
     my $self = shift;
-    my $id   = $self->get_attr('id');
-
-    my $fsfile  = $self->get_document->_get_pmldoc();    ## no critic (ProtectPrivateSubs)
-    my $fs_root = $self->get_bundle;
-
-    my $bundle_number = 1;
-    TREES:
-    foreach my $t ( $fsfile->trees() ) {
-        last TREES if $t == $fs_root;
-        $bundle_number++;
-    }
-
-    my $filename = Cwd::abs_path( $self->get_document->get_fsfile_name() );
-    return "$filename##$bundle_number.$id";
+    log_warn("Method get_fposition is deprecated use get_address() instead");
+    return $self->get_address();
 }
 
 sub generate_new_id {    #TODO move to Core::Document?
@@ -622,7 +596,7 @@ sub generate_new_id {    #TODO move to Core::Document?
     while (1) {
         $latest_node_number++;
         $new_id = "${id_base}n$latest_node_number";
-        last if not $doc->id_is_indexed($new_id);
+        last if !$doc->id_is_indexed($new_id);
 
     }
 
@@ -680,7 +654,7 @@ sub get_attrs {
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.05222';
+  $Treex::Core::Node::Removed::VERSION = '0.06441';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -699,7 +673,55 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
-=for Pod::Coverage BUILD disconnect get_ordering_value set_ordering_value get_r_attr set_r_attr
+##-- begin proposal
+# Example usage:
+# Treex::Core::Node::T methods get_lex_anode and get_aux_anodes could use:
+# my $a_lex = $t_node->get_r_attr('a/lex.rf'); # returns the node or undef
+# my @a_aux = $t_node->get_r_attr('a/aux.rf'); # returns the nodes or ()
+sub get_r_attr {
+    my ( $self, $attr_name ) = @_;
+    log_fatal('Incorrect number of arguments') if @_ != 2;
+    my $attr_value = $self->get_attr($attr_name);
+
+    return if !$attr_value;
+    my $document = $self->get_document();
+    if (wantarray) {
+        log_fatal("Attribute '$attr_name' is not a list, but get_r_attr() called in a list context.")
+            if ref($attr_value) ne 'Treex::PML::List';
+        return map { $document->get_node_by_id($_) } @{$attr_value};
+    }
+
+    log_fatal("Attribute $attr_name is a list, but get_r_attr() not called in a list context.")
+        if ref($attr_value) eq 'Treex::PML::List';
+    return $document->get_node_by_id($attr_value);
+}
+
+# Example usage:
+# $t_node->set_r_attr('a/lex.rf', $a_lex);
+# $t_node->set_r_attr('a/aux.rf', @a_aux);
+sub set_r_attr {
+    my ( $self, $attr_name, @attr_values ) = @_;
+    log_fatal('Incorrect number of arguments') if @_ < 3;
+    my $fs = $self;
+
+    # TODO $fs->type nefunguje - asi protoze se v konstruktorech nenastavuje typ
+    if ( $fs->type($attr_name) eq 'Treex::PML::List' ) {
+        my @list = map { $_->id } @attr_values;
+
+        # TODO: overriden Node::N::set_attr is bypassed by this call
+        return $fs->set_attr( $attr_name, Treex::PML::List->new(@list) );
+    }
+    log_fatal("Attribute '$attr_name' is not a list, but set_r_attr() called with @attr_values values.")
+        if @attr_values > 1;
+
+    # TODO: overriden Node::N::set_attr is bypassed by this call
+    return $fs->set_attr( $attr_name, $attr_values[0]->id );
+}
+
+# ---------------------
+
+
+=for Pod::Coverage BUILD disconnect get_ordering_value set_ordering_value get_fposition
 
 
 =encoding utf-8
@@ -710,7 +732,7 @@ Treex::Core::Node
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
@@ -726,10 +748,10 @@ Tree's attributes must be stored as attributes of the root node.
 
 =over 4
 
-=item  my $new_node = $existing_node->create_child(lemma=>'house', tag=>'NN' });
+=item  my $new_node = $existing_node->create_child({lemma=>'house', tag=>'NN' });
 
 Creates a new node as a child of an existing node. Some of its attribute
-can be filled. Direct calls of node constructors (->new) should be avoided.
+can be filled. Direct calls of node constructors (C<< ->new >>) should be avoided.
 
 
 =back
@@ -742,15 +764,15 @@ can be filled. Direct calls of node constructors (->new) should be avoided.
 
 =item my $bundle = $node->get_bundle();
 
-Returns the L<Treex::Core::Bundle|Treex::Core::Bundle> object in which the node's tree is contained.
+Returns the L<Treex::Core::Bundle> object in which the node's tree is contained.
 
 =item my $document = $node->get_document();
 
-Returns the L<Treex::Core::Document|Treex::Core::Document> object in which the node's tree is contained.
+Returns the L<Treex::Core::Document> object in which the node's tree is contained.
 
 =item get_layer
 
-Return the layer of this node (I<a,t,n or p>).
+Return the layer of this node (I<a>, I<t>, I<n> or I<p>).
 
 =item get_zone
 
@@ -759,11 +781,11 @@ Return the zone (L<Treex::Core::BundleZone>) to which this node
 
 =item $lang_code = $node->language
 
-shortcut for $lang_code = $node->get_zone()->language
+shortcut for C<< $lang_code = $node->get_zone()->language >>
 
 =item $selector = $node->selector
 
-shortcut for $selector = $node->get_zone()->selector
+shortcut for C<< $selector = $node->get_zone()->selector >>
 
 =back
 
@@ -779,9 +801,9 @@ Returns the value of the node attribute of the given name.
 =item my $node->set_attr($name,$value);
 
 Sets the given attribute of the node with the given value.
-If the attribute name is 'id', then the document's indexing table
-is updated. If value of the type List is to be filled,
-then $value must be a reference to the array of values.
+If the attribute name is C<id>, then the document's indexing table
+is updated. If value of the type C<List> is to be filled,
+then C<$value> must be a reference to the array of values.
 
 =item my $node2 = $node1->get_deref_attr($name);
 
@@ -790,7 +812,7 @@ it returns the appropriate node (or a reference to the list of nodes).
 
 =item my $node1->set_deref_attr($name, $node2);
 
-Sets the given attribute with ID (list of IDs) of the given node (list of nodes).
+Sets the given attribute with C<id> (list of C<id>s) of the given node (list of nodes).
 
 =item my $node->add_to_listattr($name, $value);
 
@@ -813,15 +835,15 @@ by a C<$value> (typically the value is an empty string).
 
 =item my $parent_node = $node->get_parent();
 
-Returns the parent node, or undef if there is none (if $node itself is the root)
+Returns the parent node, or C<undef> if there is none (if C<$node> itself is the root)
 
 =item $node->set_parent($parent_node);
 
-Makes $node a child of $parent_node.
+Makes C<$node> a child of C<$parent_node>.
 
 =item $node->remove();
 
-Deletes a node and the a subtree rooted by the given node.
+Deletes a node and the subtree rooted by the given node.
 Node identifier is removed from the document indexing table.
 The removed node cannot be further used.
 
@@ -831,11 +853,11 @@ Returns the root of the node's tree.
 
 =item my $root_node = $node->is_root();
 
-Returns true if the node has no parent.
+Returns C<true> if the node has no parent.
 
 =item $node1->is_descendant_of($node2);
 
-Tests whether $node1 is among transitive descendants of $node2;
+Tests whether C<$node1> is among transitive descendants of C<$node2>;
 
 =back
 
@@ -895,18 +917,18 @@ Names of variables in the examples suppose a language with left-to-right script.
 
 =item *
 
-B<first_only> and B<last_only> switches makes the method return just one item - a scalar,
-even if combined with the B<add_self> switch.
+C<first_only> and C<last_only> switches makes the method return just one item -
+a scalar, even if combined with the C<add_self> switch.
 
 =item *
 
-Specifying B<(first|last|preceding|following)_only> implies B<ordered>,
-so explicit addition of B<ordered> gives a warning.
+Specifying C<(first|last|preceding|following)_only> implies C<ordered>,
+so explicit addition of C<ordered> gives a warning.
 
 =item *
 
-Specifying both B<preceding_only> and B<following_only> gives an error
-(same for combining B<first_only> and B<last_only>).
+Specifying both C<preceding_only> and C<following_only> gives an error
+(same for combining C<first_only> and C<last_only>).
 
 =back
 
@@ -957,26 +979,20 @@ Actually, this is shortcut for C<$node-E<gt>get_siblings({following_only=E<gt>1,
 
 =item $node->generate_new_id();
 
-Generate new (=so far unindexed) identifier (to be used when creating new nodes).
-The new identifier is derived from the identifier of the root ($node->root), by adding
-suffix x1 (or x2, if ...x1 has already been indexed, etc.) to the root's id.
+Generate new (= so far unindexed) identifier (to be used when creating new
+nodes). The new identifier is derived from the identifier of the root
+(C<< $node->root >>), by adding suffix C<x1> (or C<x2>, if C<...x1> has already
+been indexed, etc.) to the root's C<id>.
 
 
 =item my $levels = $node->get_depth();
 
 Return the depth of the node. The root has depth = 0, its children have depth = 1 etc.
 
-=back
+=item my $address = $node->get_address();
 
-
-=head2 DEPRECATED & QUESTIONABLE METHODS
-
-=over
-
-=item my $position = $node->get_fposition();
-
-Return the node address, i.e. file name and node's position within the file, similarly
-to TrEd's FPosition() (but the value is only returned, not printed).
+Return the node address, i.e. file name and node's position within the file,
+similarly to TrEd's C<FPosition()> (but the value is only returned, not  printed).
 
 =back
 

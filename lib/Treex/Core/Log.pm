@@ -1,6 +1,6 @@
 package Treex::Core::Log;
 BEGIN {
-  $Treex::Core::Log::VERSION = '0.05222';
+  $Treex::Core::Log::VERSION = '0.06441';
 }
 use strict;
 use warnings;
@@ -31,13 +31,18 @@ binmode STDERR, ":utf8";
     *STDERR->autoflush();
 }
 
-Readonly my %ERROR_LEVEL_VALUE => (
-    'ALL'   => 0,
-    'DEBUG' => 1,
-    'INFO'  => 2,
-    'WARN'  => 3,
-    'FATAL' => 4,
-);
+
+my @ERROR_LEVEL_NAMES = qw(ALL DEBUG INFO WARN FATAL);
+Readonly my %ERROR_LEVEL_VALUE => map {$ERROR_LEVEL_NAMES[$_] => $_} (0 .. $#ERROR_LEVEL_NAMES);
+
+#Readonly my %ERROR_LEVEL_VALUE => (
+#    'ALL'   => 0,
+#    'DEBUG' => 1,
+#    'INFO'  => 2,
+#    'WARN'  => 3,
+#    'FATAL' => 4,
+#);
+
 
 use Moose::Util::TypeConstraints;
 enum 'ErrorLevel' => keys %ERROR_LEVEL_VALUE;
@@ -61,7 +66,7 @@ sub log_set_error_level {
 }
 
 sub get_error_level {
-    return $current_error_level_value;
+    return $ERROR_LEVEL_NAMES[$current_error_level_value];
 }
 
 # fatal error messages can't be suppressed
@@ -72,11 +77,13 @@ sub log_fatal {
         $unfinished_line = 0;
     }
     my $line = "TREEX-FATAL:\t$message\n\n";
-    if ($OS_ERROR) {
-        $line .= "PERL ERROR MESSAGE: $OS_ERROR\n";
-    }
-    if ($EVAL_ERROR) {
-        $line .= "PERL EVAL ERROR MESSAGE: $EVAL_ERROR\n";
+    if ( $current_error_level_value <= $ERROR_LEVEL_VALUE{'DEBUG'} ) {
+        if ($OS_ERROR) {
+            $line .= "PERL ERROR MESSAGE: $OS_ERROR\n";
+        }
+        if ($EVAL_ERROR) {
+            $line .= "PERL EVAL ERROR MESSAGE: $EVAL_ERROR\n";
+        }
     }
     $line .= "PERL STACK:";
     cluck $line;
@@ -201,7 +208,7 @@ Treex::Core::Log - logger tailored for the needs of Treex
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 SYNOPSIS
 
@@ -225,13 +232,13 @@ version 0.05222
 
 =head1 DESCRIPTION
 
-Treex::Core::Log is a logger developed with the Treex system.
+C<Treex::Core::Log> is a logger developed with the Treex system.
 It uses more or less standard leveled set of reporting functions,
-printing the messages at STDERR.
+printing the messages at C<STDERR>.
 
 
 Note that this module might be completely substituted
-by more elaborate solutions such as Log::Log4perl in the
+by more elaborate solutions such as L<Log::Log4perl> in the
 whole Treex in the future
 
 

@@ -1,6 +1,6 @@
 package Treex::Block::Read::Treex;
 BEGIN {
-  $Treex::Block::Read::Treex::VERSION = '0.05222';
+  $Treex::Block::Read::Treex::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -22,12 +22,12 @@ Treex::Block::Read::Treex
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 
 Document reader for the Treex file format (C<*.treex>),
-which is actually a PML instance which is a XML-based format.
+which is actually a PML instance which is an XML-based format.
 
 
 =head1 ATTRIBUTES

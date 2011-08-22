@@ -1,6 +1,6 @@
 package Treex::Core::Node::N;
 BEGIN {
-  $Treex::Core::Node::N::VERSION = '0.05222';
+  $Treex::Core::Node::N::VERSION = '0.06441';
 }
 use Moose;
 use Treex::Core::Common;
@@ -65,7 +65,7 @@ sub set_attr {
 
 #@overrides Treex::Core::Node::remove
 sub remove {
-    my ( $self ) = @_;
+    my ($self) = @_;
     foreach my $m_node ( $self->get_anodes() ) {
         $m_node->_set_n_node(undef);
     }
@@ -84,7 +84,7 @@ Treex::Core::Node::N
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 

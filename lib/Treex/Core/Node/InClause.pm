@@ -1,8 +1,11 @@
 package Treex::Core::Node::InClause;
 BEGIN {
-  $Treex::Core::Node::InClause::VERSION = '0.05222';
+  $Treex::Core::Node::InClause::VERSION = '0.06441';
 }
 use Moose::Role;
+
+# with Moose >= 2.00, this must be present also in roles
+use MooseX::SemiAffordanceAccessor;
 use Treex::Core::Log;
 use List::Util qw(first);    # TODO: this wouldn't be needed if there was Treex::Core::Common for roles
 
@@ -46,7 +49,7 @@ sub get_clause_nodes {
     my $root        = $self->get_root();
     my @descendants = $root->get_descendants( { ordered => 1 } );
     my $my_number   = $self->get_attr('clause_number');
-    return grep { $_->get_attr('clause_number') == $my_number } @descendants;
+    return grep { ( $_->get_attr('clause_number') || '' ) eq $my_number } @descendants;
 }
 
 # TODO: same purpose as get_clause_root but instead of clause_number uses is_clause_head
@@ -81,7 +84,7 @@ Treex::Core::Node::InClause
 
 =head1 VERSION
 
-version 0.05222
+version 0.06441
 
 =head1 DESCRIPTION
 

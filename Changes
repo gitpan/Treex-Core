@@ -1,6 +1,10 @@
 Revision history of the Treex-Core distribution:
 
 
-0.05222     2010-11-30
+0.05221     2011-04-01
 
     - the first release at CPAN
+
+0.06442     2011-08-22
+
+    - bugfixes, separation of scenario parsing
