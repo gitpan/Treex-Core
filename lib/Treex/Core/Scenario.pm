@@ -1,6 +1,6 @@
 package Treex::Core::Scenario;
 BEGIN {
-  $Treex::Core::Scenario::VERSION = '0.06442';
+  $Treex::Core::Scenario::VERSION = '0.06513_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -296,7 +296,7 @@ __END__
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 Treex::Core::Scenario - a larger Treex processing unit (composed of the basic 
 treex processing units - blocks)
 

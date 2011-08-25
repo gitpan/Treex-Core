@@ -1,6 +1,6 @@
 package Treex::Core::Node::EffectiveRelations;
 BEGIN {
-  $Treex::Core::Node::EffectiveRelations::VERSION = '0.06442';
+  $Treex::Core::Node::EffectiveRelations::VERSION = '0.06513_1';
 }
 use Moose::Role;
 
@@ -68,7 +68,7 @@ sub get_eparents {
         my $id = $self->id;
 
         #TODO: log_fatal if !$robust
-        log_warn("The node $id has no effective nor topological parent, using the root");
+        log_warn("The node $id has no effective nor topological parent, using the root", 1);
         return $self->get_root();
     }
 
@@ -236,7 +236,7 @@ Treex::Core::Node::EffectiveRelations
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 DESCRIPTION
 

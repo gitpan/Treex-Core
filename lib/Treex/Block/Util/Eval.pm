@@ -1,6 +1,6 @@
 package Treex::Block::Util::Eval;
 BEGIN {
-  $Treex::Block::Util::Eval::VERSION = '0.06442';
+  $Treex::Block::Util::Eval::VERSION = '0.06513_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -43,6 +43,7 @@ sub BUILD {
 ## no critic (ProhibitStringyEval) This block needs string evals
 sub process_document {
     my ( $self, $document ) = @_;
+    my $doc = $document;
     if ( $self->document ) {
         my $to_eval = $self->document . ';1;';
         eval($to_eval) or log_fatal("While evaluating '$to_eval' got error: $@");
@@ -130,7 +131,7 @@ Treex::Block::Util::Eval - Special block for evaluating code given by parameters
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 SYNOPSIS
 

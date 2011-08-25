@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Labels;
 BEGIN {
-  $Treex::Core::TredView::Labels::VERSION = '0.06442';
+  $Treex::Core::TredView::Labels::VERSION = '0.06513_1';
 }
 
 use Moose;
@@ -209,10 +209,14 @@ sub _anode_labels {
     $line1 .= $node->form;
 
     my $edge_label = $node->afun || $node->conll_deprel;
-    my $line2 = $edge_label ? $self->_colors->get( 'afun', 1 ) . $edge_label : $self->_colors->get( 'error', 1 ) . '!!';
+    my $color = $edge_label && $edge_label ne 'NR' ? $self->_colors->get( 'afun', 1 ) : $self->_colors->get( 'error', 1 );
+    my $line2 = $color . ( $edge_label || '!!' );
     if ( $node->is_member ) {
         my $parent = $node->parent;
-        $parent = $parent->parent while $parent and ( $parent->afun || '' ) =~ m/^Aux[CP]$/;
+        while ( $parent && ( ( $parent->afun || '' ) =~ m/^Aux[CP]$/ ) )    #skip AuxCP
+        {
+            $parent = $parent->parent;
+        }
         if ( $parent->afun =~ m/^(Ap)os|(Co)ord/ ) {
             $line2 .= '_' . $self->_colors->get( 'member', 1 ) . ( $1 ? $1 : $2 );
         }
@@ -313,7 +317,7 @@ sub _pnode_labels {
         $line2 = '-' if $line2 eq '-NONE-';
     }
     else {
-        $line1 = $self->_colors->get( 'phrase', 1 ) . $node->{phrase} . '#{black}' . join( '', map "-$_", TredMacro::ListV( $node->{functions} ) );
+        $line1 = $self->_colors->get( 'phrase', 1 ) . $node->{phrase} . '#{black}' . join( '', map {"-$_"} TredMacro::ListV( $node->{functions} ) );
     }
 
     return [
@@ -333,7 +337,7 @@ Treex::Core::TredView::Labels - Labels of tree nodes in Tred
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 DESCRIPTION
 

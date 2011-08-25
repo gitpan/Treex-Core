@@ -1,10 +1,11 @@
 package Treex::Core::Run;
 BEGIN {
-  $Treex::Core::Run::VERSION = '0.06442';
+  $Treex::Core::Run::VERSION = '0.06513_1';
 }
 use strict;
 use warnings;
 
+use 5.008;
 use Treex::Core::Common;
 use Treex::Core;
 use MooseX::SemiAffordanceAccessor;
@@ -13,6 +14,7 @@ with 'MooseX::Getopt';
 use Cwd;
 use File::Path;
 use File::Temp qw(tempdir);
+use File::Which;
 use List::MoreUtils qw(first_index);
 use Exporter;
 use base 'Exporter';
@@ -21,15 +23,19 @@ our @EXPORT_OK = q(treex);
 has 'save' => (
     traits        => ['Getopt'],
     cmd_aliases   => 's',
-    is            => 'rw', isa => 'Bool', default => 0,
+    is            => 'rw',
+    isa           => 'Bool',
+    default       => 0,
     documentation => 'save all documents',
 );
 
 has 'quiet' => (
-    traits      => ['Getopt'],
-    cmd_aliases => 'q',
-    is          => 'rw', isa => 'Bool', default => 0,
-    trigger => sub { Treex::Core::Log::log_set_error_level('FATAL'); },
+    traits        => ['Getopt'],
+    cmd_aliases   => 'q',
+    is            => 'rw',
+    isa           => 'Bool',
+    default       => 0,
+    trigger       => sub { Treex::Core::Log::log_set_error_level('FATAL'); },
     documentation => q{Warning, info and debug messages are suppressed. Only fatal errors are reported.},
 );
 
@@ -192,15 +198,40 @@ has 'survive' => (
     documentation => 'Continue collecting jobs\' outputs even if some of them crashed (risky, use with care!).',
 );
 
+has version => (
+    traits        => ['Getopt'],
+    is            => 'ro',
+    isa           => 'Bool',
+    default       => 0,
+    cmd_aliases   => 'v',
+    documentation => q(Print treex and perl version),
+    trigger       => sub {
+        print get_version();
+        exit();
+    },
+);
+
 sub _usage_format {
     return "usage: %c %o scenario [-- treex_files]\nscenario is a sequence of blocks or *.scen files\noptions:";
+}
+
+#gets info about version of treex and perl
+sub get_version {
+    my $perl_v         = $^V;
+    my $perl_x         = $^X;
+    my $treex_v        = $Treex::Core::Run::VERSION || 'DEV';
+    my $treex_x        = which('treex');
+    my $version_string = <<"VERSIONS";
+Treex version: $treex_v from $treex_x
+Perl version: $perl_v from $perl_x
+VERSIONS
+    return $version_string;
 }
 
 sub BUILD {
 
     # more complicated tests on consistency of options will be place here
     my ($self) = @_;
-
     if ( $self->jobindex ) {
         _redirect_output( $self->outdir, 0, $self->jobindex );
     }
@@ -470,10 +501,11 @@ sub _create_job_scripts {
     if ( !-t STDIN ) {
         my $stdin_file = "$workdir/input";
         $input = "cat $stdin_file | ";
-        open my $TEMP, '>', $stdin_file;
+        open my $TEMP, '>', $stdin_file or log_fatal("Cannot create file $stdin_file to store input: $!");
         while (<STDIN>) {
             print $TEMP $_;
         }
+        close $TEMP;
     }
 
     foreach my $jobnumber ( map { sprintf( "%03d", $_ ) } 1 .. $self->jobs ) {
@@ -501,6 +533,9 @@ sub _create_job_scripts {
 sub _run_job_scripts {
     my ($self) = @_;
     my $workdir = $self->workdir;
+    if ( substr $workdir, 0, 1 ne '/' ) {
+        $workdir = "./$workdir";
+    }
     foreach my $jobnumber ( 1 .. $self->jobs ) {
         my $script_filename = "scripts/job" . sprintf( "%03d", $jobnumber ) . ".sh";
 
@@ -832,7 +867,7 @@ TODO:
 * modules are just reloaded, no constructors are called yet
 
 
-=for Pod::Coverage BUILD treex
+=for Pod::Coverage BUILD treex get_version
 
 =encoding utf-8
 
@@ -842,7 +877,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 SYNOPSIS
 
@@ -873,8 +908,58 @@ machine, add the C<--local> switch.
 
 =head1 USAGE
 
- Can't locate Treex/Core/Run.pm in @INC (@INC contains: /usr/lib/perl5/site_perl/5.12.3/x86_64-linux-thread-multi /usr/lib/perl5/site_perl/5.12.3 /usr/lib/perl5/vendor_perl/5.12.3/x86_64-linux-thread-multi /usr/lib/perl5/vendor_perl/5.12.3 /usr/lib/perl5/5.12.3/x86_64-linux-thread-multi /usr/lib/perl5/5.12.3 .) at bin/treex line 5.
- BEGIN failed--compilation aborted at bin/treex line 5.
+ usage: treex [-?dEegjLlpqSsv] [long options...] scenario [-- treex_files]
+ scenario is a sequence of blocks or *.scen files
+ options:
+ 	-? --usage --help            Prints this usage information.
+ 	-s --save                    save all documents
+ 	-q --quiet                   Warning, info and debug messages are
+ 	                             suppressed. Only fatal errors are
+ 	                             reported.
+ 	--cleanup                    Delete all temporary files.
+ 	-e --error_level             Possible values: ALL, DEBUG, INFO, WARN,
+ 	                             FATAL
+ 	-E --forward_error_level     messages with this level or higher will
+ 	                             be forwarded from the distributed jobs
+ 	                             to the main STDERR
+ 	-L --language --lang         shortcut for adding "Util::SetGlobal
+ 	                             language=xy" at the beginning of the
+ 	                             scenario
+ 	-S --selector                shortcut for adding "Util::SetGlobal
+ 	                             selector=xy" at the beginning of the
+ 	                             scenario
+ 	-l --filelist                TODO load a list of treex files from a
+ 	                             file
+ 	-g --glob                    Input file mask whose expansion is to
+ 	                             Perl, e.g. --glob '*.treex'
+ 	-p --parallel                Parallelize the task on SGE cluster
+ 	                             (using qsub).
+ 	-j --jobs                    Number of jobs for parallelization,
+ 	                             default 10. Requires -p.
+ 	--jobindex                   Not to be used manually. If number of
+ 	                             jobs is set to J and modulo set to M,
+ 	                             only I-th files fulfilling I mod J == M
+ 	                             are processed.
+ 	--outdir                     Not to be used manually. Dictory for
+ 	                             collecting standard and error outputs in
+ 	                             parallelized processing.
+ 	--qsub                       Additional parameters passed to qsub.
+ 	                             Requires -p.
+ 	--local                      Run jobs locally (might help with
+ 	                             multi-core machines). Requires -p.
+ 	--watch                      re-run when the given file is changed
+ 	                             TODO better doc
+ 	--workdir                    working directory for temporary files in
+ 	                             parallelized processing (if not
+ 	                             specified, directories such as
+ 	                             001-cluster-run, 002-cluster-run etc.
+ 	                             are created)
+ 	-d --dump_scenario           Just dump (print to STDOUT) the given
+ 	                             scenario and exit.
+ 	--survive                    Continue collecting jobs' outputs even
+ 	                             if some of them crashed (risky, use with
+ 	                             care!).
+ 	-v --version                 Print treex and perl version
 
 =head1 AUTHOR
 

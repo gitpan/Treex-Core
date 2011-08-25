@@ -1,6 +1,6 @@
 package Treex::Core::Zone;
 BEGIN {
-  $Treex::Core::Zone::VERSION = '0.06442';
+  $Treex::Core::Zone::VERSION = '0.06513_1';
 }
 
 # antecedent of DocZone and BundleZone
@@ -91,7 +91,7 @@ Treex::Core::Zone
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 DESCRIPTION
 

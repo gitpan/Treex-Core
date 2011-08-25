@@ -1,10 +1,11 @@
 package Treex::Core::Log;
 BEGIN {
-  $Treex::Core::Log::VERSION = '0.06442';
+  $Treex::Core::Log::VERSION = '0.06513_1';
 }
 use strict;
 use warnings;
 
+use 5.008;
 use utf8;
 use English '-no_match_vars';
 
@@ -19,8 +20,8 @@ our @EXPORT = qw(log_fatal log_warn log_info log_debug log_memory);    ## no cri
 
 $Carp::CarpLevel = 1;
 
-binmode STDOUT, ":utf8";
-binmode STDERR, ":utf8";
+binmode STDOUT, ":encoding(utf-8)";
+binmode STDERR, ":encoding(utf-8)";
 
 # Autoflush after every Perl statement should enforce that INFO and FATALs are ordered correctly.
 {
@@ -208,7 +209,7 @@ Treex::Core::Log - logger tailored for the needs of Treex
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 SYNOPSIS
 

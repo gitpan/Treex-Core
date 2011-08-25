@@ -2,9 +2,9 @@
 use strict;
 use warnings;
 
+BEGIN { require 5.010; }
 
-
-use ExtUtils::MakeMaker 6.30;
+use ExtUtils::MakeMaker 6.31;
 
 use File::ShareDir::Install;
 install_share dist => "share";
@@ -20,7 +20,7 @@ my %WriteMakefileArgs = (
     'constant' => '0'
   },
   'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.30',
+    'ExtUtils::MakeMaker' => '6.31',
     'File::ShareDir::Install' => '0.03'
   },
   'DISTNAME' => 'Treex-Core',
@@ -43,6 +43,7 @@ my %WriteMakefileArgs = (
     'File::Slurp' => '0',
     'File::Spec' => '0',
     'File::Temp' => '0',
+    'File::Which' => '0',
     'File::chdir' => '0',
     'IO::Handle' => '0',
     'LWP::Simple' => '0',
@@ -71,7 +72,7 @@ my %WriteMakefileArgs = (
     'utf8' => '0',
     'vars' => '0'
   },
-  'VERSION' => '0.06442',
+  'VERSION' => '0.06513_1',
   'test' => {
     'TESTS' => 't/*.t'
   }

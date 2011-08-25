@@ -1,6 +1,6 @@
 package Treex::Block::Read::Text;
 BEGIN {
-  $Treex::Block::Read::Text::VERSION = '0.06442';
+  $Treex::Block::Read::Text::VERSION = '0.06513_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -27,7 +27,7 @@ Treex::Block::Read::Text
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 DESCRIPTION
 

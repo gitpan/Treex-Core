@@ -1,10 +1,11 @@
 package Treex::Core::Resource;
 BEGIN {
-  $Treex::Core::Resource::VERSION = '0.06442';
+  $Treex::Core::Resource::VERSION = '0.06513_1';
 }
 use strict;
 use warnings;
 
+use 5.010;
 #use Moose;
 #use Treex::Core::Common;
 use LWP::Simple;
@@ -33,7 +34,7 @@ sub require_file_from_share {
             log_debug("Found writable directory: $writable");
         }
     }
-
+    $who_wants_it = $who_wants_it // '';
     log_info("Shared file '$rel_path_to_file' is missing by $who_wants_it.");
     log_fatal("Cannot find writable directory for downloading from share") if !defined $writable;
 
@@ -80,7 +81,7 @@ Treex::Core::Resources
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 DESCRIPTION
 

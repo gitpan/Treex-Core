@@ -2,49 +2,12 @@
 use strict;
 use warnings;
 use Treex::Core::Run;
-use Test::More tests => 16;
+use Test::More;
 use File::Slurp;
 use File::Basename;
+use Treex::Core::Config;
 use Cwd qw(realpath);
 
-# We want to check execution of treex exactly as from the command line.
-# Originally, we tried to
-# use Test::Output;
-# and then is_combined(), but this does not check output of "system" calls,
-# so we must use temporary output file.
-my $combined_file = 'combined.out';
-
-#TODO $command cannot contain "cd" (change directory), because $combined_file would be saved to that directory
-sub is_bash_combined_output {
-    my ( $command, $expected_output, $description ) = @_;
-    system( 'bash', '-c', $command . "> $combined_file 2>&1" );
-    my $content = read_file($combined_file);
-    return is( $content, $expected_output, $description );
-}
-
-my $TREEX     = 'treex';
-my $exit_code = system('treex -h 2>/dev/null');
-if ( $exit_code != 0 ) {
-    use Treex::Core::Config;
-    $TREEX = realpath( Treex::Core::Config::lib_core_dir() . '/../../../bin/treex' );    #development location - lib_core_dir is lib/Treex/Core
-    if ( !-x $TREEX ) {
-        $TREEX = realpath( Treex::Core::Config::lib_core_dir() . '/../../../../bin/treex' );    #release location - lib_core_dir is blib/lib/Treex/Core
-    }
-}
-
-END {
-    unlink $combined_file;
-    unlink glob "*dummy.treex";
-    unlink "confuse.scen";
-}
-
-# prepare dummy input files
-my $test_data_file    = 'dummy.treex';
-my $confuse_data_file = 'confuse.scen';
-my $doc               = Treex::Core::Document->new();
-$doc->save($test_data_file);
-$doc->save( '2' . $test_data_file );
-$doc->save($confuse_data_file);
 my $my_dir = dirname($0);
 my @tasks  = (
     [ q(treex -q -- dummy.treex),                                        '' ],     # reading an empty file
@@ -78,10 +41,59 @@ my @tasks  = (
     [ q(echo | treex -q -Len Read::Sentences Util::Eval param='' document='print $self->_args->{param};'), '' ],
 );
 
-foreach my $task_rf (@tasks) {
-    my ( $command, $expected_output ) = @$task_rf;
-    $command =~ s/treex/$TREEX/;
-    is_bash_combined_output( $command, $expected_output, $command );
+plan tests => scalar @tasks;
+
+# We want to check execution of treex exactly as from the command line.
+# Originally, we tried to
+# use Test::Output;
+# and then is_combined(), but this does not check output of "system" calls,
+# so we must use temporary output file.
+my $combined_file = 'combined.out';
+
+#TODO $command cannot contain "cd" (change directory), because $combined_file would be saved to that directory
+sub is_bash_combined_output {
+    my ( $command, $expected_output, $description ) = @_;
+    system( 'bash', '-c', $command . "> $combined_file 2>&1" );
+    my $content = read_file($combined_file);
+    return is( $content, $expected_output, $description );
+}
+SKIP: {
+    my $PERL_X  = $^X;
+    my $core_dir = Treex::Core::Config::lib_core_dir();
+    my $TREEX_X = realpath( $core_dir . '/../../../bin/treex' );    #development location - lib_core_dir is lib/Treex/Core
+    if ( !defined $TREEX_X || !-e $TREEX_X ) {
+        $TREEX_X = realpath( $core_dir . '/../../../script/treex' );    #blib location
+    }
+    skip "Cannot find treex executable", scalar @tasks if !defined $TREEX_X || !-e $TREEX_X;
+    my $TREEX = "$PERL_X $TREEX_X";
+
+    my $perl_v = Treex::Core::Run::get_version();
+    note("Perl run: \n$perl_v");
+    my $sys_v = `$TREEX -v`;
+    note("Sys run: \n$sys_v");
+
+    #is( $perl_v, $sys_v, 'We are running same version from perl and from system' );
+
+    # prepare dummy input files
+    my $test_data_file    = 'dummy.treex';
+    my $confuse_data_file = 'confuse.scen';
+    my $doc               = Treex::Core::Document->new();
+    $doc->save($test_data_file);
+    $doc->save( '2' . $test_data_file );
+    $doc->save($confuse_data_file);
+
+    skip 'We run different versions of treex binary', scalar @tasks if $perl_v ne $sys_v;
+    foreach my $task_rf (@tasks) {
+        my ( $command, $expected_output ) = @$task_rf;
+        my $original_cmd = $command;
+        $command =~ s/treex/$TREEX/;
+        is_bash_combined_output( $command, $expected_output, $original_cmd );
+    }
 }
 
 #done_testing;
+END {
+    unlink $combined_file;
+    unlink glob "*dummy.treex";
+    unlink "confuse.scen";
+}

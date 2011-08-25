@@ -1,9 +1,11 @@
 package Treex::Core::Common;
 BEGIN {
-  $Treex::Core::Common::VERSION = '0.06442';
+  $Treex::Core::Common::VERSION = '0.06513_1';
 }
-use utf8;
 use Moose;
+use 5.008;
+
+use utf8;
 use Moose::Exporter;
 use Moose::Util::TypeConstraints;
 use MooseX::SemiAffordanceAccessor::Role::Attribute;
@@ -145,7 +147,7 @@ Treex::Core::Common - shorten the "C<use>" part of your Perl codes
 
 =head1 VERSION
 
-version 0.06442
+version 0.06513_1
 
 =head1 SYNOPSIS
 
