@@ -1,6 +1,6 @@
 package Treex::Core::Resource;
 BEGIN {
-  $Treex::Core::Resource::VERSION = '0.06513_1';
+  $Treex::Core::Resource::VERSION = '0.06571';
 }
 use strict;
 use warnings;
@@ -77,14 +77,15 @@ __END__
 
 =head1 NAME
 
-Treex::Core::Resources
+Treex::Core::Resource
 
 =head1 VERSION
 
-version 0.06513_1
+version 0.06571
 
 =head1 DESCRIPTION
 
+TODO POD
 resources....
 
 =head1 SUBROUTINES

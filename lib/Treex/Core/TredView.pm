@@ -1,6 +1,6 @@
 package Treex::Core::TredView;
 BEGIN {
-  $Treex::Core::TredView::VERSION = '0.06513_1';
+  $Treex::Core::TredView::VERSION = '0.06571';
 }
 
 # planned to be used from contrib.mac of tred's extensions
@@ -64,7 +64,7 @@ sub _spread_nodes {
         push @lower, @buf;
     }
     $right += $pos;
-    return ( 0, $node ) unless @lower;
+    return ( 0, $node ) if ! @lower;
 
     my $mid;
     if ( scalar( $node->children ) == 1 ) {
@@ -638,7 +638,7 @@ Treex::Core::TredView - visualization of Treex files in TrEd
 
 =head1 VERSION
 
-version 0.06513_1
+version 0.06571
 
 =head1 DESCRIPTION
 

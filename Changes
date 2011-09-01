@@ -8,3 +8,10 @@ Revision history of the Treex-Core distribution:
 0.06442     2011-08-22
 
     - bugfixes, separation of scenario parsing
+
+0.06571     2011-09-01
+
+    - correction of runtime tests
+    - minor changes
+
+For detailed log of changes see https://svn.ms.mff.cuni.cz/projects/tectomt_devel/timeline (Use 'public' username and same password)

@@ -59,4 +59,4 @@ requires:
   perl: 5.010
   utf8: 0
   vars: 0
-version: 0.06513_1
+version: 0.06571

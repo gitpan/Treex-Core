@@ -1,6 +1,6 @@
 package Treex::Core::Bundle;
 BEGIN {
-  $Treex::Core::Bundle::VERSION = '0.06513_1';
+  $Treex::Core::Bundle::VERSION = '0.06571';
 }
 
 use Moose;
@@ -230,15 +230,15 @@ __END__
 
 =head1 NAME
 
+Treex::Core::Bundle - a set of equivalent sentences in the Treex framework
 
 =head1 VERSION
 
-version 0.06513_1
-Treex::Core::Bundle - a set of equivalent sentences (translations, or variants)
-and their linguistic representations in the Treex framework
+version 0.06571
 
 =head1 DESCRIPTION
 
+A set of equivalent sentences (translations, or variants) and their linguistic representations in the Treex framework
 A bundle in Treex corresponds to one sentence or more sentences, typically 
 translations or variants of each other, with all their linguistic 
 representations. Each bundle is divided into zones (instances of 

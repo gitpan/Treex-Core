@@ -1,6 +1,6 @@
 package Treex::Core::WildAttr;
 BEGIN {
-  $Treex::Core::WildAttr::VERSION = '0.06513_1';
+  $Treex::Core::WildAttr::VERSION = '0.06571';
 }
 use Moose::Role;
 
@@ -78,11 +78,11 @@ __END__
 
 =head1 NAME
 
-Treex::Core::WildAttr
+Treex::Core::WildAttr - role for arbitrary atributes of Treex objects
 
 =head1 VERSION
 
-version 0.06513_1
+version 0.06571
 
 =head1 SYNOPSIS
 

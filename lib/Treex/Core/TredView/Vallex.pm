@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Vallex;
 BEGIN {
-  $Treex::Core::TredView::Vallex::VERSION = '0.06513_1';
+  $Treex::Core::TredView::Vallex::VERSION = '0.06571';
 }
 
 use Moose;
@@ -240,7 +240,7 @@ Treex::Core::TredView::Vallex - Browsing vallency lexicons
 
 =head1 VERSION
 
-version 0.06513_1
+version 0.06571
 
 =head1 DESCRIPTION
 
@@ -260,6 +260,8 @@ This packages provides browsers of vallency lexicons
 
 =head2 Private methods
 
+=over 4
+
 =item _OpenValLexicon_Cs
 
 =item _ChooseValFrame_Cs
@@ -274,7 +276,7 @@ This packages provides browsers of vallency lexicons
 
 =item _assigned_frame_pos_of
 
-=over 4
+=back
 
 =head1 AUTHOR
 

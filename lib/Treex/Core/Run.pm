@@ -1,6 +1,6 @@
 package Treex::Core::Run;
 BEGIN {
-  $Treex::Core::Run::VERSION = '0.06513_1';
+  $Treex::Core::Run::VERSION = '0.06571';
 }
 use strict;
 use warnings;
@@ -533,7 +533,7 @@ sub _create_job_scripts {
 sub _run_job_scripts {
     my ($self) = @_;
     my $workdir = $self->workdir;
-    if ( substr $workdir, 0, 1 ne '/' ) {
+    if ( substr( $workdir, 0, 1 ) ne '/' ) {
         $workdir = "./$workdir";
     }
     foreach my $jobnumber ( 1 .. $self->jobs ) {
@@ -877,7 +877,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.06513_1
+version 0.06571
 
 =head1 SYNOPSIS
 

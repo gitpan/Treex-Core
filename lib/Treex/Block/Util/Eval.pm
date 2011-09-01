@@ -1,6 +1,6 @@
 package Treex::Block::Util::Eval;
 BEGIN {
-  $Treex::Block::Util::Eval::VERSION = '0.06513_1';
+  $Treex::Block::Util::Eval::VERSION = '0.06571';
 }
 use Moose;
 use Treex::Core::Common;
@@ -131,7 +131,7 @@ Treex::Block::Util::Eval - Special block for evaluating code given by parameters
 
 =head1 VERSION
 
-version 0.06513_1
+version 0.06571
 
 =head1 SYNOPSIS
 

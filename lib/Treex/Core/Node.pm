@@ -1,6 +1,6 @@
 package Treex::Core::Node;
 BEGIN {
-  $Treex::Core::Node::VERSION = '0.06513_1';
+  $Treex::Core::Node::VERSION = '0.06571';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -527,6 +527,13 @@ sub get_depth {
 sub _normalize_node_ordering {
 }
 
+# Empty DESTROY method is a hack to get rid of the "Deep recursion warning"
+# in Treex::PML::Node::DESTROY and MooseX::NonMoose::Meta::Role::Class::_check_superclass_destructor.
+# Without this hack, you get the warning after creating a node with 99 or more children.
+# Deep recursion on subroutine "Class::MOP::Method::execute" at .../5.12.2/MooseX/NonMoose/Meta/Role/Class.pm line 183.
+sub DESTROY {
+}
+
 #*************************************
 #---- DEPRECATED & QUESTIONABLE ------
 
@@ -654,7 +661,7 @@ sub get_attrs {
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.06513_1';
+  $Treex::Core::Node::Removed::VERSION = '0.06571';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -728,11 +735,11 @@ sub set_r_attr {
 
 =head1 NAME
 
-Treex::Core::Node
+Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.06513_1
+version 0.06571
 
 =head1 DESCRIPTION
 
