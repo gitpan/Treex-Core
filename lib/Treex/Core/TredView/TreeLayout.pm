@@ -1,6 +1,6 @@
 package Treex::Core::TredView::TreeLayout;
 BEGIN {
-  $Treex::Core::TredView::TreeLayout::VERSION = '0.06571';
+  $Treex::Core::TredView::TreeLayout::VERSION = '0.06903_1';
 }
 
 use Moose;
@@ -341,7 +341,7 @@ sub _draw_layout {
             my $tree = $layout->[$i]->[$j];
             if ( $tree and $tree ne $self->_tag_wrap ) {
                 my ( $lang, $layer, $selector ) = split '-', $tree, 3;
-                $lang = Treex::Core::Common::get_lang_name($lang);
+                $lang = Treex::Core::Types::get_lang_name($lang);
                 $canvas->create(
                     'rectangle',
                     $i * ( $self->_width + $self->_margin ) + $self->_margin,
@@ -409,7 +409,7 @@ Treex::Core::TredView::TreeLayout - Layout of trees in Tred
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

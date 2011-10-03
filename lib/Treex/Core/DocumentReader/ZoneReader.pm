@@ -1,6 +1,6 @@
 package Treex::Core::DocumentReader::ZoneReader;
 BEGIN {
-  $Treex::Core::DocumentReader::ZoneReader::VERSION = '0.06571';
+  $Treex::Core::DocumentReader::ZoneReader::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -9,11 +9,11 @@ use File::Slurp;
 
 has language => (
     is       => 'ro',
-    isa      => 'LangCode',
+    isa      => 'Treex::Type::LangCode',
     required => 1,
 );
 
-has selector => ( isa => 'Selector', is => 'ro', default => '' );
+has selector => ( isa => 'Treex::Type::Selector', is => 'ro', default => '' );
 
 sub zone_label {
     my ($self) = @_;

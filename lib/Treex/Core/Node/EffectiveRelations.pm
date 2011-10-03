@@ -1,6 +1,6 @@
 package Treex::Core::Node::EffectiveRelations;
 BEGIN {
-  $Treex::Core::Node::EffectiveRelations::VERSION = '0.06571';
+  $Treex::Core::Node::EffectiveRelations::VERSION = '0.06903_1';
 }
 use Moose::Role;
 
@@ -11,7 +11,16 @@ use Treex::Core::Log;
 has is_member => (
     is            => 'rw',
     isa           => 'Bool',
-    documentation => 'Is this node a member of a coordination?',
+    documentation => 'Is this node a member of a coordination (i.e. conjunct) or apposition?',
+);
+
+# Shared modifiers of coordinations can be distinguished in PDT style
+# just based on the fact they are hanged on the conjunction (coord. head).
+# However, in other styles (e.g. Stanford) this attribute might be useful.
+has is_shared_modifier => (
+    is            => 'rw',
+    isa           => 'Bool',
+    documentation => 'Is this node a shared modifier of a coordination?',
 );
 
 requires 'is_coap_root';
@@ -236,7 +245,7 @@ Treex::Core::Node::EffectiveRelations
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

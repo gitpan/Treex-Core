@@ -1,6 +1,6 @@
 package Treex::Core::Node::A;
 BEGIN {
-  $Treex::Core::Node::A::VERSION = '0.06571';
+  $Treex::Core::Node::A::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -182,15 +182,19 @@ sub copy_atree
         my $child1 = $target->create_child();
 
         # We should copy all attributes that the node has but it is not easy to figure out which these are.
-        # As a workaround, we list the attributes here directly.
+        # TODO: As a workaround, we list the attributes here directly.
         foreach my $attribute (
             'form', 'lemma', 'tag', 'no_space_after', 'ord', 'afun', 'is_member', 'is_parenthesis_root',
-            'conll/deprel', 'conll/cpos', 'conll/pos', 'conll/feat'
+            'conll/deprel', 'conll/cpos', 'conll/pos', 'conll/feat', 'is_shared_modifier',
             )
         {
             my $value = $child0->get_attr($attribute);
             $child1->set_attr( $attribute, $value );
         }
+
+        # TODO probably we should do deepcopy
+        my %copy_of_wild = %{$child0->wild};
+        $child1->set_wild(\%copy_of_wild);
 
         # Call recursively on the subtrees of the children.
         $child0->copy_atree($child1);
@@ -335,7 +339,7 @@ Treex::Core::Node::A
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

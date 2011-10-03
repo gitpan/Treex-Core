@@ -30,6 +30,7 @@ lib/Treex/Core/Document.pm
 lib/Treex/Core/DocumentReader.pm
 lib/Treex/Core/DocumentReader/Base.pm
 lib/Treex/Core/DocumentReader/ZoneReader.pm
+lib/Treex/Core/Files.pm
 lib/Treex/Core/Log.pm
 lib/Treex/Core/Node.pm
 lib/Treex/Core/Node/A.pm
@@ -51,6 +52,7 @@ lib/Treex/Core/TredView/Labels.pm
 lib/Treex/Core/TredView/Styles.pm
 lib/Treex/Core/TredView/TreeLayout.pm
 lib/Treex/Core/TredView/Vallex.pm
+lib/Treex/Core/Types.pm
 lib/Treex/Core/WildAttr.pm
 lib/Treex/Core/Zone.pm
 perlcritic.rc
@@ -72,19 +74,23 @@ t/00-compile.t
 t/a_effective_rel.t
 t/attribute.t
 t/author-critic.t
+t/base.t
 t/block.t
 t/bundle.t
 t/bundle_zones.t
+t/common.t
 t/config.t
 t/document.t
 t/document_zones.t
 t/dump_scen.t
 t/error.scen
 t/eval_block.t
+t/files.t
 t/grammar.t
 t/log.t
 t/n_tree.t
 t/node.t
+t/ordered.t
 t/p_penn_treebank_string_format.t
 t/parallel.t
 t/qparallel.t
@@ -101,6 +107,7 @@ t/release-portability.t
 t/release-synopsis.t
 t/release-unused-vars.t
 t/resource.t
+t/run.t
 t/runall.sh
 t/scenario.t
 t/scenario_parser.t

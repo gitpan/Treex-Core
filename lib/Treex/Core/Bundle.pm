@@ -1,6 +1,6 @@
 package Treex::Core::Bundle;
 BEGIN {
-  $Treex::Core::Bundle::VERSION = '0.06571';
+  $Treex::Core::Bundle::VERSION = '0.06903_1';
 }
 
 use Moose;
@@ -28,8 +28,6 @@ use Treex::Core::BundleZone;
 
 use Treex::Core::Log;
 
-my @layers = qw(t a n p);    # TODO should it be here?
-
 # --------- ACCESS TO ZONES ------------
 
 sub BUILD {
@@ -42,14 +40,16 @@ sub get_zone {
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Selector', default => '' },
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Selector', default => '' },
     );
     if ( defined $self->{zones} ) {
         foreach my $element ( $self->{zones}->elements ) {
             my ( undef, $value ) = @$element;    # $name is not needed
-            if ( ($value->{language} eq $language or $language eq 'mul')
-                     and ( $value->{selector} || '' ) eq $selector ) {
+            if (( $value->{language} eq $language or $language eq 'mul' )
+                and ( $value->{selector} || '' ) eq $selector
+                )
+            {
                 return $value;
             }
         }
@@ -61,8 +61,8 @@ sub create_zone {
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Selector', default => '' },
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Selector', default => '' },
     );
 
     log_fatal("Bundle already contains a zone with language='$language' and selector='$selector'")
@@ -95,8 +95,8 @@ sub get_or_create_zone {
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Selector', default => '' },
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Selector', default => '' },
     );
     my $zone = $self->get_zone( $language, $selector );
     if ( !defined $zone ) {
@@ -146,7 +146,7 @@ sub get_all_trees {
     my @trees;
     foreach my $zone ( $self->{zones}->elements ) {
         my $structure = $zone->value;
-        foreach my $layer (@layers) {
+        foreach my $layer (Treex::Core::Types::layers()) {
             if ( exists $structure->{trees}->{"${layer}_tree"} ) {
                 push @trees, $structure->{trees}->{"${layer}_tree"};
             }
@@ -160,9 +160,9 @@ sub create_tree {
     my $self = shift;
     my ( $language, $layer, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Layer' },
-        { isa => 'Selector', default => '' }
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Layer' },
+        { isa => 'Treex::Type::Selector', default => '' }
     );
 
     my $zone = $self->get_or_create_zone( $language, $selector );
@@ -174,9 +174,9 @@ sub get_tree {
     my $self = shift;
     my ( $language, $layer, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Layer' },
-        { isa => 'Selector', default => '' }
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Layer' },
+        { isa => 'Treex::Type::Selector', default => '' }
     );
 
     my $zone = $self->get_zone( $language, $selector );
@@ -188,9 +188,9 @@ sub has_tree {
     my $self = shift;
     my ( $language, $layer, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Layer' },
-        { isa => 'Selector', default => '' }
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Layer' },
+        { isa => 'Treex::Type::Selector', default => '' }
     );
     my $zone = $self->get_zone( $language, $selector );
     return defined $zone && $zone->has_tree($layer);
@@ -234,7 +234,7 @@ Treex::Core::Bundle - a set of equivalent sentences in the Treex framework
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

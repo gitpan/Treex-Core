@@ -1,11 +1,12 @@
 package Treex::Core::Resource;
 BEGIN {
-  $Treex::Core::Resource::VERSION = '0.06571';
+  $Treex::Core::Resource::VERSION = '0.06903_1';
 }
 use strict;
 use warnings;
 
 use 5.010;
+
 #use Moose;
 #use Treex::Core::Common;
 use LWP::Simple;
@@ -34,11 +35,11 @@ sub require_file_from_share {
             log_debug("Found writable directory: $writable");
         }
     }
-    $who_wants_it = $who_wants_it // '';
-    log_info("Shared file '$rel_path_to_file' is missing by $who_wants_it.");
+    $who_wants_it = " by $who_wants_it" // '';
+    log_info("Shared file '$rel_path_to_file' is missing$who_wants_it.");
     log_fatal("Cannot find writable directory for downloading from share") if !defined $writable;
 
-    my $url = "http://ufallab.ms.mff.cuni.cz/tectomt/share/$rel_path_to_file";
+    my $url = Treex::Core::Config::share_url(). "/$rel_path_to_file";
     log_info("Trying to download $url");
 
     my $file = "$writable/$rel_path_to_file";
@@ -77,16 +78,20 @@ __END__
 
 =head1 NAME
 
-Treex::Core::Resource
+Treex::Core::Resource - Access to shared resources
 
 =head1 VERSION
 
-version 0.06571
+=head1 SYNOPSIS
+
+use Treex::Core::Resource qw(require_file_from_share);
+my $path = require_file_from_share('relative/path/to/file');
+open my $MODEL, '<', $path or log_fatal($!);
 
 =head1 DESCRIPTION
 
-TODO POD
-resources....
+This module provides access to shared resources (e.g. models). First it tries to locate it on local computer.
+If not found, download from server (L<http://ufallab.ms.mff.cuni.cz/>)
 
 =head1 SUBROUTINES
 
@@ -94,9 +99,9 @@ resources....
 
 =item require_file_from_share($rel_path_to_file, $who_wants_it, $make_executable)
 
-Helper method used in
-L<Treex::Core::Block::get_required_share_files()|Treex::Core::Block/get_required_share_files>,
-but it can be used also in Tools.
+Try to locate file in local resource paths, if not found, try to download it and stores it to first writable path.
+Obtains paths from L<Treex::Core::Config::resource_path()|Treex::Core::Config/resource_path>
+Returns path to file.
 
 =back
 

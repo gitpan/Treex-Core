@@ -1,6 +1,6 @@
 package Treex::Core::Zone;
 BEGIN {
-  $Treex::Core::Zone::VERSION = '0.06571';
+  $Treex::Core::Zone::VERSION = '0.06903_1';
 }
 
 # antecedent of DocZone and BundleZone
@@ -11,9 +11,9 @@ use MooseX::NonMoose;
 
 extends 'Treex::PML::Struct';
 
-has language => ( is => 'rw', isa => 'LangCode', required => 1 );
+has language => ( is => 'rw', isa => 'Treex::Type::LangCode', required => 1 );
 
-has selector => ( is => 'rw', isa => 'Selector', default => '' );
+has selector => ( is => 'rw', isa => 'Treex::Type::Selector', default => '' );
 
 # Based on source code of Moose::Object::BUILDARGS,
 # but we don't want to copy args (return { %{$_[0]} };).
@@ -91,7 +91,7 @@ Treex::Core::Zone - base class for Zones
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Treex::Core::Document;
 BEGIN {
-  $Treex::Core::Document::VERSION = '0.06571';
+  $Treex::Core::Document::VERSION = '0.06903_1';
 }
 
 use Moose;
@@ -21,6 +21,7 @@ has loaded_from => ( is => 'rw', isa => 'Str', default => '' );
 has path        => ( is => 'rw', isa => 'Str' );
 has file_stem   => ( is => 'rw', isa => 'Str', default => 'noname' );
 has file_number => ( is => 'rw', isa => 'Str', builder => 'build_file_number' );
+has compress    => ( is => 'rw', isa => 'Bool', default => undef, documentation => 'compression to .gz' );
 
 has _pmldoc => (
     isa      => 'Treex::PML::Document',
@@ -107,7 +108,14 @@ sub BUILD {
 
         # loading Treex::Core::Document from a file
         elsif ( $params_rf->{filename} ) {
-            $pmldoc = $factory->createDocumentFromFile( $params_rf->{filename} );
+            # If the file contains invalid PML (e.g. unknown afun value)
+            # Treex::PML fails with die.
+            # TODO: we should rather catch the die message and report it via log_fatal
+            $pmldoc = eval {
+                $factory->createDocumentFromFile( $params_rf->{filename} );
+            };
+            log_fatal "Error while loading " . $params_rf->{filename}
+             if !defined $pmldoc;
         }
     }
 
@@ -226,7 +234,7 @@ sub index_node_by_id {
     my $self = shift;
     my ( $id, $node ) = pos_validated_list(
         \@_,
-        { isa => 'Id' },
+        { isa => 'Treex::Type::Id' },
         { isa => 'Maybe[Treex::Core::Node]' },    #jde to takhle?
     );
     my $index = $self->_index;
@@ -244,18 +252,16 @@ sub id_is_indexed {
     my $self = shift;
     my ($id) = pos_validated_list(
         \@_,
-        { isa => 'Id' },
+        { isa => 'Treex::Type::Id' },
     );
     return ( defined $self->_index->{$id} );
 }
 
 sub get_node_by_id {
-
-    #komentare se vztahuji k TectoMT a vztahu M a A vrstvy -> neni to uz vyresene jinak?
     my $self = shift;
     my ($id) = pos_validated_list(
         \@_,
-        { isa => 'Id' },
+        { isa => 'Treex::Type::Id' },
     );
     if ( defined $self->_index->{$id} ) {
         return $self->_index->{$id};
@@ -322,8 +328,8 @@ sub create_zone {
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Selector', default => '' },
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Selector', default => '' },
     );
 
     my $new_zone = Treex::Core::DocZone->new(
@@ -350,8 +356,8 @@ sub get_zone {
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Selector', default => '' },
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Selector', default => '' },
     );
 
     my $meta = $self->metaData('pml_root')->{meta};
@@ -370,8 +376,8 @@ sub get_or_create_zone {
     my $self = shift;
     my ( $language, $selector ) = pos_validated_list(
         \@_,
-        { isa => 'LangCode' },
-        { isa => 'Selector', default => '' },
+        { isa => 'Treex::Type::LangCode' },
+        { isa => 'Treex::Type::Selector', default => '' },
     );
 
     my $fs_zone = $self->get_zone( $language, $selector );
@@ -425,7 +431,7 @@ Treex::Core::Document - representation of a text and its linguistic analyses in 
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 
@@ -530,7 +536,7 @@ after the existing bundle.
 
 =over 4
 
-=item  $document->index_node_by_id( $id, $node );
+=item $document->index_node_by_id( $id, $node );
 
 The node is added to the document's indexing table C<id2node> (it is done
 automatically in L<Treex::Core::Node::set_attr()|Treex::Core::Node/set_attr>
@@ -558,6 +564,17 @@ Return the array of all node identifiers indexed in the document.
 
 =back
 
+=head2 Serializing
+
+=over 4 
+
+=item my $document = load($filename, \%opts)
+
+Loads document from C<$filename> given C<%opts> using L<Treex::PML::Document::load()>
+
+=item $document->save($filename)
+
+Saves document to C<$filename> using L<Treex::PML::Document::save()>
 
 =head2 Other
 

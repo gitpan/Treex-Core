@@ -1,6 +1,6 @@
 package Treex::Core::Node::Ordered;
 BEGIN {
-  $Treex::Core::Node::Ordered::VERSION = '0.06571';
+  $Treex::Core::Node::Ordered::VERSION = '0.06903_1';
 }
 use Moose::Role;
 
@@ -8,10 +8,11 @@ use Moose::Role;
 use MooseX::SemiAffordanceAccessor;
 use Treex::Core::Log;
 use List::Util qw(first);    # TODO: this wouldn't be needed if there was Treex::Core::Common for roles
+use Treex::Core::Types;
 
 has ord => (
     is     => 'ro',
-    isa    => 'Int',         # TODO non-negative Int
+    isa    => 'Treex::Type::NonNegativeInt',
     writer => '_set_ord',
     reader => 'ord',
 );
@@ -205,7 +206,7 @@ Treex::Core::Node::Ordered
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

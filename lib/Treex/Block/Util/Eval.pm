@@ -1,6 +1,6 @@
 package Treex::Block::Util::Eval;
 BEGIN {
-  $Treex::Block::Util::Eval::VERSION = '0.06571';
+  $Treex::Block::Util::Eval::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -81,7 +81,8 @@ sub process_bundle {
     }
 
     foreach my $zone ( $bundle->get_all_zones() ) {
-        if ( $do_lang{ $zone->language } && $do_sele{ $zone->selector } ) {
+        if ( ( $do_lang{ $zone->language } || $self->language eq 'mul' )
+                 && $do_sele{ $zone->selector } ) {
             $self->process_zone($zone);
         }
     }
@@ -131,7 +132,7 @@ Treex::Block::Util::Eval - Special block for evaluating code given by parameters
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 SYNOPSIS
 

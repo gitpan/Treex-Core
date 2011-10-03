@@ -1,13 +1,13 @@
 package Treex::Core::Block;
 BEGIN {
-  $Treex::Core::Block::VERSION = '0.06571';
+  $Treex::Core::Block::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
 use Treex::Core::Resource;
 
-has selector => ( is => 'ro', isa => 'Selector',        default => '', );
-has language => ( is => 'ro', isa => 'Maybe[LangCode]', builder => 'build_language' );
+has selector => ( is => 'ro', isa => 'Treex::Type::Selector',        default => '', );
+has language => ( is => 'ro', isa => 'Maybe[Treex::Type::LangCode]', builder => 'build_language' );
 has scenario => (
     is       => 'ro',
     isa      => 'Treex::Core::Scenario',
@@ -24,7 +24,7 @@ has scenario => (
 sub build_language {
     my $self = shift;
     my ($lang) = $self->get_block_name() =~ /::(?:[A-Z][A-Z]2)?([A-Z][A-Z])::/;
-    if ( $lang && Treex::Core::Common::is_lang_code( lc $lang ) ) {
+    if ( $lang && Treex::Core::Types::is_lang_code( lc $lang ) ) {
         return lc $lang;
     }
     else {
@@ -79,18 +79,16 @@ sub process_document {
         log_fatal "There are no bundles in the document and block " . $self->get_block_name() .
             " doesn't override the method process_document";
     }
+    
+    my $bundleNo = 1;
     foreach my $bundle ( $document->get_bundles() ) {
-        $self->process_bundle($bundle);
+        $self->process_bundle($bundle, $bundleNo++);
     }
     return 1;
 }
 
 sub process_bundle {
-    my $self = shift;
-    my ($bundle) = pos_validated_list(
-        \@_,
-        { isa => 'Treex::Core::Bundle' },
-    );
+    my ($self, $bundle, $bundleNo) = @_;
 
     log_fatal "Parameter language was not set and block " . $self->get_block_name()
         . " doesn't override the method process_bundle" if !$self->language;
@@ -104,12 +102,12 @@ sub process_bundle {
             . " doesn't override the method process_bundle"
         )
         if !$zone;
-    return $self->process_zone($zone);
+    return $self->process_zone($zone, $bundleNo);
 }
 
 sub _try_process_layer {
     my $self = shift;
-    my ( $zone, $layer ) = @_;
+    my ( $zone, $layer, $bundleNo ) = @_;
 
     return 0 if !$zone->has_tree($layer);
     my $tree = $zone->get_tree($layer);
@@ -117,14 +115,14 @@ sub _try_process_layer {
 
     if ( my $m = $meta->find_method_by_name("process_${layer}tree") ) {
         ##$self->process_atree($tree);
-        $m->execute( $self, $tree );
+        $m->execute( $self, $tree, $bundleNo );
         return 1;
     }
 
     if ( my $m = $meta->find_method_by_name("process_${layer}node") ) {
         foreach my $node ( $tree->get_descendants() ) {
             ##$self->process_anode($node);
-            $m->execute( $self, $node );
+            $m->execute( $self, $node, $bundleNo );
         }
         return 1;
     }
@@ -133,16 +131,12 @@ sub _try_process_layer {
 }
 
 sub process_zone {
-    my $self = shift;
-    my ($zone) = pos_validated_list(
-        \@_,
-        { isa => 'Treex::Core::Zone' },
-    );
+    my ($self, $zone, $bundleNo) = @_;
 
     my $overriden;
 
     for my $layer (qw(a t n p)) {
-        $overriden ||= $self->_try_process_layer( $zone, $layer );
+        $overriden ||= $self->_try_process_layer( $zone, $layer, $bundleNo );
     }
     log_fatal "One of the methods /process_(document|bundle|zone|[atnp](tree|node))/ "
         . "must be overriden and the corresponding [atnp] trees must be present in bundles.\n"
@@ -171,7 +165,7 @@ Treex::Core::Block - the basic data-processing unit in the Treex framework
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 SYNOPSIS
 

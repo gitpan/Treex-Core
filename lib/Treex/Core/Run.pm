@@ -1,11 +1,9 @@
 package Treex::Core::Run;
 BEGIN {
-  $Treex::Core::Run::VERSION = '0.06571';
+  $Treex::Core::Run::VERSION = '0.06903_1';
 }
-use strict;
-use warnings;
-
 use 5.008;
+use Moose;
 use Treex::Core::Common;
 use Treex::Core;
 use MooseX::SemiAffordanceAccessor;
@@ -63,14 +61,14 @@ has 'forward_error_level' => (
 has 'lang' => (
     traits        => ['Getopt'],
     cmd_aliases   => [ 'language', 'L' ],
-    is            => 'rw', isa => 'LangCode',
+    is            => 'rw', isa => 'Treex::Type::LangCode',
     documentation => q{shortcut for adding "Util::SetGlobal language=xy" at the beginning of the scenario},
 );
 
 has 'selector' => (
     traits        => ['Getopt'],
     cmd_aliases   => 'S',
-    is            => 'rw', isa => 'Selector',
+    is            => 'rw', isa => 'Treex::Type::Selector',
     documentation => q{shortcut for adding "Util::SetGlobal selector=xy" at the beginning of the scenario},
 );
 
@@ -328,8 +326,9 @@ sub _execute {
 }
 
 my %READER_FOR = (
-    treex => 'Treex',
-    txt   => 'Text',
+    treex      => 'Treex',
+    'treex.gz' => 'Treex',
+    txt        => 'Text',
 
     # TODO:
     # conll  => 'Conll',
@@ -339,13 +338,26 @@ my %READER_FOR = (
 );
 
 sub _get_reader_name_for {
-    my $self = shift;
-    my ( $ext, @extensions ) = map {/[^.]+\.(.+)?/} @_;
-    log_fatal 'Files (' . join( ',', @_ ) . ') must have extensions' if !$ext;
-    log_fatal 'All files (' . join( ',', @_ ) . ') must have the same extension' if any { $_ ne $ext } @extensions;
-
-    my $r = $READER_FOR{$ext};
-    log_fatal "There is no DocumentReader implemented for extension '$ext'" if !$r;
+    my $self  = shift;
+    my @names = @_;
+    my $re    = qr{\.(treex|txt)(\.gz)?$};
+    my @extensions;
+    my $first;
+    foreach my $name (@names) {
+        if ( $name =~ $re ) {
+            my $current = $1;
+            if (!defined $first) {
+                $first = $current;
+            }
+            log_fatal 'All files (' . join( ',', @names ) . ') must have the same extension' if ($current ne $first);
+            push @extensions, $current;
+        }
+        else {
+            log_fatal 'Files (' . join( ',', @names ) . ') must have extensions';
+        }
+    }
+    my $r = $READER_FOR{$first};
+    log_fatal "There is no DocumentReader implemented for extension '$first'" if !$r;
     return "Read::$r";
 }
 
@@ -375,7 +387,7 @@ sub _execute_locally {
         $self->set_filenames( \@files );
     }
     elsif ( $self->filelist ) {
-        open my $FL, "<:utf8", $self->filelist
+        open my $FL, "<:encoding(utf8)", $self->filelist
             or log_fatal "Cannot open file list " . $self->filelist;
         my @files;
         while (<$FL>) {
@@ -608,7 +620,8 @@ sub _print_output_files {
         my $mask = $self->workdir . "/output/job*-doc" . sprintf( "%07d", $doc_number ) . ".$stream";
         my ($filename) = glob $mask;
         if ( !defined $filename ) {
-            my $message = "Document $doc_number finished without producing $mask";
+            my $message = "Document $doc_number finished without producing $mask . " .
+                " It might be useful to inspect " . $self->workdir . "/output/job*-loading.stderr";
             if ( $self->survive ) {
                 log_warn("$message (fatal error ignored due to survival mode, be careful)");
                 return;
@@ -618,7 +631,7 @@ sub _print_output_files {
             }
         }
 
-        open my $FILE, '<:utf8', $filename or log_fatal $!;
+        open my $FILE, '<:encoding(utf8)', $filename or log_fatal $!;
         if ( $stream eq "stdout" ) {
             while (<$FILE>) {
                 print;
@@ -631,7 +644,7 @@ sub _print_output_files {
             while (<$FILE>) {
 
                 # skip [success] indicatory lines, but set the success flag to 1
-                if ( $_ =~ /^Document [0-9]+\/[0-9]+ .*: \[success\]\.\r?\n?$/ ) {
+                if ( $_ =~ /^Document [0-9]+\/[0-9\?]+ .*: \[success\]\.\r?\n?$/ ) {
                     $success = 1;
                     next;
                 }
@@ -648,7 +661,7 @@ sub _print_output_files {
 
             # test for the [success] indication on the last line of STDERR
             if ( !$success ) {
-                log_fatal "Document $doc_number has not finished successfully";
+                log_fatal "Document $doc_number has not finished successfully (see $filename)";
             }
         }
         close $FILE;
@@ -867,7 +880,7 @@ TODO:
 * modules are just reloaded, no constructors are called yet
 
 
-=for Pod::Coverage BUILD treex get_version
+=for Pod::Coverage BUILD get_version
 
 =encoding utf-8
 
@@ -877,7 +890,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 SYNOPSIS
 
@@ -894,17 +907,27 @@ In Perl:
 
 =head1 DESCRIPTION
 
-C<Treex::Core::Run> allows to apply a block, a scenario, or their mixture on a 
-set of data files. It is designed to be used primarily from bash command line, 
-using a thin front-end script called C<treex>. However, the same list of 
-arguments can be passed by an array reference to the function C<treex()> 
+C<Treex::Core::Run> allows to apply a block, a scenario, or their mixture on a
+set of data files. It is designed to be used primarily from bash command line,
+using a thin front-end script called C<treex>. However, the same list of
+arguments can be passed by an array reference to the function C<treex()>
 imported from C<Treex::Core::Run>.
 
-Note that this module supports distributed processing, simply by adding switch 
-C<-p>. Then there are two ways to process the data in a parallel fashion. By 
-default, SGE cluster\'s C<qsub> is expected to be available. If you have no 
-cluster but want to make the computation parallelized at least on a multicore 
+Note that this module supports distributed processing, simply by adding switch
+C<-p>. Then there are two ways to process the data in a parallel fashion. By
+default, SGE cluster\'s C<qsub> is expected to be available. If you have no
+cluster but want to make the computation parallelized at least on a multicore
 machine, add the C<--local> switch.
+
+=head1 SUBROUTINES
+
+=over 4
+
+=item treex
+
+create new runner and runs scenario given in parameters
+
+=back
 
 =head1 USAGE
 

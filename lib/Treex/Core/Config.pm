@@ -1,6 +1,6 @@
 package Treex::Core::Config;
 BEGIN {
-  $Treex::Core::Config::VERSION = '0.06571';
+  $Treex::Core::Config::VERSION = '0.06903_1';
 }
 use strict;
 use warnings;
@@ -66,6 +66,10 @@ sub share_dir {
     }
 }
 
+sub share_url {
+    return 'http://ufallab.ms.mff.cuni.cz/tectomt/share';
+}
+
 sub tred_dir {
     return realpath( share_dir() . '/tred/' );
 }
@@ -120,7 +124,7 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 SYNOPSIS
 
@@ -166,6 +170,10 @@ the other L<Treex::Core> modules are expected too)
 =item share_dir()
 
 returns the Treex shared directory (formerly C<$TMT_SHARE>)
+
+=item share_url()
+
+returns base url from shared data are downloaded
 
 =item pml_schema_dir()
 

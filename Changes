@@ -14,4 +14,9 @@ Revision history of the Treex-Core distribution:
     - correction of runtime tests
     - minor changes
 
+0.06903_1     2011-10-03
+
+    - POD improved
+    - lot of minor changes
+
 For detailed log of changes see https://svn.ms.mff.cuni.cz/projects/tectomt_devel/timeline (Use 'public' username and same password)

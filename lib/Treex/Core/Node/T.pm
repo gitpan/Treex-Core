@@ -1,6 +1,6 @@
 package Treex::Core::Node::T;
 BEGIN {
-  $Treex::Core::Node::T::VERSION = '0.06571';
+  $Treex::Core::Node::T::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -171,6 +171,28 @@ sub get_coref_text_nodes {
     return $self->_get_node_list( 'coref_text.rf', $arg_ref );
 }
 
+# it doesn't return a complete chain, just the members which are accessible
+# from the current node
+sub get_coref_chain {
+    my ( $self, $arg_ref ) = @_;
+
+    my %visited_nodes = ();
+    my @nodes;
+    my @queue = ( $self->_get_node_list('coref_gram.rf'), $self->_get_node_list('coref_text.rf') );
+    while (my $node = shift @queue) {
+        $visited_nodes{$node} = 1;
+        push @nodes, $node;
+        my @antes = ( $node->_get_node_list('coref_gram.rf'), $node->_get_node_list('coref_text.rf') );
+        foreach my $ante (@antes) {
+            if (!defined $visited_nodes{$ante}) {
+                push @queue, $ante;
+            }
+        }
+    }
+
+    return $self->_process_switches( $arg_ref, @nodes );
+}
+
 sub add_coref_gram_nodes {
     my $self = shift;
     return $self->_add_to_node_list( 'coref_gram.rf', @_ );
@@ -272,7 +294,7 @@ Treex::Core::Node::T
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 
@@ -335,7 +357,7 @@ Add textual coreference nodes (to C<coref_text.rf>).
 
 =item $node->remove_coref_nodes()
 
-Remove the specified nodes from C<coref_gram.rf> or C<coref_text.rf> (if they are contained in one or both of them). 
+Remove the specified nodes from C<coref_gram.rf> or C<coref_text.rf> (if they are contained in one or both of them).
 
 =item $node->update_coref_nodes()
 
@@ -390,7 +412,7 @@ For example: "Bank of China"
 Is this node a root (or head) of a coordination/apposition construction?
 On t-layer this is decided based on C<functor =~ /^(CONJ|CONFR|DISJ|GRAD|ADVS|CSQ|REAS|CONTRA|APPS|OPER)/>.
 
-=back 
+=back
 
 
 =head1 AUTHOR

@@ -13,6 +13,8 @@ my $command =  Treex::Core::Config::tred_dir
     . '/tred -O PreInstalledExtensionsDir='
     . Treex::Core::Config::tred_extension_dir
     . ' -O MaxUndo=0 '
+    . ' -J* '
+    . ' -j treex '
     . (join ' ',@ARGV);
 
 print "Running TrEd customized for Treex:\n$command\n";
@@ -32,7 +34,7 @@ ttred - running TrEd customized for browsing treex files
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

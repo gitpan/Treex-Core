@@ -1,6 +1,6 @@
 package Treex::Block::Write::Redirectable;
 BEGIN {
-  $Treex::Block::Write::Redirectable::VERSION = '0.06571';
+  $Treex::Block::Write::Redirectable::VERSION = '0.06903_1';
 }
 
 use Moose::Role;
@@ -56,7 +56,7 @@ Treex::Block::Write::Redirectable
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

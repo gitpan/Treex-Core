@@ -1,6 +1,6 @@
 package Treex::Core::BundleZone;
 BEGIN {
-  $Treex::Core::BundleZone::VERSION = '0.06571';
+  $Treex::Core::BundleZone::VERSION = '0.06903_1';
 }
 
 use Moose;
@@ -58,7 +58,7 @@ sub create_tree {
     my $self = shift;
     my ($layer) = pos_validated_list(
         \@_,
-        { isa => 'Layer' },
+        { isa => 'Treex::Type::Layer' },
     );
     log_fatal("Zone already contains tree at $layer layer") if $self->has_tree($layer);
     my $class = "Treex::Core::Node::" . uc($layer);
@@ -91,7 +91,7 @@ sub remove_tree {
     my $self = shift;
     my ($layer) = pos_validated_list(
         \@_,
-        { isa => 'Layer' },
+        { isa => 'Treex::Type::Layer' },
     );
 
     # remove all nodes ($tree_root->remove does not work, in order to not be used by users)
@@ -110,7 +110,7 @@ sub get_tree {
     my $self = shift;
     my ($layer) = pos_validated_list(
         \@_,
-        { isa => 'Layer' },
+        { isa => 'Treex::Type::Layer' },
     );
 
     my $tree_name = lc($layer) . "_tree";
@@ -146,7 +146,7 @@ sub has_tree {
     my $self = shift;
     my ($layer) = pos_validated_list(
         \@_,
-        { isa => 'Layer' },
+        { isa => 'Treex::Type::Layer' },
     );
     my $tree_name = lc($layer) . "_tree";
     return defined $self->{trees}->{$tree_name};
@@ -221,7 +221,7 @@ Treex::Core::BundleZone - contains a sentence and its linguistic representations
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 SYNOPSIS
 

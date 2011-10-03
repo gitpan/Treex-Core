@@ -1,19 +1,20 @@
 package Treex::Block::Read::BaseTextReader;
 BEGIN {
-  $Treex::Block::Read::BaseTextReader::VERSION = '0.06571';
+  $Treex::Block::Read::BaseTextReader::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
 extends 'Treex::Block::Read::BaseReader';
-use File::Slurp;
+use Perl6::Slurp;
+use PerlIO::gzip;
 
 # By default read from STDIN
 has '+from' => ( default => '-' );
 
-has language      => ( isa => 'LangCode', is => 'ro', required => 1 );
-has lines_per_doc => ( isa => 'Int',      is => 'ro', default  => 0 );
-has merge_files   => ( isa => 'Bool',     is => 'ro', default  => 0 );
-has encoding      => ( isa => 'Str',      is => 'ro', default  => 'utf8' );
+has language      => ( isa => 'Treex::Type::LangCode', is => 'ro', required => 1 );
+has lines_per_doc => ( isa => 'Int',                   is => 'ro', default  => 0 );
+has merge_files   => ( isa => 'Bool',                  is => 'ro', default  => 0 );
+has encoding      => ( isa => 'Str',                   is => 'ro', default  => 'utf8' );
 
 has _current_fh => ( is => 'rw' );
 
@@ -33,7 +34,8 @@ sub next_filehandle {
         binmode STDIN, $self->encoding;
         return \*STDIN;
     }
-    my $mode = '<:' . $self->encoding;
+    my $mode = $filename =~ /[.]gz$/ ? '<:gzip:' : '<:';
+    $mode .= $self->encoding;
     open my $FH, $mode, $filename or log_fatal "Can't open $filename: $!";
     return $FH;
 }
@@ -48,7 +50,7 @@ sub next_document_text {
 
     if ( $self->is_one_doc_per_file ) {
         $self->_set_current_fh(undef);
-        return read_file($FH);
+        return slurp($FH);
     }
 
     my $text = '';
@@ -80,7 +82,7 @@ Treex::Block::Read::BaseTextReader - abstract ancestor for document readers
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Treex::Block::Read::Sentences;
 BEGIN {
-  $Treex::Block::Read::Sentences::VERSION = '0.06571';
+  $Treex::Block::Read::Sentences::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -31,7 +31,7 @@ Treex::Block::Read::Sentences
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 
@@ -64,6 +64,8 @@ Loads a document.
 L<Treex::Block::Read::BaseTextReader>
 L<Treex::Core::Document>
 L<Treex::Core::Bundle>
+L<Treex::Block::Read::AlignedSentences>
+
 
 =head1 AUTHOR
 

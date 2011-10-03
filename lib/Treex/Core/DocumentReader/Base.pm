@@ -1,6 +1,6 @@
 package Treex::Core::DocumentReader::Base;
 BEGIN {
-  $Treex::Core::DocumentReader::Base::VERSION = '0.06571';
+  $Treex::Core::DocumentReader::Base::VERSION = '0.06903_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -8,7 +8,7 @@ with 'Treex::Core::DocumentReader';
 
 has encoding => ( isa => 'Str', is => 'ro', default => 'utf8' );
 
-has selector => ( isa => 'Selector', is => 'ro', default => '' );
+has selector => ( isa => 'Treex::Type::Selector', is => 'ro', default => '' );
 
 has file_stem => (
     isa           => 'Str',
@@ -54,7 +54,7 @@ sub BUILD {
         if ( $arg =~ /_/ ) {
             ( $lang, $sele ) = split /_/, $arg;
         }
-        if ( Treex::Core::Common::is_lang_code($lang) ) {
+        if ( Treex::Core::Types::is_lang_code($lang) ) {
             $self->add_zone_files( $lang, $sele, $args->{$arg} );
         }
         elsif ( $arg =~ /selector|language|scenario/ ) { }

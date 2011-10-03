@@ -1,6 +1,6 @@
 package Treex::Core::Node;
 BEGIN {
-  $Treex::Core::Node::VERSION = '0.06571';
+  $Treex::Core::Node::VERSION = '0.06903_1';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -661,7 +661,7 @@ sub get_attrs {
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.06571';
+  $Treex::Core::Node::Removed::VERSION = '0.06903_1';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -739,7 +739,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.06571
+version 0.06903_1
 
 =head1 DESCRIPTION
 
@@ -973,6 +973,8 @@ Actually, this is shortcut for C<$node-E<gt>get_siblings({following_only=E<gt>1,
 =item add_aligned_node
 
 =item get_aligned_nodes
+
+Returns an array containing two array references. The first array contains the nodes aligned to this node, the second array contains types of the links.
 
 =item delete_aligned_node
 
