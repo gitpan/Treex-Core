@@ -1,6 +1,6 @@
 package Treex::Core::Common;
-BEGIN {
-  $Treex::Core::Common::VERSION = '0.06903_1';
+{
+  $Treex::Core::Common::VERSION = '0.07190';
 }
 use strict;
 use warnings;
@@ -39,7 +39,7 @@ sub pos_validated_list {
     return @{$args_ref};
 }
 
-# Choose which variant to use according to Treex::Core::Config::$params_validate
+# Choose which variant to use according to $Treex::Core::Config::params_validate
 if ( $Treex::Core::Config::params_validate == 2 ) {    ## no critic (ProhibitPackageVars)
     require MooseX::Params::Validate;
     $validation_sub = \&MooseX::Params::Validate::pos_validated_list;
@@ -90,7 +90,7 @@ Treex::Core::Common - shorten the "C<use>" part of your Perl codes
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package Treex::Core::Node::A;
-BEGIN {
-  $Treex::Core::Node::A::VERSION = '0.06903_1';
+{
+  $Treex::Core::Node::A::VERSION = '0.07190';
 }
 use Moose;
 use Treex::Core::Common;
@@ -174,6 +174,11 @@ sub copy_atree
 {
     my $self      = shift;
     my $target    = shift;
+
+    # TODO probably we should do deepcopy
+    my %copy_of_wild = %{$self->wild};
+    $target->set_wild(\%copy_of_wild);
+
     my @children0 = $self->get_children( { ordered => 1 } );
     foreach my $child0 (@children0)
     {
@@ -199,6 +204,7 @@ sub copy_atree
         # Call recursively on the subtrees of the children.
         $child0->copy_atree($child1);
     }
+
     return;
 }
 
@@ -339,7 +345,7 @@ Treex::Core::Node::A
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 DESCRIPTION
 

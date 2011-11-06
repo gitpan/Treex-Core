@@ -1,6 +1,6 @@
 package Treex::Core::Scenario;
-BEGIN {
-  $Treex::Core::Scenario::VERSION = '0.06903_1';
+{
+  $Treex::Core::Scenario::VERSION = '0.07190';
 }
 use Moose;
 use Treex::Core::Common;
@@ -264,6 +264,12 @@ sub run {
             print STDERR "Document $document_number/$number_of_documents $doc_name: [success].\n";
         }
     }
+    
+    log_info "Applying process_end";
+    foreach my $block ( @{ $self->loaded_blocks } ) {
+        $block->process_end();
+    }
+    
     log_info "Processed $document_number document"
         . ( $document_number == 1 ? '' : 's' );
     return 1;
@@ -297,7 +303,7 @@ Treex::Core::Scenario - a larger Treex processing unit, composed of blocks
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 SYNOPSIS
 

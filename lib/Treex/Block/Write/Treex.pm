@@ -1,6 +1,6 @@
 package Treex::Block::Write::Treex;
-BEGIN {
-  $Treex::Block::Write::Treex::VERSION = '0.06903_1';
+{
+  $Treex::Block::Write::Treex::VERSION = '0.07190';
 }
 use Moose;
 use Treex::Core::Common;
@@ -10,6 +10,12 @@ has [qw(file_stem path)] => (
     isa           => 'Str',
     is            => 'ro',
     documentation => 'overrides the respective attributes in documents (filled in by a DocumentReader)',
+);
+
+has stem_suffix => (
+    isa           => 'Str',
+    is            => 'ro',
+    documentation => 'a suffix to append after file_stem',
 );
 
 has to => (
@@ -63,6 +69,12 @@ sub process_document {
         $document->set_file_stem( $self->file_stem );
         $filename = $document->full_filename . $self->_extension($document);;
     }
+    if ( defined $self->stem_suffix ) {
+        my $origstem = defined $self->file_stem
+                       ? $self->file_stem : $document->file_stem;
+        $document->set_file_stem( $origstem . $self->stem_suffix );
+        $filename = $document->full_filename . $self->_extension($document);;
+    }
     if ( defined $self->to ) {
         my ( $next_filename, @rest_filenames ) = @{ $self->filenames };
         if ( !defined $next_filename ) {
@@ -71,6 +83,12 @@ sub process_document {
         }
         else {
             $filename = ( defined $self->path ? $self->path : '' ) . $next_filename;
+            
+            # HACK: Treex::PML::Document->save() cannot take filehandle
+            if ($filename eq '-'){
+                $filename = '/dev/stdout';
+            }
+            
             $self->set_filenames( \@rest_filenames );
         }
     }
@@ -89,7 +107,7 @@ Treex::Block::Write::Treex
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 DESCRIPTION
 
@@ -110,6 +128,10 @@ space or comma separated list of filenames
 overrides the respective attributes in documents
 (filled in by a L<DocumentReader|Treex::Core::DocumentReader>),
 which are used for generating output file names
+
+=item stem_suffix
+
+a string to append after file_stem
 
 =back
 

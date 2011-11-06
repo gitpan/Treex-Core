@@ -1,6 +1,6 @@
 package Treex::Core::Resource;
-BEGIN {
-  $Treex::Core::Resource::VERSION = '0.06903_1';
+{
+  $Treex::Core::Resource::VERSION = '0.07190';
 }
 use strict;
 use warnings;
@@ -22,7 +22,7 @@ sub require_file_from_share {
     my ( $rel_path_to_file, $who_wants_it, $make_executable ) = @_;
     my $writable;    #will store first writable directory found
     SEARCH:
-    foreach my $resource_dir ( Treex::Core::Config::resource_path() ) {
+    foreach my $resource_dir ( Treex::Core::Config->resource_path() ) {
         my $file = "$resource_dir/$rel_path_to_file";
         log_debug("Trying $file\n");
         if ( -e $file ) {
@@ -39,7 +39,7 @@ sub require_file_from_share {
     log_info("Shared file '$rel_path_to_file' is missing$who_wants_it.");
     log_fatal("Cannot find writable directory for downloading from share") if !defined $writable;
 
-    my $url = Treex::Core::Config::share_url(). "/$rel_path_to_file";
+    my $url = Treex::Core::Config->share_url(). "/$rel_path_to_file";
     log_info("Trying to download $url");
 
     my $file = "$writable/$rel_path_to_file";
@@ -100,7 +100,7 @@ If not found, download from server (L<http://ufallab.ms.mff.cuni.cz/>)
 =item require_file_from_share($rel_path_to_file, $who_wants_it, $make_executable)
 
 Try to locate file in local resource paths, if not found, try to download it and stores it to first writable path.
-Obtains paths from L<Treex::Core::Config::resource_path()|Treex::Core::Config/resource_path>
+Obtains paths from L<Treex::Core::Config->resource_path()|Treex::Core::Config/resource_path>
 Returns path to file.
 
 =back

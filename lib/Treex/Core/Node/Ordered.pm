@@ -1,6 +1,6 @@
 package Treex::Core::Node::Ordered;
-BEGIN {
-  $Treex::Core::Node::Ordered::VERSION = '0.06903_1';
+{
+  $Treex::Core::Node::Ordered::VERSION = '0.07190';
 }
 use Moose::Role;
 
@@ -206,7 +206,7 @@ Treex::Core::Node::Ordered
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 DESCRIPTION
 

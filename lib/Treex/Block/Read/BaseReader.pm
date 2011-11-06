@@ -1,6 +1,6 @@
 package Treex::Block::Read::BaseReader;
-BEGIN {
-  $Treex::Block::Read::BaseReader::VERSION = '0.06903_1';
+{
+  $Treex::Block::Read::BaseReader::VERSION = '0.07190';
 }
 use Moose;
 use Treex::Core::Common;
@@ -14,6 +14,13 @@ sub next_document {
 }
 
 has selector => ( isa => 'Treex::Type::Selector', is => 'ro', default => q{} );
+
+# Note that "language" is intentionally not required here,
+# because some derived classes (e.g. Read::Treex) do not need it.
+# However, if a derived class reads a format where the language is not specified,
+# it must add the parameter language using:
+#has language => ( isa => 'Treex::Type::LangCode', is => 'ro', required=>1 );
+
 
 has from => (
     isa           => 'Treex::Core::Files',
@@ -120,7 +127,7 @@ Treex::Block::Read::BaseReader - abstract ancestor for document readers
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 DESCRIPTION
 

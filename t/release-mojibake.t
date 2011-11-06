@@ -10,7 +10,8 @@ BEGIN {
 
 use Test::More;
 
-eval 'use Test::Portability::Files';
-plan skip_all => 'Test::Portability::Files required for testing portability'
+eval 'use Test::Mojibake';
+plan skip_all => 'Test::Mojibake required for source encoding testing'
     if $@;
-run_tests();
+
+all_files_encoding_ok();

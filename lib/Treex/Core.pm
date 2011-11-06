@@ -1,6 +1,6 @@
 package Treex::Core;
-BEGIN {
-  $Treex::Core::VERSION = '0.06903_1';
+{
+  $Treex::Core::VERSION = '0.07190';
 }
 use strict;
 use warnings;
@@ -23,7 +23,7 @@ Treex::Core - interface to linguistic structures and processing units in Treex
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 SYNOPSIS
 

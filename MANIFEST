@@ -12,6 +12,7 @@ lib/Treex/Block/Read/BaseTextReader.pm
 lib/Treex/Block/Read/Sentences.pm
 lib/Treex/Block/Read/Text.pm
 lib/Treex/Block/Read/Treex.pm
+lib/Treex/Block/Util/ChangeDocumentPath.pm
 lib/Treex/Block/Util/DefinedAttr.pm
 lib/Treex/Block/Util/Eval.pm
 lib/Treex/Block/Util/SetGlobal.pm
@@ -97,14 +98,17 @@ t/qparallel.t
 t/release-cpan-changes.t
 t/release-dist-manifest.t
 t/release-distmeta.t
-t/release-has-version.t
+t/release-eol.t
 t/release-kwalitee.t
 t/release-minimum-version.t
+t/release-mojibake.t
 t/release-no-tabs.t
 t/release-pod-coverage.t
+t/release-pod-linkcheck.t
 t/release-pod-syntax.t
 t/release-portability.t
 t/release-synopsis.t
+t/release-test-version.t
 t/release-unused-vars.t
 t/resource.t
 t/run.t

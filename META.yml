@@ -9,10 +9,10 @@ build_requires:
   Test::Output: 0
   constant: 0
 configure_requires:
-  ExtUtils::MakeMaker: 6.31
+  ExtUtils::MakeMaker: 6.30
   File::ShareDir::Install: 0.03
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.110930'
+generated_by: 'Dist::Zilla version 4.300003, CPAN::Meta::Converter version 2.112621'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -25,7 +25,7 @@ requires:
   English: 0
   Exporter: 0
   File::Basename: 0
-  File::HomeDir: 0
+  File::HomeDir: 0.97
   File::Path: 0
   File::ShareDir: 0
   File::Slurp: 9999.19
@@ -57,9 +57,14 @@ requires:
   Treex::PML::Factory: 0
   Treex::PML::Node: 0
   Treex::PML::Struct: 0
+  YAML: 0.72
   autodie: 0
+  base: 0
   integer: 0
+  open: 0
   perl: 5.010
+  strict: 0
   utf8: 0
   vars: 0
-version: 0.06903_1
+  warnings: 0
+version: 0.07190

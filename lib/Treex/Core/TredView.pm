@@ -1,6 +1,6 @@
 package Treex::Core::TredView;
-BEGIN {
-  $Treex::Core::TredView::VERSION = '0.06903_1';
+{
+  $Treex::Core::TredView::VERSION = '0.07190';
 }
 
 # planned to be used from contrib.mac of tred's extensions
@@ -48,6 +48,22 @@ has fast_loading => (
     documentation => 'Do the precomputation lazily for each bundle',
 );
 
+has _displayed_nodes => (
+    is => 'rw',
+    isa => 'HashRef[Treex::Core::Node]',
+    default => sub { {} }
+);
+has _ptb_index_map => (
+    is => 'rw',
+    isa => 'HashRef[Treex::Core::Node::P]',
+    default => sub { {} }
+);
+has _ptb_coindex_map => (
+    is => 'rw',
+    isa => 'HashRef[Treex::Core::Node::P]',
+    default => sub { {} }
+);
+
 has 'clause_collapsing' => ( is => 'rw', isa => 'Bool', default => 0 );
 has 'show_alignment'    => ( is => 'rw', isa => 'Bool', default => 1 );
 
@@ -90,6 +106,8 @@ sub get_nodelist_hook {
                                              # results in Can't locate object method "get_all_zones" via package "Treex::PML::Node" at /ha/work/people/popel/tectomt/treex/lib/Treex/Core/TredView.pm line 22
 
     my $layout = $self->tree_layout->get_layout();
+    $self->{'_ptb_index_map'} = {};
+    $self->{'_ptb_coindex_map'} = {};
     my %nodes;
 
     foreach my $tree ( map { $_->get_all_trees } $bundle->get_all_zones ) {
@@ -98,6 +116,10 @@ sub get_nodelist_hook {
         if ( $tree->get_layer eq 'p' ) {
             @nodes = $self->_spread_nodes($tree);
             shift @nodes;
+            foreach my $node (@nodes) {
+                $self->{'_ptb_index_map'}->{$node->{'index'}} = $node if defined $node->{'index'};
+                $self->{'_ptb_coindex_map'}->{$node->{'coindex'}} = $node if defined $node->{'coindex'};
+            }
         }
         elsif ( $tree->does('Treex::Core::Node::Ordered') ) {
             @nodes = $tree->get_descendants( { add_self => 1, ordered => 1 } );
@@ -129,8 +151,8 @@ sub get_nodelist_hook {
     for ( my $col = 0; $col < scalar @$layout; $col++ ) {
         my @task = ();
         for ( my $row = 0; $row < scalar @{ $layout->[$col] }; $row++ ) {
-            if ( $layout->[$col][$row] ) {
-                my $label     = $layout->[$col][$row];
+            if ( $layout->[$col][$row] and $layout->[$col][$row]->{'visible'} ) {
+                my $label     = $layout->[$col][$row]->{'label'};
                 my %tree_info = ();
                 $tree_info{'total'} = $tree_info{'left'} = scalar @{ $nodes{$label} };
                 $tree_info{'label'} = $label;
@@ -171,6 +193,8 @@ sub get_nodelist_hook {
             }
         }
     }
+
+    $self->{'_displayed_nodes'} = { map { $_->attr('id') => 1 } @nodes };
 
     unless ( $currentNode and ( first { $_ == $currentNode } @nodes ) ) {
         $currentNode = $nodes[0];
@@ -232,6 +256,7 @@ sub value_line_doubleclick_hook {
 
     my $layout = $self->tree_layout->get_layout;
     my %ordering;
+    my %visible;
     my $i     = 0;
     my $row   = 0;
     my $found = 1;
@@ -239,18 +264,25 @@ sub value_line_doubleclick_hook {
     while ($found) {
         $found = 0;
         for ( my $col = 0; $col < scalar @$layout; $col++ ) {
-            if ( $layout->[$col][$row] ) {
-                $ordering{ $layout->[$col][$row] } = $i++;
+            if ( defined $layout->[$col][$row] ) {
+                if ($layout->[$col][$row]->{'visible'}) {
+                    $ordering{ $layout->[$col][$row]->{'label'} } = $i++;
+                    $visible{$layout->[$col][$row]->{'label'}} = 1;
+                }
                 $found = 1;
             }
         }
         $row++;
     }
-    my @trees = sort { $ordering{ $self->tree_layout->get_tree_label($a) } <=> $ordering{ $self->tree_layout->get_tree_label($b) } } $bundle->get_all_trees;
+    my @trees = sort {
+        $ordering{ $self->tree_layout->get_tree_label($a) } <=> $ordering{ $self->tree_layout->get_tree_label($b) }
+    } grep {
+      exists $visible{ $self->tree_layout->get_tree_label($_) }
+    } $bundle->get_all_trees;
 
     for my $tree (@trees) {
         for my $node ( $tree->get_descendants ) {
-            next if $node->get_layer eq 'p' and $node->get_pml_type_name =~ m/nonterminal/;
+            next if $node->get_layer eq 'p' and not $node->is_terminal;
             return $node if exists $tags{"$node"};
         }
     }
@@ -307,7 +339,8 @@ sub precompute_tree_shifts {
         my $max_depth = 0;
         @trees = ();
         for ( my $col = 0; $col < scalar @$layout; $col++ ) {
-            if ( my $label = $layout->[$col][$row] ) {
+            if ( defined $layout->[$col][$row] ) {
+                my $label = $layout->[$col][$row]->{'label'};
                 my $depth = $forest{$label}{_tree_depth};
                 push @trees, $label;
                 $max_depth = $depth if $depth > $max_depth;
@@ -376,8 +409,8 @@ sub get_clickable_sentence_for_a_zone {
     for my $anode (@anodes) {
         my $id = $anode->id;
         push @{ $refs{$id} }, $anode;
-        if ( $anode->attr('p/terminal.rf') ) {
-            my $pnode = $self->treex_doc->get_node_by_id( $anode->attr('p/terminal.rf') );
+        if ( $anode->attr('p_terminal.rf') ) {
+            my $pnode = $self->treex_doc->get_node_by_id( $anode->attr('p_terminal.rf') );
             push @{ $refs{$id} }, $pnode;
             while ( $pnode->parent ) {
                 $pnode = $pnode->parent;
@@ -388,7 +421,7 @@ sub get_clickable_sentence_for_a_zone {
 
     my @out;
     for my $anode (@anodes) {
-        push @out, [ $anode->form, @{ $refs{ $anode->id } || [] }, 'anode:' . $anode->id ];
+        push @out, [ $anode->form, @{ $refs{ $anode->id } || [] } ];
         if ( $anode->clause_number ) {
             my $clr = $self->_styles->_colors->get_clause_color( $anode->clause_number );
             push @{ $out[-1] }, "-foreground => $clr";
@@ -491,11 +524,9 @@ sub nnode_hint {
 
 sub pnode_hint {
     my ( $self, $node ) = @_;
-
     my @lines = ();
-    my $terminal = $node->get_pml_type_name eq 'p-terminal.type' ? 1 : 0;
 
-    if ($terminal) {
+    if ($node->is_terminal) {
         push @lines, map { "$_: " . ( defined $node->{$_} ? $node->{$_} : '' ) } qw(lemma tag form);
     }
     else {
@@ -527,11 +558,37 @@ sub node_style_hook {
         }
     }
 
+    # P-layer indexes and coindexes
+    if ($node->get_layer eq 'p') {
+        my $coindex;
+        if ($node->attr('form') and $node->attr('form') =~ m/-(\d+)$/) {
+            $coindex = $1;
+        } elsif ($node->attr('coindex')) {
+            $coindex = $node->attr('coindex');
+        }
+
+        if ($coindex) {
+            my $target_node;
+            if (exists $self->{'_ptb_index_map'}->{$coindex}) {
+              $target_node = $self->{'_ptb_index_map'}->{$coindex};
+            } elsif ($node->is_terminal and exists $self->{'_ptb_coindex_map'}->{$coindex}) {
+              $target_node = $self->{'_ptb_coindex_map'}->{$coindex};
+            }
+
+            if ($target_node) {
+              push @target_ids, $target_node->{'id'};
+              push @arrow_types, 'coindex';
+            }
+        }
+    }
+
     # alignment
     if ( $self->show_alignment and my $links = $node->attr('alignment') ) {
         foreach my $link (@$links) {
-            push @target_ids,  $link->{'counterpart.rf'};
-            push @arrow_types, 'alignment';
+            if (exists $self->_displayed_nodes->{$link->{'counterpart.rf'}}) {
+                push @target_ids,  $link->{'counterpart.rf'};
+                push @arrow_types, 'alignment';
+            }
         }
     }
 
@@ -646,7 +703,7 @@ Treex::Core::TredView - visualization of Treex files in TrEd
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 DESCRIPTION
 

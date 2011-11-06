@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Colors;
-BEGIN {
-  $Treex::Core::TredView::Colors::VERSION = '0.06903_1';
+{
+  $Treex::Core::TredView::Colors::VERSION = '0.07190';
 }
 
 use Moose;
@@ -17,7 +17,7 @@ sub _build_colors {
         'edge'      => '#555555',
         'coord'     => '#bbbbbb',
         'error'     => '#ff0000',
-        'coord_mod' => '#666666',
+        'coord_mod' => 'aquamarine4',
 
         'anode'            => '#ff6666',
         'anode_coord'      => '#ff6666',
@@ -34,6 +34,7 @@ sub _build_colors {
         'coref_text' => '#4c509f',
         'compl'      => '#629f52',
         'alignment'  => '#bebebe',
+        'coindex'    => '#ffa500', #orange
 
         'lex'         => '#006400',
         'aux'         => '#ff8c00',

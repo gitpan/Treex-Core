@@ -1,6 +1,6 @@
 package Treex::Core::Run;
-BEGIN {
-  $Treex::Core::Run::VERSION = '0.06903_1';
+{
+  $Treex::Core::Run::VERSION = '0.07190';
 }
 use 5.008;
 use Moose;
@@ -367,7 +367,7 @@ sub _execute_locally {
     # Parameters can contain whitespaces that should be preserved
     my @arguments;
     foreach my $arg ( @{ $self->extra_argv } ) {
-        if ( $arg =~ /(\S+)=(.+\s.+)$/ ) {
+        if ( $arg =~ /(\S+)=(.*\s.*)$/ ) {
             my ( $name, $value ) = ( $1, $2 );
             $value =~ s/'/\\'/g;
             push @arguments, qq($name='$value');
@@ -526,7 +526,7 @@ sub _create_job_scripts {
         print $J "#!/bin/bash\n\n";
         print $J "echo \$HOSTNAME > $current_dir/$workdir/output/job$jobnumber.started\n";
         print $J "cd $current_dir\n\n";
-        print $J "source " . Treex::Core::Config::lib_core_dir()
+        print $J "source " . Treex::Core::Config->lib_core_dir()
             . "/../../../../config/init_devel_environ.sh 2> /dev/null\n\n";    # temporary hack !!!
 
         my $opts_and_scen = join ' ', map { _quote_argument($_) } @{ $self->ARGV };
@@ -719,6 +719,11 @@ sub _wait_for_jobs {
     return;
 }
 
+# To get utf8 encoding also when using qx (aka backticks):
+# my $command_output = qw($command);
+# we need to
+use open qw' :std IO :encoding(UTF-8) ';
+
 sub _check_job_errors {
     my ($self) = @_;
     my $workdir = $self->workdir;
@@ -890,7 +895,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 SYNOPSIS
 

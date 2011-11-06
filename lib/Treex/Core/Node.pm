@@ -1,6 +1,6 @@
 package Treex::Core::Node;
-BEGIN {
-  $Treex::Core::Node::VERSION = '0.06903_1';
+{
+  $Treex::Core::Node::VERSION = '0.07190';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -307,7 +307,7 @@ sub set_parent {
 
     # We cannot detach a node by setting an undefined parent. The if statement below will die.
     # Let's inform the user where the bad call is.
-    log_fatal('Cannot attach the node to an undefined parent') if ( !defined($parent) );
+    log_fatal('Cannot attach the node ' . $self->id . ' to an undefined parent') if ( !defined($parent) );
     if ( $self == $parent || $CHECK_FOR_CYCLES && $parent->is_descendant_of($self) ) {
         my $id   = $self->id;
         my $p_id = $parent->id;
@@ -521,6 +521,50 @@ sub get_depth {
     return $depth;
 }
 
+#------------------------------------------------------------------------------
+# Tells whether the node is attached to its parent nonprojectively, i.e. there
+# is at least one node between this node and its parent that is not dominated
+# by the parent.
+#------------------------------------------------------------------------------
+sub is_nonprojective
+{
+    log_fatal('Incorrect number of arguments') if(scalar(@_)!=1);
+    my $self = shift;
+    my $parent = $self->parent();
+    # A node that does not have a parent cannot be nonprojective.
+    return 0 if(!$parent);
+    # Get a hash of all descendants of the parent.
+    my @pdesc = $parent->get_descendants({add_self=>1});
+    my %pdesc; map {$pdesc{$_}++} (@pdesc);
+    # Figure out whether the node is to the left or to the right from its parent.
+    my $nord = $self->ord();
+    my $pord = $parent->ord();
+    my ($x, $y);
+    if($pord>$nord)
+    {
+        $x = $self;
+        $y = $parent;
+    }
+    else
+    {
+        $x = $parent;
+        $y = $self;
+    }
+    # Get the ordered list of all nodes between $x and $y.
+    my $xord = $x->ord();
+    my $yord = $y->ord();
+    my @between = grep {$_->ord()>$xord && $_->ord()<$yord} ($parent->root()->get_descendants({ordered=>1}));
+    # This node is nonprojective if @between contains anything that is not in %pdesc.
+    foreach my $b (@between)
+    {
+        if(!$pdesc{$b})
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 # This is called from $node->remove()
 # so it must be defined in this class,
 # but it is overriden in Treex::Core::Node::Ordered.
@@ -660,8 +704,8 @@ sub get_attrs {
 # TODO: How to do this in an elegant way?
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
-BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.06903_1';
+{
+  $Treex::Core::Node::Removed::VERSION = '0.07190';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -739,7 +783,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 DESCRIPTION
 
@@ -998,6 +1042,12 @@ been indexed, etc.) to the root's C<id>.
 
 Return the depth of the node. The root has depth = 0, its children have depth = 1 etc.
 
+=item my $nonproj = $node->is_nonprojective();
+
+Return 1 if the node is attached to its parent nonprojectively, i.e. there is
+at least one node between this node and its parent that is not descendant of
+the parent. Return 0 otherwise.
+
 =item my $address = $node->get_address();
 
 Return the node address, i.e. file name and node's position within the file,
@@ -1013,6 +1063,8 @@ Zdeněk Žabokrtský <zabokrtsky@ufal.mff.cuni.cz>
 Martin Popel <popel@ufal.mff.cuni.cz>
 
 David Mareček <marecek@ufal.mff.cuni.cz>
+
+Daniel Zeman <zeman@ufal.mff.cuni.cz>
 
 =head1 COPYRIGHT AND LICENSE
 

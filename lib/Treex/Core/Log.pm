@@ -1,6 +1,6 @@
 package Treex::Core::Log;
-BEGIN {
-  $Treex::Core::Log::VERSION = '0.06903_1';
+{
+  $Treex::Core::Log::VERSION = '0.07190';
 }
 use strict;
 use warnings;
@@ -209,7 +209,7 @@ Treex::Core::Log - logger tailored for the needs of Treex
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 SYNOPSIS
 

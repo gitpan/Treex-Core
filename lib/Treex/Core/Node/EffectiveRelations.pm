@@ -1,6 +1,6 @@
 package Treex::Core::Node::EffectiveRelations;
-BEGIN {
-  $Treex::Core::Node::EffectiveRelations::VERSION = '0.06903_1';
+{
+  $Treex::Core::Node::EffectiveRelations::VERSION = '0.07190';
 }
 use Moose::Role;
 
@@ -245,7 +245,7 @@ Treex::Core::Node::EffectiveRelations
 
 =head1 VERSION
 
-version 0.06903_1
+version 0.07190
 
 =head1 DESCRIPTION
 
