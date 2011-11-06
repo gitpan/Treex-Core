@@ -1,6 +1,6 @@
 package Treex::Core::Node;
 {
-  $Treex::Core::Node::VERSION = '0.07190';
+  $Treex::Core::Node::VERSION = '0.07191';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -705,7 +705,7 @@ sub get_attrs {
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 {
-  $Treex::Core::Node::Removed::VERSION = '0.07190';
+  $Treex::Core::Node::Removed::VERSION = '0.07191';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -783,7 +783,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.07190
+version 0.07191
 
 =head1 DESCRIPTION
 

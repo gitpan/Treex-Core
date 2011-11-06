@@ -1,6 +1,6 @@
 package Treex::Core::Config;
 {
-  $Treex::Core::Config::VERSION = '0.07190';
+  $Treex::Core::Config::VERSION = '0.07191';
 }
 use strict;
 use warnings;
@@ -134,7 +134,7 @@ sub tred_dir {
 
 sub pml_schema_dir {
     my $self = shift;
-    if (!defined $config->{pml_schema_dir} || !defined realpath( $config->{pml_schema_dir} ) {
+    if (!defined $config->{pml_schema_dir} || !defined realpath( $config->{pml_schema_dir} )) {
             if ( $self->_devel_version() ) {
                 $config->{pml_schema_dir} = realpath( $self->lib_core_dir() . "/share/tred_extension/treex/resources/" );
             }
@@ -200,7 +200,7 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.07190
+version 0.07191
 
 =head1 SYNOPSIS
 

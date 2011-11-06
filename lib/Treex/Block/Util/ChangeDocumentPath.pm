@@ -1,6 +1,6 @@
 package Treex::Block::Util::ChangeDocumentPath;
 {
-  $Treex::Block::Util::ChangeDocumentPath::VERSION = '0.07190';
+  $Treex::Block::Util::ChangeDocumentPath::VERSION = '0.07191';
 }
 use Moose;
 use Treex::Core::Common;
@@ -45,7 +45,7 @@ Treex::Block::Util::ChangeDocumentPath
 
 =head1 VERSION
 
-version 0.07190
+version 0.07191
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Treex::Core::Node::P;
 {
-  $Treex::Core::Node::P::VERSION = '0.07190';
+  $Treex::Core::Node::P::VERSION = '0.07191';
 }
 use Moose;
 use Treex::Core::Common;
@@ -180,7 +180,7 @@ Treex::Core::Node::P
 
 =head1 VERSION
 
-version 0.07190
+version 0.07191
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Treex::Core::Resource;
 {
-  $Treex::Core::Resource::VERSION = '0.07190';
+  $Treex::Core::Resource::VERSION = '0.07191';
 }
 use strict;
 use warnings;

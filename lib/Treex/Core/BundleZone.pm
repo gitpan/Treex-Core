@@ -1,6 +1,6 @@
 package Treex::Core::BundleZone;
 {
-  $Treex::Core::BundleZone::VERSION = '0.07190';
+  $Treex::Core::BundleZone::VERSION = '0.07191';
 }
 
 use Moose;
@@ -221,7 +221,7 @@ Treex::Core::BundleZone - contains a sentence and its linguistic representations
 
 =head1 VERSION
 
-version 0.07190
+version 0.07191
 
 =head1 SYNOPSIS
 

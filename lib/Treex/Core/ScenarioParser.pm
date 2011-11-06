@@ -1,6 +1,6 @@
 package Treex::Core::ScenarioParser;
 {
-  $Treex::Core::ScenarioParser::VERSION = '0.07190';
+  $Treex::Core::ScenarioParser::VERSION = '0.07191';
 }
 use Parse::RecDescent;
 
@@ -9,7 +9,7 @@ use Parse::RecDescent;
 
 package Parse::RecDescent::Treex::Core::ScenarioParser;
 {
-  $Parse::RecDescent::Treex::Core::ScenarioParser::VERSION = '0.07190';
+  $Parse::RecDescent::Treex::Core::ScenarioParser::VERSION = '0.07191';
 }
 use strict;
 use vars qw($skip $AUTOLOAD  );
