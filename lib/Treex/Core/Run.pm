@@ -1,6 +1,6 @@
 package Treex::Core::Run;
 {
-  $Treex::Core::Run::VERSION = '0.07191';
+  $Treex::Core::Run::VERSION = '0.08051';
 }
 use 5.008;
 use Moose;
@@ -14,6 +14,7 @@ use File::Path;
 use File::Temp qw(tempdir);
 use File::Which;
 use List::MoreUtils qw(first_index);
+use IO::Interactive;
 use Exporter;
 use base 'Exporter';
 our @EXPORT_OK = q(treex);
@@ -157,6 +158,15 @@ has 'local' => (
     documentation => 'Run jobs locally (might help with multi-core machines). Requires -p.',
 );
 
+has 'priority' => (
+    traits        => ['Getopt'],
+    is            => 'ro',
+    isa           => 'Int',
+    default       => 0,
+    documentation => 'Priority for qsub (an integer in the range -1023 to 1024, default=0). Requires -p.',
+);
+
+
 has 'watch' => (
     traits        => ['Getopt'],
     is            => 'ro',
@@ -263,7 +273,7 @@ sub _execute {
         # TODO: execute_locally does the same work as the following line in a more safe ways
         # (If someone wants to run treex -d My::Block my_scen.scen)
         my $scen_str = join ' ', @{ $self->extra_argv };
-        $self->set_scenario( Treex::Core::Scenario->new( scenario_string => $scen_str ) );
+        $self->set_scenario( Treex::Core::Scenario->new( scenario_string => $scen_str, runner => $self ) );
 
         # TODO: Do it properly - perhaps, add a Scenario option to not load all the blocks.
         # We cannot create the real scenario instance without loading all the blocks
@@ -326,26 +336,30 @@ sub _execute {
 }
 
 my %READER_FOR = (
-    treex      => 'Treex',
+    'treex' => 'Treex',
     'treex.gz' => 'Treex',
-    txt        => 'Text',
+    'txt'   => 'Text',
+    'txt.gz'   => 'Text',
+    'streex'   => 'Treex',
 
     # TODO:
     # conll  => 'Conll',
     # plsgz  => 'Plsgz',
-    # treex.gz
     # tmt
 );
 
 sub _get_reader_name_for {
     my $self  = shift;
     my @names = @_;
-    my $re    = qr{\.(treex|txt)(\.gz)?$};
+    my $base_re = join('|', keys %READER_FOR);
+    my $re    = qr{\.($base_re)$};
     my @extensions;
     my $first;
+
     foreach my $name (@names) {
-        if ( $name =~ $re ) {
+        if ( $name =~ /$re/ ) {
             my $current = $1;
+            $current =~ s/\.gz$//;
             if (!defined $first) {
                 $first = $current;
             }
@@ -407,8 +421,8 @@ sub _execute_locally {
     }
 
     if ( $self->save ) {
-        log_info "Block Write::Treex added to the end of the scenario.";
-        $scen_str .= ' Write::Treex';
+        log_info "Block Write::Treex clobber=1 added to the end of the scenario.";
+        $scen_str .= ' Write::Treex clobber=1';
     }
 
     if ( $self->lang ) {
@@ -424,7 +438,7 @@ sub _execute_locally {
         $self->scenario->restart();
     }
     else {
-        $self->set_scenario( Treex::Core::Scenario->new( from_string => $scen_str ) );
+        $self->set_scenario( Treex::Core::Scenario->new( from_string => $scen_str, runner => $self ) );
         $self->scenario->load_blocks;
     }
     my $scenario      = $self->scenario;
@@ -510,9 +524,10 @@ sub _create_job_scripts {
     # You cannot use interactive input from terminal to "treex -p".
     # (If you really need it, use perl -npe 1 | treex -p ...)
     my $input = '';
-    if ( !-t STDIN ) {
+    if ( ! IO::Interactive::is_interactive(*STDIN) ) {
         my $stdin_file = "$workdir/input";
         $input = "cat $stdin_file | ";
+        ## no critic (ProhibitExplicitStdin)
         open my $TEMP, '>', $stdin_file or log_fatal("Cannot create file $stdin_file to store input: $!");
         while (<STDIN>) {
             print $TEMP $_;
@@ -525,6 +540,7 @@ sub _create_job_scripts {
         open my $J, ">", "$workdir/$script_filename" or log_fatal $!;
         print $J "#!/bin/bash\n\n";
         print $J "echo \$HOSTNAME > $current_dir/$workdir/output/job$jobnumber.started\n";
+        print $J "export PATH=/opt/bin/:\$PATH > /dev/null 2>&1\n\n";
         print $J "cd $current_dir\n\n";
         print $J "source " . Treex::Core::Config->lib_core_dir()
             . "/../../../../config/init_devel_environ.sh 2> /dev/null\n\n";    # temporary hack !!!
@@ -533,7 +549,7 @@ sub _create_job_scripts {
         if ( $self->filenames ) {
             $opts_and_scen .= ' -- ' . join ' ', map { _quote_argument($_) } @{ $self->filenames };
         }
-        print $J $input . "treex --jobindex=$jobnumber --outdir=$workdir/output $opts_and_scen"
+        print $J $input . "treex --jobindex=$jobnumber --workdir=$workdir --outdir=$workdir/output $opts_and_scen"
             . " 2>> $workdir/output/job$jobnumber.started\n\n";
         print $J "touch $workdir/output/job$jobnumber.finished\n";
         close $J;
@@ -555,7 +571,11 @@ sub _run_job_scripts {
             system "$workdir/$script_filename &";
         }
         else {
-            open my $QSUB, "cd $workdir && qsub -cwd " . $self->qsub . " -e output/ -S /bin/bash $script_filename |" or log_fatal $!;    ## no critic (ProhibitTwoArgOpen)
+            my $qsub_opts = '-cwd -e output/ -S /bin/bash ' . $self->qsub;
+            if ($self->priority){
+                $qsub_opts .= ' -p ' . $self->priority;
+            }
+            open my $QSUB, "cd $workdir && qsub $qsub_opts $script_filename |" or log_fatal $!;    ## no critic (ProhibitTwoArgOpen)
 
             my $firstline = <$QSUB>;
             close $QSUB;
@@ -722,7 +742,7 @@ sub _wait_for_jobs {
 # To get utf8 encoding also when using qx (aka backticks):
 # my $command_output = qw($command);
 # we need to
-use open qw' :std IO :encoding(UTF-8) ';
+use open qw{ :std IO :encoding(UTF-8) };
 
 sub _check_job_errors {
     my ($self) = @_;
@@ -735,8 +755,14 @@ sub _check_job_errors {
         log_info "********************** FATAL ERRORS FOUND IN JOB $fatal_job ******************\n";
         log_info "$fatal_lines\n";
         log_info "********************** END OF JOB $fatal_job FATAL ERRORS LOG ****************\n";
-        log_info "All remaining jobs will be interrupted now.";
-        $self->_delete_jobs_and_exit;
+        if ($self->survive){
+            log_warn("fatal error ignored due to the --survive option, be careful");
+            return;
+        }
+        else {
+            log_info "All remaining jobs will be interrupted now.";
+            $self->_delete_jobs_and_exit;
+        }
     }
     return;
 }
@@ -895,7 +921,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 SYNOPSIS
 
@@ -975,6 +1001,9 @@ create new runner and runs scenario given in parameters
  	                             Requires -p.
  	--local                      Run jobs locally (might help with
  	                             multi-core machines). Requires -p.
+ 	--priority                   Priority for qsub (an integer in the
+ 	                             range -1023 to 1024, default=0).
+ 	                             Requires -p.
  	--watch                      re-run when the given file is changed
  	                             TODO better doc
  	--workdir                    working directory for temporary files in

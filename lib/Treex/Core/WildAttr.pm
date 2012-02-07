@@ -1,6 +1,6 @@
 package Treex::Core::WildAttr;
 {
-  $Treex::Core::WildAttr::VERSION = '0.07191';
+  $Treex::Core::WildAttr::VERSION = '0.08051';
 }
 use Moose::Role;
 
@@ -62,7 +62,7 @@ sub serialize_wild {
 sub deserialize_wild {
     my ($self) = @_;
     if ( $self->_wild_dump ) {
-        $self->set_wild( eval "my " . $self->_wild_dump . '; return $VAR1' );
+        $self->set_wild( eval "my " . $self->_wild_dump . '; return $VAR1' ); ## no critic (ProhibitStringyEval)
     }
     else {
         $self->set_wild( {} );
@@ -78,11 +78,11 @@ __END__
 
 =head1 NAME
 
-Treex::Core::WildAttr - role for arbitrary atributes of Treex objects
+Treex::Core::WildAttr - role for arbitrary attributes of Treex objects
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =for test_synopsis my ($node, $value);
 =head1 SYNOPSIS

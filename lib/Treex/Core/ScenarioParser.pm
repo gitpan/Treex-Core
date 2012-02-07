@@ -1,6 +1,6 @@
 package Treex::Core::ScenarioParser;
 {
-  $Treex::Core::ScenarioParser::VERSION = '0.07191';
+  $Treex::Core::ScenarioParser::VERSION = '0.08051';
 }
 use Parse::RecDescent;
 
@@ -9,7 +9,7 @@ use Parse::RecDescent;
 
 package Parse::RecDescent::Treex::Core::ScenarioParser;
 {
-  $Parse::RecDescent::Treex::Core::ScenarioParser::VERSION = '0.07191';
+  $Parse::RecDescent::Treex::Core::ScenarioParser::VERSION = '0.08051';
 }
 use strict;
 use vars qw($skip $AUTOLOAD  );
@@ -36,7 +36,7 @@ local $SIG{__WARN__} = sub {0};
 }
 
 push @Parse::RecDescent::Treex::Core::ScenarioParser::ISA, 'Parse::RecDescent';
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
 {
 	my $thisparser = $_[0];
@@ -44,7 +44,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"SPACE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [SPACE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{SPACE},
@@ -62,12 +62,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/\\s+/});
     $expectation->at($_[1]);
@@ -97,13 +98,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
                       q{SPACE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:\s+)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -111,7 +112,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -142,12 +143,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/\\s+/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{SPACE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -182,7 +185,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
                       q{SPACE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{SPACE},
                       $tracelevel)
@@ -191,7 +194,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SPACE
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
 {
 	my $thisparser = $_[0];
@@ -199,7 +202,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"EMPTY"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [EMPTY]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{EMPTY},
@@ -217,12 +220,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{//});
     $expectation->at($_[1]);
@@ -252,13 +256,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
                       q{EMPTY},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -266,7 +270,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -275,12 +279,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
         push @item, $item{__PATTERN1__}=$current_match;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [//]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{EMPTY},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -315,7 +321,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
                       q{EMPTY},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{EMPTY},
                       $tracelevel)
@@ -324,7 +330,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
 {
 	my $thisparser = $_[0];
@@ -332,7 +338,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PNOTQUOTED"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PNOTQUOTED]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PNOTQUOTED},
@@ -350,12 +356,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/\\S+/, or EMPTY});
     $expectation->at($_[1]);
@@ -385,13 +392,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
                       q{PNOTQUOTED},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:\S+)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -399,7 +406,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -430,12 +437,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/\\S+/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PNOTQUOTED},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -464,7 +473,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::EMPTY($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [EMPTY]>>},
@@ -477,7 +486,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [EMPTY]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PNOTQUOTED},
                       $tracelevel)
@@ -509,12 +518,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [EMPTY]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PNOTQUOTED},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -549,7 +560,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
                       q{PNOTQUOTED},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PNOTQUOTED},
                       $tracelevel)
@@ -558,7 +569,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
 {
 	my $thisparser = $_[0];
@@ -566,7 +577,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"SLASHEDSQUOTE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [SLASHEDSQUOTE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{SLASHEDSQUOTE},
@@ -584,12 +595,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/\\\\'/});
     $expectation->at($_[1]);
@@ -619,13 +631,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
                       q{SLASHEDSQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:\\')/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -633,7 +645,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -664,12 +676,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/\\\\'/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{SLASHEDSQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -704,7 +718,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
                       q{SLASHEDSQUOTE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{SLASHEDSQUOTE},
                       $tracelevel)
@@ -713,7 +727,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
 {
 	my $thisparser = $_[0];
@@ -721,7 +735,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"COMMENT"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [COMMENT]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{COMMENT},
@@ -739,12 +753,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/#[^\\n]*/});
     $expectation->at($_[1]);
@@ -774,13 +789,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
                       q{COMMENT},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:#[^\n]*)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -788,7 +803,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -819,12 +834,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/#[^\\n]*/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{COMMENT},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -859,7 +876,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
                       q{COMMENT},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{COMMENT},
                       $tracelevel)
@@ -868,7 +885,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
 {
 	my $thisparser = $_[0];
@@ -876,7 +893,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"EOF"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [EOF]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{EOF},
@@ -894,12 +911,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/^\\Z/});
     $expectation->at($_[1]);
@@ -929,13 +947,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
                       q{EOF},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:^\Z)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -943,7 +961,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -952,12 +970,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
         push @item, $item{__PATTERN1__}=$current_match;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/^\\Z/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{EOF},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -992,7 +1012,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
                       q{EOF},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{EOF},
                       $tracelevel)
@@ -1001,7 +1021,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::EOF
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
 {
 	my $thisparser = $_[0];
@@ -1009,7 +1029,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"NOTSQUOTE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [NOTSQUOTE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{NOTSQUOTE},
@@ -1027,12 +1047,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/[^']*[^'\\\\]/});
     $expectation->at($_[1]);
@@ -1062,13 +1083,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
                       q{NOTSQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:[^']*[^'\\])/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -1076,7 +1097,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -1085,12 +1106,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
         push @item, $item{__PATTERN1__}=$current_match;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/[^']*[^'\\\\]/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{NOTSQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -1125,7 +1148,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
                       q{NOTSQUOTE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{NOTSQUOTE},
                       $tracelevel)
@@ -1134,7 +1157,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
 {
 	my $thisparser = $_[0];
@@ -1142,7 +1165,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"TBNAME"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [TBNAME]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{TBNAME},
@@ -1160,12 +1183,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/::/, or BNAME});
     $expectation->at($_[1]);
@@ -1195,13 +1219,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
                       q{TBNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:::)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -1209,7 +1233,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -1225,7 +1249,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{BNAME})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BNAME($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BNAME($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [BNAME]>>},
@@ -1238,7 +1262,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [BNAME]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{TBNAME},
                       $tracelevel)
@@ -1270,12 +1294,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/::/ BNAME]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{TBNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -1304,7 +1330,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BNAME($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BNAME($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [BNAME]>>},
@@ -1317,7 +1343,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [BNAME]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{TBNAME},
                       $tracelevel)
@@ -1349,12 +1375,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [BNAME]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{TBNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -1389,7 +1417,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
                       q{TBNAME},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{TBNAME},
                       $tracelevel)
@@ -1398,7 +1426,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
 {
 	my $thisparser = $_[0];
@@ -1406,7 +1434,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"startrule"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [startrule]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{startrule},
@@ -1424,12 +1452,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{SCEN});
     $expectation->at($_[1]);
@@ -1462,7 +1491,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::SCEN($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::SCEN($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [SCEN]>>},
@@ -1475,7 +1504,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [SCEN]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{startrule},
                       $tracelevel)
@@ -1492,7 +1521,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{EOF})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::EOF($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::EOF($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [EOF]>>},
@@ -1505,7 +1534,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [EOF]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{startrule},
                       $tracelevel)
@@ -1537,12 +1566,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [SCEN EOF]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{startrule},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -1577,7 +1608,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
                       q{startrule},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{startrule},
                       $tracelevel)
@@ -1586,7 +1617,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::startrule
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
 {
 	my $thisparser = $_[0];
@@ -1594,7 +1625,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"LINE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [LINE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{LINE},
@@ -1612,12 +1643,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{BLOCK, or COMMENT});
     $expectation->at($_[1]);
@@ -1650,7 +1682,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [BLOCK]>>},
@@ -1663,7 +1695,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [BLOCK]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{LINE},
                       $tracelevel)
@@ -1680,7 +1712,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{COMMENT})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [COMMENT]>>},
@@ -1693,7 +1725,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [COMMENT]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{LINE},
                       $tracelevel)
@@ -1725,12 +1757,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [BLOCK COMMENT]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{LINE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -1759,7 +1793,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [BLOCK]>>},
@@ -1772,7 +1806,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [BLOCK]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{LINE},
                       $tracelevel)
@@ -1804,12 +1838,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [BLOCK]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{LINE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -1838,7 +1874,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::COMMENT($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [COMMENT]>>},
@@ -1851,7 +1887,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [COMMENT]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{LINE},
                       $tracelevel)
@@ -1883,12 +1919,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [COMMENT]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{LINE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -1923,7 +1961,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
                       q{LINE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{LINE},
                       $tracelevel)
@@ -1932,7 +1970,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::LINE
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
 {
 	my $thisparser = $_[0];
@@ -1940,7 +1978,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"BLOCK"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [BLOCK]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{BLOCK},
@@ -1958,12 +1996,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{INCLUDE, or TBNAME});
     $expectation->at($_[1]);
@@ -1996,7 +2035,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [INCLUDE]>>},
@@ -2009,7 +2048,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [INCLUDE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{BLOCK},
                       $tracelevel)
@@ -2049,12 +2088,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [INCLUDE]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{BLOCK},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -2083,7 +2124,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [TBNAME]>>},
@@ -2096,7 +2137,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [TBNAME]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{BLOCK},
                       $tracelevel)
@@ -2113,7 +2154,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{PARAMS})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PARAMS]>>},
@@ -2126,7 +2167,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PARAMS]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{BLOCK},
                       $tracelevel)
@@ -2162,12 +2203,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [TBNAME PARAMS]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{BLOCK},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -2196,7 +2239,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::TBNAME($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [TBNAME]>>},
@@ -2209,7 +2252,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [TBNAME]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{BLOCK},
                       $tracelevel)
@@ -2245,12 +2288,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [TBNAME]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{BLOCK},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -2285,7 +2330,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
                       q{BLOCK},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{BLOCK},
                       $tracelevel)
@@ -2294,7 +2339,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BLOCK
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
 {
 	my $thisparser = $_[0];
@@ -2302,7 +2347,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PNAME"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PNAME]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PNAME},
@@ -2320,12 +2365,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/\\w+/});
     $expectation->at($_[1]);
@@ -2355,13 +2401,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
                       q{PNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:\w+)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -2369,7 +2415,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -2400,12 +2446,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/\\w+/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -2440,7 +2488,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
                       q{PNAME},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PNAME},
                       $tracelevel)
@@ -2449,7 +2497,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PNAME
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
 {
 	my $thisparser = $_[0];
@@ -2457,7 +2505,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PTICKED"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PTICKED]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PTICKED},
@@ -2475,12 +2523,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/[^`]+/});
     $expectation->at($_[1]);
@@ -2510,13 +2559,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
                       q{PTICKED},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:[^`]+)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -2524,7 +2573,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -2555,12 +2604,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/[^`]+/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PTICKED},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -2595,7 +2646,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
                       q{PTICKED},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PTICKED},
                       $tracelevel)
@@ -2604,7 +2655,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
 {
 	my $thisparser = $_[0];
@@ -2612,7 +2663,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"BNAME"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [BNAME]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{BNAME},
@@ -2630,12 +2681,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/[A-Z]\\w*::/, or /[A-Z]\\w*/});
     $expectation->at($_[1]);
@@ -2665,13 +2717,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
                       q{BNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:[A-Z]\w*::)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -2679,7 +2731,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -2695,7 +2747,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{BNAME})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BNAME($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::BNAME($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [BNAME]>>},
@@ -2708,7 +2760,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [BNAME]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{BNAME},
                       $tracelevel)
@@ -2740,12 +2792,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/[A-Z]\\w*::/ BNAME]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{BNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -2771,13 +2825,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
                       q{BNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:[A-Z]\w*)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -2785,7 +2839,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -2816,12 +2870,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/[A-Z]\\w*/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{BNAME},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -2856,7 +2912,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
                       q{BNAME},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{BNAME},
                       $tracelevel)
@@ -2865,7 +2921,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::BNAME
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
 {
 	my $thisparser = $_[0];
@@ -2873,7 +2929,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"SCEN"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [SCEN]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{SCEN},
@@ -2891,12 +2947,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{LINE});
     $expectation->at($_[1]);
@@ -2929,7 +2986,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::LINE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::LINE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [LINE]>>},
@@ -2942,7 +2999,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [LINE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{SCEN},
                       $tracelevel)
@@ -2959,7 +3016,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{SCEN})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::SCEN($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::SCEN($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [SCEN]>>},
@@ -2972,7 +3029,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [SCEN]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{SCEN},
                       $tracelevel)
@@ -3004,12 +3061,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [LINE SCEN]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{SCEN},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3038,7 +3097,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::LINE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::LINE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [LINE]>>},
@@ -3051,7 +3110,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [LINE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{SCEN},
                       $tracelevel)
@@ -3083,12 +3142,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [LINE]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{SCEN},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3123,7 +3184,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
                       q{SCEN},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{SCEN},
                       $tracelevel)
@@ -3132,7 +3193,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::SCEN
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
 {
 	my $thisparser = $_[0];
@@ -3140,7 +3201,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"INCLUDE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [INCLUDE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{INCLUDE},
@@ -3158,12 +3219,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/\\/\\S+\\.scen/, or /[^\\/#]\\S+\\.scen/});
     $expectation->at($_[1]);
@@ -3193,13 +3255,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
                       q{INCLUDE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:\/\S+\.scen)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -3207,7 +3269,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -3238,12 +3300,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/\\/\\S+\\.scen/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{INCLUDE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3269,13 +3333,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
                       q{INCLUDE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:[^\/#]\S+\.scen)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -3283,7 +3347,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -3320,12 +3384,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/[^\\/#]\\S+\\.scen/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{INCLUDE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3360,7 +3426,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
                       q{INCLUDE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{INCLUDE},
                       $tracelevel)
@@ -3369,7 +3435,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::INCLUDE
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
 {
 	my $thisparser = $_[0];
@@ -3377,7 +3443,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PDQUOTE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PDQUOTE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PDQUOTE},
@@ -3395,12 +3461,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/[^"]*/});
     $expectation->at($_[1]);
@@ -3430,13 +3497,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
                       q{PDQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:[^"]*)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -3444,7 +3511,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -3475,12 +3542,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/[^"]*/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PDQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3515,7 +3584,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
                       q{PDQUOTE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PDQUOTE},
                       $tracelevel)
@@ -3524,7 +3593,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
 {
 	my $thisparser = $_[0];
@@ -3532,7 +3601,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PSQUOTE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PSQUOTE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PSQUOTE},
@@ -3550,12 +3619,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{NOTSQUOTE});
     $expectation->at($_[1]);
@@ -3588,7 +3658,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [NOTSQUOTE]>>},
@@ -3601,7 +3671,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [NOTSQUOTE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PSQUOTE},
                       $tracelevel)
@@ -3618,7 +3688,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{SLASHEDSQUOTE})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::SLASHEDSQUOTE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [SLASHEDSQUOTE]>>},
@@ -3631,7 +3701,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [SLASHEDSQUOTE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PSQUOTE},
                       $tracelevel)
@@ -3648,7 +3718,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{PSQUOTE})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PSQUOTE]>>},
@@ -3661,7 +3731,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PSQUOTE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PSQUOTE},
                       $tracelevel)
@@ -3693,12 +3763,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [NOTSQUOTE SLASHEDSQUOTE PSQUOTE]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PSQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3727,7 +3799,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::NOTSQUOTE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [NOTSQUOTE]>>},
@@ -3740,7 +3812,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [NOTSQUOTE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PSQUOTE},
                       $tracelevel)
@@ -3750,12 +3822,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
         
         }
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [NOTSQUOTE]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PSQUOTE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3790,7 +3864,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
                       q{PSQUOTE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PSQUOTE},
                       $tracelevel)
@@ -3799,7 +3873,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
 {
 	my $thisparser = $_[0];
@@ -3807,7 +3881,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PARAMS"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PARAMS]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PARAMS},
@@ -3825,12 +3899,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{PARAM});
     $expectation->at($_[1]);
@@ -3863,7 +3938,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAM($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAM($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PARAM]>>},
@@ -3876,7 +3951,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PARAM]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAMS},
                       $tracelevel)
@@ -3893,7 +3968,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{PARAMS})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PARAMS]>>},
@@ -3906,7 +3981,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PARAMS]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAMS},
                       $tracelevel)
@@ -3938,12 +4013,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [PARAM PARAMS]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAMS},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -3972,7 +4049,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAM($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PARAM($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PARAM]>>},
@@ -3985,7 +4062,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PARAM]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAMS},
                       $tracelevel)
@@ -4017,12 +4094,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [PARAM]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAMS},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -4057,7 +4136,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
                       q{PARAMS},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PARAMS},
                       $tracelevel)
@@ -4066,7 +4145,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAMS
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
 {
 	my $thisparser = $_[0];
@@ -4074,7 +4153,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PARAM"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PARAM]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PARAM},
@@ -4092,12 +4171,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{PNAME});
     $expectation->at($_[1]);
@@ -4130,7 +4210,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PNAME($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PNAME($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PNAME]>>},
@@ -4143,7 +4223,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PNAME]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAM},
                       $tracelevel)
@@ -4158,12 +4238,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
                       q{PARAM},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{'='})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A\=/)
         {
+            $text = $lastsep . $text if defined $lastsep;
             
             $expectation->failed();
             Parse::RecDescent::_trace(qq{<<Didn't match terminal>>},
@@ -4171,7 +4252,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
                             if defined $::RD_TRACE;
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -4213,7 +4294,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{PVALUE})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PVALUE]>>},
@@ -4226,7 +4307,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PVALUE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAM},
                       $tracelevel)
@@ -4258,12 +4339,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [PNAME '=' <skip: qr//> PVALUE]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PARAM},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -4298,7 +4381,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
                       q{PARAM},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PARAM},
                       $tracelevel)
@@ -4307,7 +4390,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PARAM
     return $return;
 }
 
-# ARGS ARE: ($parser, $text; $repeating, $_noactions, \@args)
+# ARGS ARE: ($parser, $text; $repeating, $_noactions, $_itempos, \@args)
 sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 {
 	my $thisparser = $_[0];
@@ -4315,7 +4398,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"PVALUE"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [PVALUE]},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{PVALUE},
@@ -4333,12 +4416,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
     my $commit=0;
     my @item = ();
     my %item = ();
-    my $repeating =  defined($_[2]) && $_[2];
-    my $_noactions = defined($_[3]) && $_[3];
-    my @arg =    defined $_[4] ? @{ &{$_[4]} } : ();
+    my $repeating =  $_[2];
+    my $_noactions = $_[3];
+    my $_itempos = $_[4];
+    my @arg =    defined $_[5] ? @{ &{$_[5]} } : ();
     my %arg =    ($#arg & 01) ? @arg : (@arg, undef);
     my $text;
-    my $lastsep="";
+    my $lastsep;
     my $current_match;
     my $expectation = new Parse::RecDescent::Expectation(q{/'/, or /"/, or /`/, or PNOTQUOTED});
     $expectation->at($_[1]);
@@ -4368,13 +4452,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:')/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -4382,7 +4466,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -4398,7 +4482,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{PSQUOTE})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PSQUOTE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PSQUOTE]>>},
@@ -4411,7 +4495,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PSQUOTE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
@@ -4425,13 +4509,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{/'/})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:')/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -4439,7 +4523,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -4470,12 +4554,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/'/ PSQUOTE /'/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -4501,13 +4587,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:")/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -4515,7 +4601,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -4531,7 +4617,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{PDQUOTE})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PDQUOTE($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PDQUOTE]>>},
@@ -4544,7 +4630,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PDQUOTE]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
@@ -4558,13 +4644,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{/"/})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:")/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -4572,7 +4658,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -4603,12 +4689,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/"/ PDQUOTE /"/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -4634,13 +4722,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:`)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -4648,7 +4736,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -4664,7 +4752,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{PTICKED})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PTICKED($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PTICKED]>>},
@@ -4677,7 +4765,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PTICKED]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
@@ -4691,13 +4779,13 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
-        $lastsep = "";
+        undef $lastsep;
         $expectation->is(q{/`/})->at($text);
         
 
         unless ($text =~ s/\A($skip)/$lastsep=$1 and ""/e and   $text =~ m/\A(?:`)/)
         {
-            
+            $text = $lastsep . $text if defined $lastsep;
             $expectation->failed();
             Parse::RecDescent::_trace(q{<<Didn't match terminal>>},
                           Parse::RecDescent::_tracefirst($text))
@@ -4705,7 +4793,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
 
             last;
         }
-		$current_match = substr($text, $-[0], $+[0] - $-[0]);
+        $current_match = substr($text, $-[0], $+[0] - $-[0]);
         substr($text,0,length($current_match),q{});
         Parse::RecDescent::_trace(q{>>Matched terminal<< (return value: [}
                         . $current_match . q{])},
@@ -4736,12 +4824,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [/`/ PTICKED /`/]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -4770,7 +4860,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                     if defined $::RD_TRACE;
         if (1) { no strict qw{refs};
         $expectation->is(q{})->at($text);
-        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED($thisparser,$text,$repeating,$_noactions,sub { \@arg })))
+        unless (defined ($_tok = Parse::RecDescent::Treex::Core::ScenarioParser::PNOTQUOTED($thisparser,$text,$repeating,$_noactions,undef,sub { \@arg })))
         {
             
             Parse::RecDescent::_trace(q{<<Didn't match subrule: [PNOTQUOTED]>>},
@@ -4783,7 +4873,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         }
         Parse::RecDescent::_trace(q{>>Matched subrule: [PNOTQUOTED]<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
@@ -4815,12 +4905,14 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
         $item{__ACTION1__}=$_tok;
         
 
-
         Parse::RecDescent::_trace(q{>>Matched production: [PNOTQUOTED]<<},
                       Parse::RecDescent::_tracefirst($text),
                       q{PVALUE},
                       $tracelevel)
                         if defined $::RD_TRACE;
+
+
+
         $_matched = 1;
         last;
     }
@@ -4855,7 +4947,7 @@ sub Parse::RecDescent::Treex::Core::ScenarioParser::PVALUE
                       q{PVALUE},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{PVALUE},
                       $tracelevel)

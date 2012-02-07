@@ -1,6 +1,6 @@
 package Treex::Core::Config;
 {
-  $Treex::Core::Config::VERSION = '0.07191';
+  $Treex::Core::Config::VERSION = '0.08051';
 }
 use strict;
 use warnings;
@@ -24,6 +24,7 @@ our %service;                   ## no critic (ProhibitPackageVars)
 our $params_validate = 0;       ## no critic (ProhibitPackageVars)
 
 my $config = __PACKAGE__->_load_config();
+my $running_in_tred; ## no critic (ProhibitUnusedVariables)
 
 sub _load_config {
     my $self     = shift;
@@ -120,7 +121,9 @@ sub share_dir {
 
 sub share_url {
     my $self = shift;
-    $config->{share_url} = 'http://ufallab.ms.mff.cuni.cz/tectomt/share' if !defined $config->{share_url};
+    if ( !defined $config->{share_url} ) {
+        $config->{share_url} = 'http://ufallab.ms.mff.cuni.cz/tectomt/share';
+    }
     return $config->{share_url};
 }
 
@@ -134,61 +137,61 @@ sub tred_dir {
 
 sub pml_schema_dir {
     my $self = shift;
-    if (!defined $config->{pml_schema_dir} || !defined realpath( $config->{pml_schema_dir} )) {
-            if ( $self->_devel_version() ) {
-                $config->{pml_schema_dir} = realpath( $self->lib_core_dir() . "/share/tred_extension/treex/resources/" );
-            }
-            else {
-                $config->{pml_schema_dir} = realpath( File::ShareDir::dist_dir('Treex-Core') . "/tred_extension/treex/resources/" );    #that's different share than former TMT_SHARE
-            }
+    if ( !defined $config->{pml_schema_dir} || !defined realpath( $config->{pml_schema_dir} ) ) {
+        if ( $self->_devel_version() ) {
+            $config->{pml_schema_dir} = realpath( $self->lib_core_dir() . "/share/tred_extension/treex/resources/" );
         }
-        return $config->{pml_schema_dir};
-    }
-
-    # tenhle adresar ted vubec v balicku neni!
-    sub tred_extension_dir {
-        my $self = shift;
-        if ( !defined $config->{tred_extension_dir} || !defined realpath( $config->{tred_extension_dir} ) ) {
-            $config->{tred_extension_dir} = realpath( $self->pml_schema_dir() . "/../../" );
+        else {
+            $config->{pml_schema_dir} = realpath( File::ShareDir::dist_dir('Treex-Core') . "/tred_extension/treex/resources/" );    #that's different share than former TMT_SHARE
         }
-        return $config->{tred_extension_dir};
     }
+    return $config->{pml_schema_dir};
+}
 
-    sub lib_core_dir {
-        my $self = shift;
-        return realpath( $self->_caller_dir() );
+# tenhle adresar ted vubec v balicku neni!
+sub tred_extension_dir {
+    my $self = shift;
+    if ( !defined $config->{tred_extension_dir} || !defined realpath( $config->{tred_extension_dir} ) ) {
+        $config->{tred_extension_dir} = realpath( $self->pml_schema_dir() . "/../../" );
     }
+    return $config->{tred_extension_dir};
+}
 
-    sub tmp_dir {
-        my $self = shift;
-        if ( !defined $config->{tmp_dir} || !defined realpath( $config->{tmp_dir} ) ) {
-            $config->{tmp_dir} = $self->_default_tmp_dir();
-        }
-        return $config->{tmp_dir};
+sub lib_core_dir {
+    my $self = shift;
+    return realpath( $self->_caller_dir() );
+}
+
+sub tmp_dir {
+    my $self = shift;
+    if ( !defined $config->{tmp_dir} || !defined realpath( $config->{tmp_dir} ) ) {
+        $config->{tmp_dir} = $self->_default_tmp_dir();
     }
+    return $config->{tmp_dir};
+}
 
-    sub _default_tmp_dir {
-        my $self      = shift;
-        my $dot_treex = File::HomeDir->my_dist_data( 'Treex-Core', { create => 1 } );
-        my $suffix    = 'tmp';
-        my $tmp_dir   = realpath("$dot_treex/$suffix");
-        if ( !-e $tmp_dir ) {
-            mkdir $tmp_dir or log_fatal("Cannot create temporary directory");
-        }
-        return $tmp_dir;
+sub _default_tmp_dir {
+    my $self      = shift;
+    my $dot_treex = File::HomeDir->my_dist_data( 'Treex-Core', { create => 1 } );
+    my $suffix    = 'tmp';
+    my $tmp_dir   = realpath("$dot_treex/$suffix");
+    if ( !-e $tmp_dir ) {
+        mkdir $tmp_dir or log_fatal("Cannot create temporary directory");
     }
+    return $tmp_dir;
+}
 
-    sub _caller_dir {
-        my $self = shift;
-        my %call_info;
-        @call_info{
-            qw(pack file line sub has_args wantarray evaltext is_require)
-            } = caller(0);
-        $call_info{file} =~ s/[^\/]+$//;
-        return $call_info{file};
-    }
+sub _caller_dir {
+    my $self = shift;
+    my %call_info;
+    @call_info{
+        qw(pack file line sub has_args wantarray evaltext is_require)
+        } = caller(0);
+    $call_info{file} =~ s/[^\/]+$//;
+    return $call_info{file};
+}
 
-    1;
+1;
 
 __END__
 
@@ -200,7 +203,7 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 SYNOPSIS
 
@@ -231,7 +234,7 @@ return list of directories where resources will be searched
 
 =item tmp_dir()
 
-return temporary directory, shoud be used instead of /tmp or similar
+return temporary directory, should be used instead of /tmp or similar
 
 =item _devel_version()
 

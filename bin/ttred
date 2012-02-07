@@ -19,6 +19,7 @@ my $command =  $tred_dir
     . '/tred -O PreInstalledExtensionsDir='
     . $tred_extension_dir
     . ' -O MaxUndo=0 '
+    . ' -B Treex::Core::TredView::BackendStorable ' # extra backends
     . ' -J* '
     . ' -j treex '
     . (join ' ',@ARGV);
@@ -40,7 +41,7 @@ ttred - running TrEd customized for browsing treex files
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 

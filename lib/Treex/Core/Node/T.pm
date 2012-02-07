@@ -1,6 +1,6 @@
 package Treex::Core::Node::T;
 {
-  $Treex::Core::Node::T::VERSION = '0.07191';
+  $Treex::Core::Node::T::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
@@ -14,7 +14,7 @@ has [
     qw( nodetype t_lemma functor subfunctor formeme tfa
         is_dsp_root sentmod is_parenthesis is_passive is_generated
         is_relclause_head is_name_of_person voice
-        t_lemma_origin formeme_origin
+        t_lemma_origin formeme_origin is_infin
         )
 ] => ( is => 'rw' );
 
@@ -34,27 +34,21 @@ sub is_coap_root {
 #----------- helpers for reference lists ------------
 
 sub _get_node_list {
-
     my ( $self, $list, $arg_ref ) = @_;
-    my $doc = $self->get_document();
-
     $list = $self->get_attr($list);
+    my $doc = $self->get_document();
     my @nodes = $list ? ( map { $doc->get_node_by_id($_) } @{$list} ) : ();
-
     return $arg_ref ? $self->_process_switches( $arg_ref, @nodes ) : @nodes;
 }
 
 sub _set_node_list {
-
     my $self = shift;
     my $list = shift;
-
     $self->set_attr( $list, [ map { $_->get_attr('id') } @_ ] );
     return;
 }
 
 sub _add_to_node_list {
-
     my $self = shift;
     my $list = shift;
 
@@ -74,7 +68,6 @@ sub _add_to_node_list {
 }
 
 sub _remove_from_node_list {
-
     my $self = shift;
     my $list = shift;
     my @prev = $self->_get_node_list($list);
@@ -89,6 +82,7 @@ sub _remove_from_node_list {
     return;
 }
 
+# TODO: with backrefs this method is no more needed
 # remove unindexed IDs from a list attribute
 sub _update_list {
 
@@ -96,7 +90,18 @@ sub _update_list {
     my $doc = $self->get_document();
 
     my $ref = $self->get_attr($list);
-    my @nodes = $ref ? ( grep { $doc->id_is_indexed($_) } @{$ref} ) : ();
+    my (@nodes, @invalid);
+
+    return if (!$ref);
+
+    foreach my $id (@{$ref}){
+        if ($doc->id_is_indexed($id)){
+            push @nodes, $id;
+        }
+        else {
+            push @invalid, $id;
+        }
+    }
 
     $self->set_attr( $list, @nodes > 0 ? [@nodes] : undef );
     return;
@@ -173,18 +178,19 @@ sub get_coref_text_nodes {
 
 # it doesn't return a complete chain, just the members which are accessible
 # from the current node
+# TODO: with backrefs the whole chain is accessible now
 sub get_coref_chain {
     my ( $self, $arg_ref ) = @_;
 
     my %visited_nodes = ();
     my @nodes;
     my @queue = ( $self->_get_node_list('coref_gram.rf'), $self->_get_node_list('coref_text.rf') );
-    while (my $node = shift @queue) {
+    while ( my $node = shift @queue ) {
         $visited_nodes{$node} = 1;
         push @nodes, $node;
         my @antes = ( $node->_get_node_list('coref_gram.rf'), $node->_get_node_list('coref_text.rf') );
         foreach my $ante (@antes) {
-            if (!defined $visited_nodes{$ante}) {
+            if ( !defined $visited_nodes{$ante} ) {
                 push @queue, $ante;
             }
         }
@@ -219,6 +225,25 @@ sub update_coref_nodes {
     return;
 }
 
+# ----------- complement nodes -------------
+
+sub add_compl_nodes {
+    my $self = shift;
+    return $self->_add_to_node_list( 'compl.rf', @_ );
+}
+
+sub remove_compl_nodes {
+    my $self = shift;
+    $self->_remove_from_node_list( 'compl.rf', @_ );
+    return;
+}
+
+sub update_compl_nodes {
+    my $self = shift;
+    $self->_update_list('compl.rf');
+    return;
+}
+
 #----------- n-layer (named entity) nodes -------------
 
 sub get_n_node {
@@ -240,6 +265,14 @@ sub set_src_tnode {
     $self->set_attr( 'src_tnode.rf', $source_node->id );
     return;
 }
+
+# ---- attributes that contain references
+
+override '_get_reference_attrs' => sub {
+
+    my ($self) = @_;
+    return ('a/lex.rf', 'original_parent.rf', 'src_tnode.rf', 'a/aux.rf', 'compl.rf', 'coref_gram.rf', 'coref_text.rf');
+};
 
 #----------- grammatemes -------------
 
@@ -294,7 +327,7 @@ Treex::Core::Node::T
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
@@ -333,7 +366,7 @@ Set the lexical a-node (to C<a/lex.rf>).
 
 =item $node->remove_aux_anodes(@to_remove)
 
-Remove the specifed a-nodes from C<a/aux.rf> (if they are contained in it).
+Remove the specified a-nodes from C<a/aux.rf> (if they are contained in it).
 
 =item $node->get_coref_nodes()
 
@@ -421,8 +454,10 @@ Zdeněk Žabokrtský <zabokrtsky@ufal.mff.cuni.cz>
 
 Martin Popel <popel@ufal.mff.cuni.cz>
 
+Ondřej Dušek <odusek@ufal.mff.cuni.cz>
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2011 by Institute of Formal and Applied Linguistics, Charles University in Prague
+Copyright © 2011-2012 by Institute of Formal and Applied Linguistics, Charles University in Prague
 
 This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

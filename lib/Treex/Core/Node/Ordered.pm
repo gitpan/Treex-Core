@@ -1,6 +1,6 @@
 package Treex::Core::Node::Ordered;
 {
-  $Treex::Core::Node::Ordered::VERSION = '0.07191';
+  $Treex::Core::Node::Ordered::VERSION = '0.08051';
 }
 use Moose::Role;
 
@@ -117,7 +117,14 @@ sub shift_after_subtree {
     my ( $self, $reference_node, $arg_ref ) = @_;
     _check_shifting_method_args(@_);
 
-    my $last_node = $reference_node->get_descendants( { except => $self, last_only => 1, add_self => 1 } );
+    my $last_node;
+    if ( $arg_ref->{without_children} ) {
+        ($last_node) = reverse grep { $_ != $self } $reference_node->get_descendants( { ordered => 1, add_self => 1 } );
+    }
+    else {
+        $last_node = $reference_node->get_descendants( { except => $self, last_only => 1, add_self => 1 } );
+    }
+    return if !defined $last_node;
     return $self->_shift_to_node( $last_node, 1, $arg_ref->{without_children} ) if $arg_ref;
     return $self->_shift_to_node( $last_node, 1, 0 );
 }
@@ -126,7 +133,14 @@ sub shift_before_subtree {
     my ( $self, $reference_node, $arg_ref ) = @_;
     _check_shifting_method_args(@_);
 
-    my $first_node = $reference_node->get_descendants( { except => $self, first_only => 1, add_self => 1 } );
+    my $first_node;
+    if ( $arg_ref->{without_children} ) {
+        ($first_node) = grep { $_ != $self } $reference_node->get_descendants( { ordered => 1, add_self => 1 } );
+    }
+    else {
+        $first_node = $reference_node->get_descendants( { except => $self, first_only => 1, add_self => 1 } );
+    }
+    return if !defined $first_node;
     return $self->_shift_to_node( $first_node, 0, $arg_ref->{without_children} ) if $arg_ref;
     return $self->_shift_to_node( $first_node, 0, 0 );
 }
@@ -162,7 +176,8 @@ sub _shift_to_node {
 
     # Recompute ord of all nodes.
     # The technical root has ord=0 and the first node will have ord=1.
-    my $counter = 1;
+    my $counter     = 1;
+    my $nodes_moved = 0;
     @all_nodes = sort { $a->ord() <=> $b->ord() } @all_nodes;
     foreach my $node (@all_nodes) {
 
@@ -183,6 +198,7 @@ sub _shift_to_node {
             foreach my $moving_node (@nodes_to_move) {
                 $moving_node->_set_ord( $counter++ );
             }
+            $nodes_moved = 1;
         }
 
         # If moving "before" a node, then now it is the right moment
@@ -191,7 +207,38 @@ sub _shift_to_node {
             $node->_set_ord( $counter++ );
         }
     }
+
+    # If $is_moving{$reference_node}, e.g. when there is just one node in the tree,
+    # we need to do the reordering now (otherwise the ord would be still 10000).
+    if ( !$nodes_moved ) {
+        foreach my $moving_node (@nodes_to_move) {
+            $moving_node->_set_ord( $counter++ );
+        }
+    }
     return;
+}
+
+sub is_nonprojective {
+    my ($self) = @_;
+
+    # Root and its children are always projective
+    my $parent = $self->get_parent();
+    return 0 if !$parent || $parent->is_root();
+
+    # Edges between neighbouring nodes are always projective.
+    # Check it now to make it a bit faster.
+    my ( $ordA, $ordB ) = ( $self->ord, $parent->ord );
+    if ( $ordA > $ordB ) {
+        ( $ordA, $ordB ) = ( $ordB, $ordA );
+    }
+    my $distance = $ordB - $ordA;
+    return 0 if $distance == 1;
+
+    # Get all the descendants of $parent that are in the span of the edge.
+    my @span = grep { $_->ord > $ordA && $_->ord < $ordB } $parent->get_descendants();
+
+    # For projective edges @span must include all the nodes between $parent and $self.
+    return @span != $distance - 1;
 }
 
 1;
@@ -206,7 +253,7 @@ Treex::Core::Node::Ordered
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
@@ -289,6 +336,18 @@ Shifts (changes the C<ord> of) the node just in front of the reference node.
 =item $node->shift_before_subtree($reference_node);
 
 Shifts (changes the C<ord> of) the node in front of the subtree of the reference node.
+
+=back
+
+=head2 Nonprojectivity
+
+=over
+
+=item my $nonproj = $node->is_nonprojective();
+
+Return 1 if the node is attached to its parent nonprojectively, i.e. there is
+at least one node between this node and its parent that is not descendant of
+the parent. Return 0 otherwise.
 
 =back
 

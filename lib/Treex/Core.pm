@@ -1,6 +1,6 @@
 package Treex::Core;
 {
-  $Treex::Core::VERSION = '0.07191';
+  $Treex::Core::VERSION = '0.08051';
 }
 use strict;
 use warnings;
@@ -23,7 +23,7 @@ Treex::Core - interface to linguistic structures and processing units in Treex
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 SYNOPSIS
 
@@ -138,7 +138,7 @@ Each node has a parent (unless it is the root) and a set of predefined
 attributes, depending on the layer it belongs to. There is an abstract class 
 L<Treex::Core::Node> defining the functionality which is 
 common to all types of trees (such as functions for accessing node's parent or 
-children). Functinality specific for the individual linguistic layers is 
+children). Functionality specific for the individual linguistic layers is 
 implemented in the derived classes:
 
 * L<Treex::Core::Node::A>

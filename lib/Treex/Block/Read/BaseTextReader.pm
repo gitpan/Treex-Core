@@ -1,12 +1,12 @@
 package Treex::Block::Read::BaseTextReader;
 {
-  $Treex::Block::Read::BaseTextReader::VERSION = '0.07191';
+  $Treex::Block::Read::BaseTextReader::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
 extends 'Treex::Block::Read::BaseReader';
-use Perl6::Slurp;
-use PerlIO::gzip;
+#use File::Slurp 9999;
+use PerlIO::via::gzip;
 
 # By default read from STDIN
 has '+from' => ( default => '-' );
@@ -34,7 +34,7 @@ sub next_filehandle {
         binmode STDIN, $self->encoding;
         return \*STDIN;
     }
-    my $mode = $filename =~ /[.]gz$/ ? '<:gzip:' : '<:';
+    my $mode = $filename =~ /[.]gz$/ ? '<:via(gzip):' : '<:';
     $mode .= $self->encoding;
     open my $FH, $mode, $filename or log_fatal "Can't open $filename: $!";
     return $FH;
@@ -50,7 +50,8 @@ sub next_document_text {
 
     if ( $self->is_one_doc_per_file ) {
         $self->_set_current_fh(undef);
-        return slurp($FH);
+        local $/ = undef;
+        return <$FH>;
     }
 
     my $text = '';
@@ -82,7 +83,7 @@ Treex::Block::Read::BaseTextReader - abstract ancestor for document readers
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
@@ -113,7 +114,7 @@ even from non-equally-sized files.
 
 =item encoding
 
-Whan is the encoding of the input files. E.g. C<utf8> (the default), C<cp1250> etc.
+What is the encoding of the input files. E.g. C<utf8> (the default), C<cp1250> etc.
 
 =back
 

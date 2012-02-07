@@ -1,6 +1,6 @@
 package Treex::Core::TredView::TreeLayout;
 {
-  $Treex::Core::TredView::TreeLayout::VERSION = '0.07191';
+  $Treex::Core::TredView::TreeLayout::VERSION = '0.08051';
 }
 
 use Moose;
@@ -45,7 +45,11 @@ sub get_layout_label {
     return unless ref($bundle) eq 'Treex::Core::Bundle';
 
     my @label;
-    foreach my $zone ( sort { $a->language cmp $b->language } $bundle->get_all_zones ) {
+    ###!!! DZ: Occasionally we get a 'zone' of the type Treex::PML::Struct (instead of Treex::Core::BundleZone).
+    ###!!! Ttred then complains "Can't locate object method "get_all_trees" via package..."
+    ###!!! I am grepping the zones for real ones but one may want to find the cause within get_all_zones() instead.
+    my @zones = grep {ref($_) ne 'Treex::PML::Struct'} $bundle->get_all_zones();
+    foreach my $zone ( sort { $a->language cmp $b->language } @zones ) {
         push @label, map { $self->get_tree_label($_) } sort { $a->get_layer cmp $b->get_layer } $zone->get_all_trees();
     }
     return join ',', @label;
@@ -75,9 +79,9 @@ sub load_layouts {
     $self->{_layouts_loaded} = 1;
 
     my $filename = TredMacro::FindMacroDir('treex') . '/.layouts.cfg';
-    open CFG, $filename or return;
+    open my $CFG, '<:utf8', $filename or return;
 
-    while (<CFG>) {
+    while (<$CFG>) {
         chomp;
         my ( $label, $coords ) = split '=';
         my @label  = split ',', $label;
@@ -93,7 +97,8 @@ sub load_layouts {
         $self->_layouts->{$label} = $cols;
     }
 
-    close CFG;
+    close $CFG;
+    return;
 }
 
 sub save_layouts {
@@ -103,7 +108,7 @@ sub save_layouts {
     return unless ref(TredMacro::GUI()) eq 'TrEd::Window';
 
     my $filename = TredMacro::FindMacroDir('treex') . '/.layouts.cfg';
-    open CFG, ">$filename";
+    open my $CFG, '>:utf8', $filename or die $!;
 
     while ( my ( $label, $cols ) = each %{ $self->_layouts } ) {
         my %coords = ();
@@ -119,11 +124,12 @@ sub save_layouts {
             push @coords, $coords{$tree};
         }
 
-        print CFG $label . '=' . join( ',', @coords ) . "\n";
+        print $CFG $label . '=' . join( ',', @coords ) . "\n";
     }
 
-    close CFG;
+    close $CFG;
     $self->{_layouts_saved} = 1;
+    return;
 }
 
 sub _move_layout {
@@ -147,6 +153,7 @@ sub _move_layout {
     }
 
     $self->{_cur_layout} = $new_layout;
+    return;
 }
 
 sub _wrap_layout {
@@ -181,6 +188,7 @@ sub _wrap_layout {
     }
 
     $self->{_cur_layout} = $new_layout;
+    return;
 }
 
 sub _normalize_layout {
@@ -213,6 +221,7 @@ sub _normalize_layout {
     }
 
     $self->{_cur_layout} = $new_layout;
+    return;
 }
 
 sub _get_layout_coords {
@@ -284,6 +293,7 @@ sub _mouse_move {
         }
         $self->{_cur_tree} = $tree;
     }
+    return;
 }
 
 sub _mouse_drag {
@@ -294,6 +304,7 @@ sub _mouse_drag {
     $self->{_drag_tree} = $tree;
     ( $self->{_drag_x}, $self->{_drag_y} ) = $self->_get_layout_coords( $x, $y );
     $canvas->itemconfigure( $tree->{'label'} . '&&' . $self->_tag_tree, -outline => 'red', -width => 2, -fill => 'yellow' );
+    return;
 }
 
 sub _mouse_drop {
@@ -333,6 +344,7 @@ sub _mouse_drop {
 
     $self->{_drag_tree} = undef;
     $self->{_drag_x} = $self->{_drag_y} = -1;
+    return;
 }
 
 sub _mouse_right {
@@ -347,6 +359,7 @@ sub _mouse_right {
     $layout->[$x]->[$y]->{'visible'} = $visibility;
     $canvas->itemconfigure( $tree->{'label'} . '&&' . $self->_tag_tree, -fill => $visibility ? 'white' : 'grey' );
     $self->{_cur_layout} = $layout;
+    return;
 }
 
 sub _draw_layout {
@@ -386,6 +399,7 @@ sub _draw_layout {
     $canvas->CanvasBind( '<ButtonPress-1>'   => [ $self => '_mouse_drag', $canvas ] );
     $canvas->CanvasBind( '<ButtonRelease-1>' => [ $self => '_mouse_drop', $canvas ] );
     $canvas->CanvasBind( '<ButtonRelease-3>' => [ $self => '_mouse_right', $canvas ] );
+    return;
 }
 
 sub conf_dialog {
@@ -428,16 +442,16 @@ Treex::Core::TredView::TreeLayout - Layout of trees in Tred
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
-This package supports the main Tred visualisation package Treex::Core::TredView.
+This package supports the main Tred visualization package Treex::Core::TredView.
 It's purpose is to allow an user friendly configuration of the placement of
 the trees stored in a bundle.
 
 The mechanism works only with bundles. Each bundle gets a label that describes
-it's content (conbination of layers, languages and selectors). When there is a
+it's content (combination of layers, languages and selectors). When there is a
 bundle to be displayed, the package constructs its label and tries to find its
 layout. If the label is unknown (no layout found), default is provided.
 

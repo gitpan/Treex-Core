@@ -1,6 +1,6 @@
 package Treex::Core::Resource;
 {
-  $Treex::Core::Resource::VERSION = '0.07191';
+  $Treex::Core::Resource::VERSION = '0.08051';
 }
 use strict;
 use warnings;
@@ -9,7 +9,7 @@ use 5.010;
 
 #use Moose;
 #use Treex::Core::Common;
-use LWP::Simple;
+use LWP::Simple; #TODO rewrite using LWP:UserAgent to show progress
 use File::Path;
 use Treex::Core::Log;
 use Treex::Core::Config;
@@ -81,6 +81,8 @@ __END__
 Treex::Core::Resource - Access to shared resources
 
 =head1 VERSION
+
+version 0.08051
 
 =head1 SYNOPSIS
 

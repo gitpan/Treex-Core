@@ -11,7 +11,9 @@
     <member name="is_head" ><cdata format="any"/></member>
     <member name="head_selection_rule" ><cdata format="any"/></member>
     <member name="is_collins_head" ><cdata format="any"/></member>
-    <member name="phrase" type="p-phrase.type"  />
+    <!-- label of the incoming edge, as defined in the TIGER-XML and similar formats -->
+    <member name="edgelabel"><cdata format="any"/></member>
+    <member name="phrase"><cdata format="any"/></member>
     <member name="functions">
       <list type="p-function.type" ordered="1"/>
     </member>
@@ -35,10 +37,15 @@
         <member name="is_collins_head" ><cdata format="any"/></member>
         <member name="index"><cdata format="any"/></member>
         <member name="coindex"><cdata format="any"/></member>
+        <!-- label of the incoming edge, as defined in the TIGER-XML and similar formats -->
+        <member name="edgelabel"><cdata format="any"/></member>
         <member name="form"><cdata format="any"/></member>
         <member name="lemma"><cdata format="any"/></member>
-        <member name="tag" type="p-postag.type"/>
-		<member name="bbn_tag" type="bbn_tag.type" />
+        <member name="tag"><cdata format="any"/></member>
+        <member name="bbn_tag" type="bbn_tag.type" />
+        <member name="alignment">
+            <list ordered="0" type="align-links.type"/>
+        </member>
 <!--        <member name="m.rf" role="#KNIT" type="m-node.type"/> -->
         <member name="wild_dump"><cdata format="any"/></member>
     </structure>
@@ -176,5 +183,17 @@
 
     </choice>
   </type>
+
+  <type name="align-links.type">
+    <structure>
+       <member name="counterpart.rf">
+          <cdata format="PMLREF"/>
+       </member>
+       <member name="type">
+          <cdata format="any"/>
+       </member>
+    </structure>
+ </type>
+
 
 </pml_schema>

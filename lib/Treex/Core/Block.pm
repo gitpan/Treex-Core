@@ -1,6 +1,6 @@
 package Treex::Core::Block;
 {
-  $Treex::Core::Block::VERSION = '0.07191';
+  $Treex::Core::Block::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
@@ -13,6 +13,14 @@ has scenario => (
     isa      => 'Treex::Core::Scenario',
     writer   => '_set_scenario',
     weak_ref => 1,
+);
+
+has grep_bundle => (
+    is            => 'ro',
+    isa           => 'Int',                                            # or regex in future?
+    default       => 0,
+    documentation => 'apply process_bundle only on the n-th bundle,'
+        . ' 0 (default) means apply to all bundles. Useful for debugging.',
 );
 
 # If the block name contains language (e.g. W2A::EN::Tokenize contains "en")
@@ -82,7 +90,10 @@ sub process_document {
 
     my $bundleNo = 1;
     foreach my $bundle ( $document->get_bundles() ) {
-        $self->process_bundle( $bundle, $bundleNo++ );
+        if ( !$self->grep_bundle || $self->grep_bundle == $bundleNo ) {
+            $self->process_bundle( $bundle, $bundleNo );
+        }
+        $bundleNo++;
     }
     return 1;
 }
@@ -148,8 +159,8 @@ sub process_zone {
 
 sub process_end {
     my ($self) = @_;
-
     # default implementation is empty, but can be overriden
+    return;
 }
 
 sub get_block_name {
@@ -171,7 +182,7 @@ Treex::Core::Block - the basic data-processing unit in the Treex framework
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 SYNOPSIS
 

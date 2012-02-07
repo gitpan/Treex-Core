@@ -1,6 +1,6 @@
 package Treex::Core::Node;
 {
-  $Treex::Core::Node::VERSION = '0.07191';
+  $Treex::Core::Node::VERSION = '0.08051';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -28,7 +28,11 @@ has id => (
 
 sub BUILD {
     my ( $self, $arg_ref ) = @_;
-    if ( not defined $arg_ref or not defined $arg_ref->{_called_from_core_} ) {
+
+    if (( not defined $arg_ref or not defined $arg_ref->{_called_from_core_} )
+        and not $Treex::Core::Config::running_in_tred
+        )
+    {
         log_fatal 'Because of node indexing, no nodes can be created outside of documents. '
             . 'You have to use $zone->create_tree(...) or $node->create_child() '
             . 'instead of Treex::Core::Node...->new().';
@@ -79,6 +83,25 @@ sub set_attr {
         $attr_value = Treex::PML::List->new( @{$attr_value} );
     }
 
+    if ($attr_name =~ /\.rf$/){
+        my $document = $self->get_document();
+
+        # Delete previous back references
+        my $old_value = $self->get_attr($attr_name);
+        if ($old_value) {
+            if ( ref $old_value eq 'Treex::PML::List' && @$old_value ) {
+                $document->remove_backref( $attr_name, $self->id, $old_value );
+            }
+            else {
+                $document->remove_backref( $attr_name, $self->id, [$old_value] );
+            }
+        }
+
+        # Set new back references
+        my $ids = ref($attr_value) eq 'Treex::PML::List' ? $attr_value : [$attr_value];
+        $document->index_backref( $attr_name, $self->id, $ids );
+    }
+
     #simple attributes can be accessed directly
     return $self->{$attr_name} = $attr_value if $attr_name =~ /^[\w\.]+$/;
     log_fatal "Attribute '$attr_name' contains strange symbols."
@@ -117,17 +140,21 @@ sub get_deref_attr {
 sub set_deref_attr {
     my ( $self, $attr_name, $attr_value ) = @_;
     log_fatal('Incorrect number of arguments') if @_ != 3;
+
+    # If $attr_value is an array of nodes
     if ( ref($attr_value) eq 'ARRAY' ) {
         my @list = map { $_->id } @{$attr_value};
         $attr_value = Treex::PML::List->new(@list);
     }
+
+    # If $attr_value is just one node
     else {
         $attr_value = $attr_value->id;
     }
 
-    # attr setting always through TectoMT set_attr, as it can be overidden (and it is in Node/N.pm)
-    #return $fsnode{ ident $self}->set_attr( $attr_name, $attr_value );
-    return $self->set_attr( $attr_name, $attr_value );
+    # Set the new reference(s)
+    $self->set_attr( $attr_name, $attr_value );
+    return;
 }
 
 sub get_bundle {
@@ -166,6 +193,7 @@ sub remove {
     # Remove the subtree from the document's indexing table
     foreach my $node ( $self, $self->get_descendants ) {
         if ( defined $node->id ) {
+            $document->_remove_references_to_node( $node );
             $document->index_node_by_id( $node->id, undef );
         }
     }
@@ -181,6 +209,46 @@ sub remove {
     # By reblessing we make sure that
     # all methods called on removed nodes will result in fatal errors.
     bless $self, 'Treex::Core::Node::Deleted';
+    return;
+}
+
+# Return all nodes that have a reference of the given type (e.g. 'alignment', 'a/lex.rf') to this node
+sub get_referencing_nodes {
+
+    my ( $self, $type ) = @_;
+    my $doc  = $self->get_document;
+    my $refs = $doc->get_references_to_id( $self->id );
+
+    return if ( !$refs || !$refs->{$type} );
+    return map { $doc->get_node_by_id($_) } @{ $refs->{$type} };
+}
+
+# Remove a reference of the given type to the given node. This will not remove a reverse reference from document
+# index, since it is itself called from when removing reverse references; use the API methods for the individual
+# references if you want to keep reverse references up-to-date.
+sub remove_reference {
+    my ( $self, $type, $id ) = @_;
+
+    if ( $type eq 'alignment' ) {    # handle alignment links separately
+
+        my $links = $self->get_attr('alignment');
+
+        if ($links) {
+            my $document = $self->get_document;
+            $self->set_attr( 'alignment', [ grep { $_->{'counterpart.rf'} ne $id } @{$links} ] );
+        }
+    }
+    else {
+        my $attr = $self->get_attr($type);
+        log_fatal "undefined attr $type (id=$id)" if !defined $attr;
+
+        if ( $attr eq $id || scalar( @{$attr} ) <= 1 ) {                # single-value attributes
+            $self->set_attr( $type, undef );
+        }
+        else {
+            $attr->delete_value($id);                                   # TODO : will it be always a Treex::PML::List? Looks like it works.
+        }
+    }
     return;
 }
 
@@ -287,6 +355,12 @@ sub is_root {
     return !$self->parent;
 }
 
+sub is_leaf {
+    log_fatal 'Incorrect number of arguments' if @_ != 1;
+    my $self = shift;
+    return not $self->firstson;
+}
+
 sub get_parent {
     log_fatal 'Incorrect number of arguments' if @_ != 1;
     my $self = shift;
@@ -307,7 +381,7 @@ sub set_parent {
 
     # We cannot detach a node by setting an undefined parent. The if statement below will die.
     # Let's inform the user where the bad call is.
-    log_fatal('Cannot attach the node ' . $self->id . ' to an undefined parent') if ( !defined($parent) );
+    log_fatal( 'Cannot attach the node ' . $self->id . ' to an undefined parent' ) if ( !defined($parent) );
     if ( $self == $parent || $CHECK_FOR_CYCLES && $parent->is_descendant_of($self) ) {
         my $id   = $self->id;
         my $p_id = $parent->id;
@@ -483,9 +557,24 @@ sub get_aligned_nodes {
     return ( undef, undef );
 }
 
+sub get_aligned_nodes_of_type {
+    my ( $self, $type_regex ) = @_;
+    my @nodes;
+    my ( $n_rf, $t_rf ) = $self->get_aligned_nodes();
+    return if !$n_rf;
+    my $iterator = List::MoreUtils::each_arrayref( $n_rf, $t_rf );
+    while ( my ( $node, $type ) = $iterator->() ) {
+        if ( $type =~ /$type_regex/ ) {
+            push @nodes, $node;
+        }
+    }
+    return @nodes;
+}
+
 sub is_aligned_to {
     my ( $self, $node, $type ) = @_;
-    return grep { $_ eq $node } $self->get_aligned_nodes( $node, $type ) ? 1 : 0;
+    log_fatal 'Incorrect number of parameters' if @_ != 3;
+    return any { $_ eq $node } $self->get_aligned_nodes_of_type( $node, $type ) ? 1 : 0;
 }
 
 sub delete_aligned_node {
@@ -493,7 +582,11 @@ sub delete_aligned_node {
     my $links_rf = $self->get_attr('alignment');
     my @links    = ();
     if ($links_rf) {
-        @links = grep { $_->{'counterpart.rf'} ne $node->id || $_->{'type'} ne $type } @$links_rf;
+        @links = grep {
+            $_->{'counterpart.rf'} ne $node->id
+                || ( defined($type) && defined( $_->{'type'} ) && $_->{'type'} ne $type )
+            }
+            @$links_rf;
     }
     $self->set_attr( 'alignment', \@links );
     return;
@@ -508,6 +601,21 @@ sub add_aligned_node {
     return;
 }
 
+# remove invalid alignment links (leading to unindexed nodes)
+sub update_aligned_nodes {
+
+    my ($self)   = @_;
+    my $doc      = $self->get_document();
+    my $links_rf = $self->get_attr('alignment');
+    my @new_links;
+
+    foreach my $link ( @{$links_rf} ) {
+        push @new_links, $link if ( $doc->id_is_indexed( $link->{'counterpart.rf'} ) );
+    }
+    $self->set_attr( 'alignment', \@new_links );
+    return;
+}
+
 #************************************
 #---- OTHER ------
 
@@ -519,50 +627,6 @@ sub get_depth {
         $depth++;
     }
     return $depth;
-}
-
-#------------------------------------------------------------------------------
-# Tells whether the node is attached to its parent nonprojectively, i.e. there
-# is at least one node between this node and its parent that is not dominated
-# by the parent.
-#------------------------------------------------------------------------------
-sub is_nonprojective
-{
-    log_fatal('Incorrect number of arguments') if(scalar(@_)!=1);
-    my $self = shift;
-    my $parent = $self->parent();
-    # A node that does not have a parent cannot be nonprojective.
-    return 0 if(!$parent);
-    # Get a hash of all descendants of the parent.
-    my @pdesc = $parent->get_descendants({add_self=>1});
-    my %pdesc; map {$pdesc{$_}++} (@pdesc);
-    # Figure out whether the node is to the left or to the right from its parent.
-    my $nord = $self->ord();
-    my $pord = $parent->ord();
-    my ($x, $y);
-    if($pord>$nord)
-    {
-        $x = $self;
-        $y = $parent;
-    }
-    else
-    {
-        $x = $parent;
-        $y = $self;
-    }
-    # Get the ordered list of all nodes between $x and $y.
-    my $xord = $x->ord();
-    my $yord = $y->ord();
-    my @between = grep {$_->ord()>$xord && $_->ord()<$yord} ($parent->root()->get_descendants({ordered=>1}));
-    # This node is nonprojective if @between contains anything that is not in %pdesc.
-    foreach my $b (@between)
-    {
-        if(!$pdesc{$b})
-        {
-            return 1;
-        }
-    }
-    return 0;
 }
 
 # This is called from $node->remove()
@@ -701,11 +765,40 @@ sub get_attrs {
     return @attr_values;
 }
 
+# Return all attributes of the given node (sub)type that contain references
+sub _get_reference_attrs {
+    my ($self) = @_;
+    return ();
+}
+
+# Return IDs of all nodes to which there are reference links from this node (must be overridden in
+# the respective node types)
+sub _get_referenced_ids {
+    my ($self) = @_;
+    my $ret = {};
+
+    # handle alignment separately
+    my $links_rf = $self->get_attr('alignment');
+    $ret->{alignment} = [ map { $_->{'counterpart.rf'} } @{$links_rf} ] if ($links_rf);
+
+    # all other references
+    foreach my $ref_attr ( $self->_get_reference_attrs() ) {
+        my $val = $self->get_attr($ref_attr) or next;
+        if ( !ref $val ) {    # single-valued
+            $ret->{$ref_attr} = [$val];
+        }
+        else {
+            $ret->{$ref_attr} = $val;
+        }
+    }
+    return $ret;
+}
+
 # TODO: How to do this in an elegant way?
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 {
-  $Treex::Core::Node::Removed::VERSION = '0.07191';
+  $Treex::Core::Node::Removed::VERSION = '0.08051';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -783,7 +876,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
@@ -906,6 +999,10 @@ Returns the root of the node's tree.
 
 Returns C<true> if the node has no parent.
 
+=item my $root_node = $node->is_leaf();
+
+Returns C<true> if the node has no children.
+
 =item $node1->is_descendant_of($node2);
 
 Tests whether C<$node1> is among transitive descendants of C<$node2>;
@@ -1003,7 +1100,7 @@ Actually, this is shortcut for C<$node-E<gt>get_siblings({following_only=E<gt>1,
 
 =head2 PML-related methods
 
-=over 4
+=over
 
 =item my $type = $node->get_pml_type_name;
 
@@ -1016,15 +1113,31 @@ Actually, this is shortcut for C<$node-E<gt>get_siblings({following_only=E<gt>1,
 
 =item add_aligned_node
 
-=item get_aligned_nodes
+=item my ($nodes_rf, $types_rf) = $node->get_aligned_nodes();
 
 Returns an array containing two array references. The first array contains the nodes aligned to this node, the second array contains types of the links.
+
+=item my @nodes = $node->get_aligned_nodes_of_type($regex_constraint_on_type);
 
 =item delete_aligned_node
 
 =item is_aligned_to
 
+=item update_aligned_nodes()
+
+Removes all alignment links leading to nodes which have been deleted.
+
 =back
+
+=head2 References (alignment and other references depending on node subtype)
+
+=over
+
+=item my @refnodes = $node->get_referencing_nodes($ref_type);
+
+Returns an array of nodes referencing this node with the given reference type (e.g. 'alignment', 'a/lex.rf' etc.).
+
+=back 
 
 =head2 Other methods
 
@@ -1041,12 +1154,6 @@ been indexed, etc.) to the root's C<id>.
 =item my $levels = $node->get_depth();
 
 Return the depth of the node. The root has depth = 0, its children have depth = 1 etc.
-
-=item my $nonproj = $node->is_nonprojective();
-
-Return 1 if the node is attached to its parent nonprojectively, i.e. there is
-at least one node between this node and its parent that is not descendant of
-the parent. Return 0 otherwise.
 
 =item my $address = $node->get_address();
 
@@ -1066,8 +1173,10 @@ David Mareček <marecek@ufal.mff.cuni.cz>
 
 Daniel Zeman <zeman@ufal.mff.cuni.cz>
 
+Ondřej Dušek <odusek@ufal.mff.cuni.cz>
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2011 by Institute of Formal and Applied Linguistics, Charles University in Prague
+Copyright © 2011-2012 by Institute of Formal and Applied Linguistics, Charles University in Prague
 
 This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

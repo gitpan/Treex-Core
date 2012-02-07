@@ -1,6 +1,6 @@
 package Treex::Core::Node::A;
 {
-  $Treex::Core::Node::A::VERSION = '0.07191';
+  $Treex::Core::Node::A::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
@@ -9,10 +9,6 @@ with 'Treex::Core::Node::Ordered';
 with 'Treex::Core::Node::InClause';
 with 'Treex::Core::Node::EffectiveRelations';
 #with 'Treex::Core::Node::Interset';
-
-# _set_n_node is called only from Treex::Core::Node::N
-# (automatically, when a new n-node is added to the n-tree).
-has 'n_node' => ( is => 'ro', writer => '_set_n_node', );
 
 # Original w-layer and m-layer attributes
 has [qw(form lemma tag no_space_after)] => ( is => 'rw' );
@@ -32,6 +28,12 @@ sub is_coap_root {
     my ($self) = @_;
     log_fatal('Incorrect number of arguments') if @_ != 1;
     return defined $self->afun && $self->afun =~ /^(Coord|Apos)$/;
+}
+
+sub n_node {
+    my ($self) = @_;
+    my ($first_n_node) = $self->get_referencing_nodes('a.rf'); 
+    return $first_n_node;
 }
 
 #------------------------------------------------------------------------------
@@ -169,6 +171,9 @@ sub set_real_afun
 # This function is specific to the A layer because it contains the list of
 # attributes. If we could figure out the list automatically, the function would
 # become general enough to reside directly in Node.pm.
+#
+# NOTE: We could possibly make just copy_attributes() layer-dependent and unify
+# the main copy_atree code.
 #------------------------------------------------------------------------------
 sub copy_atree
 {
@@ -176,6 +181,7 @@ sub copy_atree
     my $target    = shift;
 
     # TODO probably we should do deepcopy
+    # Why is this here ? the attributes of the root node are NOT copied, are they ??
     my %copy_of_wild = %{$self->wild};
     $target->set_wild(\%copy_of_wild);
 
@@ -186,24 +192,34 @@ sub copy_atree
         # Create a copy of the child node.
         my $child1 = $target->create_child();
 
-        # We should copy all attributes that the node has but it is not easy to figure out which these are.
-        # TODO: As a workaround, we list the attributes here directly.
-        foreach my $attribute (
-            'form', 'lemma', 'tag', 'no_space_after', 'ord', 'afun', 'is_member', 'is_parenthesis_root',
-            'conll/deprel', 'conll/cpos', 'conll/pos', 'conll/feat', 'is_shared_modifier',
-            )
-        {
-            my $value = $child0->get_attr($attribute);
-            $child1->set_attr( $attribute, $value );
-        }
-
-        # TODO probably we should do deepcopy
-        my %copy_of_wild = %{$child0->wild};
-        $child1->set_wild(\%copy_of_wild);
+        # Copy all attributes of the original node to the new one
+        $child0->copy_attributes($child1);
 
         # Call recursively on the subtrees of the children.
         $child0->copy_atree($child1);
     }
+
+    return;
+}
+
+
+sub copy_attributes {
+    my ($self, $other) = @_;
+
+    # We should copy all attributes that the node has but it is not easy to figure out which these are.
+    # TODO: As a workaround, we list the attributes here directly.
+    foreach my $attribute (
+        'form', 'lemma', 'tag', 'no_space_after', 'ord', 'afun', 'is_member', 'is_parenthesis_root',
+        'conll/deprel', 'conll/cpos', 'conll/pos', 'conll/feat', 'is_shared_modifier', 'morphcat',
+        )
+    {
+        my $value = $self->get_attr($attribute);
+        $other->set_attr( $attribute, $value );
+    }
+
+    # TODO probably we should do deepcopy
+    my %copy_of_wild = %{$self->wild};
+    $other->set_wild(\%copy_of_wild);
 
     return;
 }
@@ -217,6 +233,7 @@ sub get_terminal_pnode {
         return $document->get_node_by_id( $self->get_attr('p_terminal.rf') );
     }
     else {
+        # TODO: shouldn't this just return undef and keep going? This is not consistent with other references.
         log_fatal('SEnglishA node pointing to no SEnglishP node');
     }
 }
@@ -239,6 +256,13 @@ sub get_pnodes {
     my ($self) = @_;
     return ( $self->get_terminal_pnode, $self->get_nonterminal_pnodes );
 }
+
+# -- referenced node ids --
+
+override '_get_reference_attrs' => sub {
+    my ($self) = @_;
+    return ('p_terminal.rf');
+};
 
 # -- other --
 
@@ -345,11 +369,45 @@ Treex::Core::Node::A
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
 a-layer (analytical) node
+
+=head1 ATTRIBUTES
+
+For each attribute (e.g. C<tag>), there is
+a getter method (C<< my $tag = $anode->tag(); >>)
+and a setter method (C<< $anode->set_tag('NN'); >>).
+
+=head2 Original w-layer and m-layer attributes
+
+=over
+
+=item form
+
+=item lemma
+
+=item tag
+
+=item no_space_after
+
+=back
+
+=head2 Original a-layer attributes
+
+=over
+
+=item afun
+
+=item is_parenthesis_root
+
+=item edge_to_collapse
+
+=item is_auxiliary
+
+=back
 
 =head1 METHODS
 
@@ -427,7 +485,7 @@ For example: "Bank of China"
 
 =item $node->get_subtree_string
 
-Return the string coresponding to a subtree rooted in C<$node>.
+Return the string corresponding to a subtree rooted in C<$node>.
 It's computed based on attributes C<form> and C<no_space_after>.
 
 =back
@@ -441,6 +499,6 @@ Martin Popel <popel@ufal.mff.cuni.cz>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2011 by Institute of Formal and Applied Linguistics, Charles University in Prague
+Copyright © 2011-2012 by Institute of Formal and Applied Linguistics, Charles University in Prague
 
 This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

@@ -1,6 +1,6 @@
 package Treex::Core::Scenario;
 {
-  $Treex::Core::Scenario::VERSION = '0.07191';
+  $Treex::Core::Scenario::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
@@ -79,6 +79,14 @@ has parser => (
     init_arg      => undef,
     builder       => '_build_parser',
     documentation => q{Parses treex scenarios}
+);
+
+has runner => (
+    is       => 'ro',
+    isa      => 'Treex::Core::Run',
+    writer   => '_set_runner',
+    weak_ref => 1,
+    documentation => 'Treex::Core::Run instance in which the scenario is running',
 );
 
 sub _build_scenario_string {
@@ -188,7 +196,7 @@ sub construct_scenario_string {
     my @block_strings;
     foreach my $block_item (@block_items) {
         my $name       = $block_item->{block_name};
-        my @parameters = @{ $block_item->{block_parameters} };
+        my @parameters = map {_add_quotes($_)} @{ $block_item->{block_parameters} };
         $name =~ s{^Treex::Block::}{} or $name = "::$name";    #strip leading Treex::Block:: or add leading ::
         my $params;
         if ( scalar @parameters ) {
@@ -200,6 +208,15 @@ sub construct_scenario_string {
         push @block_strings, $name . $params;
     }
     return join $delim, @block_strings;
+}
+
+sub _add_quotes { # adding quotes only if param. value contains a space
+    my ( $block_parameter ) = @_;
+    my ( $name, $value ) = split /=/,$block_parameter,2;
+    if ( $value =~ /\s/ ) {
+        return "$name=\"$value\"";
+    }
+    return $block_parameter;
 }
 
 sub load_blocks {
@@ -264,12 +281,12 @@ sub run {
             print STDERR "Document $document_number/$number_of_documents $doc_name: [success].\n";
         }
     }
-    
+
     log_info "Applying process_end";
     foreach my $block ( @{ $self->loaded_blocks } ) {
         $block->process_end();
     }
-    
+
     log_info "Processed $document_number document"
         . ( $document_number == 1 ? '' : 's' );
     return 1;
@@ -303,7 +320,7 @@ Treex::Core::Scenario - a larger Treex processing unit, composed of blocks
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 SYNOPSIS
 
@@ -325,15 +342,15 @@ name is passed.
 
 The string description of scenarios looks as follows.
 
-1) It contains a list of block names from which their 'C<Treex::Block::>' 
+1) It contains a list of block names from which their 'C<Treex::Block::>'
 prefixes were removed.
 
-2) The block names are separated by one or more whitespaces.
+2) The block names are separated by one or more white spaces.
 
-3) The block names are listed in the same order in which they should be 
+3) The block names are listed in the same order in which they should be
 applied on data.
 
-4) For each block, there can be one or more parameters specified, using the 
+4) For each block, there can be one or more parameters specified, using the
 C<attribute=value> form.
 
 5) Comments start with 'C<#>' and end with the nearest newline character.
@@ -377,9 +394,9 @@ The scenario description is loaded from the file.
 =item $scenario->run();
 
 Run the scenario.
-One of the blocks (usually the first one) must be the document reader (see 
-L<Treex::Core::DocumentReader>) that produces the 
-documents on which this scenatio is applied.
+One of the blocks (usually the first one) must be the document reader (see
+L<Treex::Core::DocumentReader>) that produces the
+documents on which this scenario is applied.
 
 =back
 
@@ -408,12 +425,12 @@ when running scenario blocks are loaded automatically
 
 =item init
 
-do all initialization so after this method scenario is ready to run 
+do all initialization so after this method scenario is ready to run
 currently just load blocks
 
 =item restart
 
-resets document readed, in future it will rebuild reloaded blocks
+resets the document reader, in future it will rebuild reloaded blocks
 
 =back
 

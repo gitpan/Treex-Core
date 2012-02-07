@@ -1,16 +1,20 @@
 package Treex::Block::Write::Text;
 {
-  $Treex::Block::Write::Text::VERSION = '0.07191';
+  $Treex::Block::Write::Text::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
-extends 'Treex::Core::Block';
+extends 'Treex::Block::Write::BaseTextWriter';
 
-#TODO implement "to"
-has to => ( isa => 'Str', is => 'ro', default => '-' );
+has '+language' => ( required => 1 );
+
+has '+extension' => ( default => '.txt' );
 
 sub process_document {
     my ( $self, $doc ) = @_;
+
+    $self->_prepare_file_handle($doc);    # open the output file handle
+
     my $doczone = $doc->get_zone( $self->language, $self->selector );
     print $doczone->text;
     return;
@@ -26,7 +30,7 @@ Treex::Block::Write::Text
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 

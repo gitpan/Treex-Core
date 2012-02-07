@@ -1,6 +1,6 @@
 package Treex::Block::Util::Eval;
 {
-  $Treex::Block::Util::Eval::VERSION = '0.07191';
+  $Treex::Block::Util::Eval::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
@@ -50,15 +50,19 @@ sub process_document {
     }
 
     if ( $self->_args->{_bundle} ) {
+        my $bundleNo = 1;
         foreach my $bundle ( $document->get_bundles() ) {
-            $self->process_bundle($bundle);
+            if ( !$self->grep_bundle || $self->grep_bundle == $bundleNo ) {
+                $self->process_bundle($bundle, $bundleNo);
+            }
+            $bundleNo++;
         }
     }
     return;
 }
 
 sub process_bundle {
-    my ( $self, $bundle ) = @_;
+    my ( $self, $bundle, $bundleNo ) = @_;
 
     # Extract variables $document ($doc), so they can be used in eval code
     my $document = $bundle->get_document();
@@ -132,7 +136,7 @@ Treex::Block::Util::Eval - Special block for evaluating code given by parameters
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 SYNOPSIS
 

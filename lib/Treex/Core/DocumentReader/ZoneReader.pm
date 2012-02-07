@@ -1,6 +1,6 @@
 package Treex::Core::DocumentReader::ZoneReader;
 {
-  $Treex::Core::DocumentReader::ZoneReader::VERSION = '0.07191';
+  $Treex::Core::DocumentReader::ZoneReader::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;

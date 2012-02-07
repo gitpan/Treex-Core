@@ -1,6 +1,6 @@
 package Treex::Core::Node::EffectiveRelations;
 {
-  $Treex::Core::Node::EffectiveRelations::VERSION = '0.07191';
+  $Treex::Core::Node::EffectiveRelations::VERSION = '0.08051';
 }
 use Moose::Role;
 
@@ -71,13 +71,26 @@ sub get_eparents {
     log_fatal('Incorrect number of arguments') if @_ > 2;
     $self->_can_apply_eff($arg_ref) or return $self->get_parent();
 
+    # Get effective parents
+    my @eparents = $self->_get_eparents($arg_ref);
+
+    # Process eventual switches (ordered=>1, add_self=>1,...)
+    delete $arg_ref->{dive};
+    delete $arg_ref->{or_topological};
+    delete $arg_ref->{ignore_incorrect_tree_structure};
+    return $self->_process_switches( $arg_ref, @eparents );
+}
+
+sub _get_eparents {
+    my ( $self, $arg_ref ) = @_;
+
     # 0) Check if there is a topological parent.
     # Otherwise, there is no chance getting effective parents.
     if ( !$self->get_parent() ) {
         my $id = $self->id;
 
         #TODO: log_fatal if !$robust
-        log_warn("The node $id has no effective nor topological parent, using the root", 1);
+        log_warn( "The node $id has no effective nor topological parent, using the root", 1 );
         return $self->get_root();
     }
 
@@ -87,11 +100,11 @@ sub get_eparents {
     my $node = $self->_get_transitive_coap_root($arg_ref) || $self;
 
     # 2) Get the parent
-    $node = $node->get_parent() or return $self->_fallback_parent();
+    $node = $node->get_parent() or return $self->_fallback_parent($arg_ref);
 
     # 3) If it is a node to be dived, look above for the first non-dive ancestor.
     while ( $arg_ref->{dive}->($node) ) {
-        $node = $node->get_parent() or return $self->_fallback_parent();
+        $node = $node->get_parent() or return $self->_fallback_parent($arg_ref);
     }
 
     # If $node is not a head of a coordination/aposition,
@@ -103,7 +116,8 @@ sub get_eparents {
     # of the coordination rooted in $node.
     my @eff = $node->get_coap_members($arg_ref);
     return @eff if @eff;
-    return $self->_fallback_parent();
+
+    return $self->_fallback_parent($arg_ref);
 }
 
 # --- Utility methods for get_echildren and get_eparents
@@ -154,10 +168,13 @@ sub _can_apply_eff {
     return 0;
 }
 
+# used only if there is an error in the tree structure,
+# eg. there is a coordination with no members or a non-root node with no parent
 sub _fallback_parent {
-    my ($self) = @_;
+    my ( $self, $arg_ref ) = @_;
     my $id = $self->get_attr('id');
-    log_warn("The node $id has no effective parent, using the topological one.");
+    log_warn "The node $id has no effective parent, using the topological one."
+        if ( !$arg_ref || !$arg_ref->{ignore_incorrect_tree_structure} );
     return $self->get_parent();
 }
 
@@ -245,7 +262,7 @@ Treex::Core::Node::EffectiveRelations
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
@@ -256,6 +273,54 @@ on the a-layer (L<Treex::Core::Node::A>) and
 on the t-layer (L<Treex::Core::Node::T>).
 
 TODO: explain it, some examples, reference to PDT manual 
+
+Eg. in the sentence "Martin and Rudolph came", the tree structure is
+
+ came(and(Martin,Rudolph))
+
+where "and" is a head of a coordination with members "Martin" and "Rudolph".
+See what the methods C<get_children>, C<get_echildren>, C<get_parent>
+and C<get_eparents> return when called on various nodes
+(some pseudocode used for better readability):
+
+
+ # CHILDREN AND EFFECTIVE CHILDREN
+
+ "came"->get_children()
+ # returns "and"
+ 
+ "came"->get_echildren()
+ # returns ("Martin", "Rudolph")
+ 
+ "and"->get_children()
+ # returns ("Martin", "Rudolph")
+ 
+ "and"->get_echildren()
+ # returns ("Martin", "Rudolph") and issues a warning:
+ # get_echildren called on coap root ([id_of_and]). Fallback to topological one.
+ 
+ "and"->get_echildren({or_topological => 1})
+ # returns ("Martin", "Rudolph") with no warning
+
+
+ # PARENTS AND EFFECTIVE PARENTS
+ 
+ "Rudolph"->get_parent()
+ # returns "and"
+ 
+ "Rudolph"->get_eparents()
+ # returns "came"
+ 
+ "and"->get_parent()
+ # returns "came"
+ 
+ "and"->get_eparents()
+ # returns "came" and issues a warning:
+ # get_eparents called on coap root ([id_of_and]). Fallback to topological one.
+ 
+ "and"->get_eparents({or_topological => 1})
+ # returns "came" with no warning
+
 
 Note that to skip prepositions and subordinating conjunctions on the a-layer,
 you must use option C<dive>, e.g.:
@@ -292,9 +357,16 @@ Typically this is used for prepositions and subord. conjunctions on a-layer.
 You can set C<dive> to the string C<AuxCP> which is a shortcut
 for C<sub {my $self=shift;return $self->afun =~ /^Aux[CP]$/;}>. 
 
+=item or_topological
+
+If the notion of effective child is not defined
+(if C<$node> is a head of coordination),
+return the topological children without warnings.
+
 =item ordered, add_self, following_only, preceding_only, first_only, last_only
 
-You can specify the same options as in L<Treex::Core::Node::get_children()|Treex::Core::Node/get_children>.
+You can specify the same options as in
+L<Treex::Core::Node::get_children()|Treex::Core::Node/get_children>.
 
 =back
 
@@ -316,6 +388,20 @@ see L<get_echildren>
 If the notion of effective parent is not defined
 (if C<$node> is a head of coordination),
 return the topological parent without warnings.
+
+=item ignore_incorrect_tree_structure
+
+If there is an error in the tree structure,
+eg. there is a coordination with no members or a non-root node with no parent,
+a warning is issued
+(C<The node [node_id] has no effective parent, using the topological one.>).
+This option supresses the warning.
+Use thoughtfully (preferably do not use at all).
+
+=item ordered, add_self, following_only, preceding_only, first_only, last_only
+
+You can specify the same options as in
+L<Treex::Core::Node::get_children()|Treex::Core::Node/get_children>.
 
 =back
 

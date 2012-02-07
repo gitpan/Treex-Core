@@ -1,13 +1,14 @@
 package Treex::Block::Write::Sentences;
 {
-  $Treex::Block::Write::Sentences::VERSION = '0.07191';
+  $Treex::Block::Write::Sentences::VERSION = '0.08051';
 }
 use Moose;
 use Treex::Core::Common;
-extends 'Treex::Core::Block';
-with 'Treex::Block::Write::Redirectable';
+extends 'Treex::Block::Write::BaseTextWriter';
 
 has '+language' => ( required => 1 );
+
+has '+extension' => ( default => '.txt' );
 
 has join_resegmented => (
     is            => 'ro',
@@ -39,7 +40,7 @@ Treex::Block::Write::Sentences
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 

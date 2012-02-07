@@ -1,6 +1,6 @@
 package Treex::Core::Bundle;
 {
-  $Treex::Core::Bundle::VERSION = '0.07191';
+  $Treex::Core::Bundle::VERSION = '0.08051';
 }
 
 use Moose;
@@ -59,14 +59,24 @@ sub get_zone {
 
 sub create_zone {
     my $self = shift;
-    my ( $language, $selector ) = pos_validated_list(
+    my ( $language, $selector, $params_rf ) = pos_validated_list(
         \@_,
         { isa => 'Treex::Type::LangCode' },
         { isa => 'Treex::Type::Selector', default => '' },
+        { isa => 'Ref' },
     );
 
-    log_fatal("Bundle already contains a zone with language='$language' and selector='$selector'")
-        if $self->get_zone( $language, $selector );
+    if ( $self->get_zone( $language, $selector ) ) {
+        if (defined $params_rf and $params_rf->{overwrite}) {
+
+        }
+        else {
+            log_fatal("Bundle already contains a zone with language='$language' and selector='$selector'. "
+                          . "Use create_zone(...,{overwrite=>1}) to remove it first.")
+        }
+    }
+
+
 
     my $new_zone = Treex::Core::BundleZone->new(
         {
@@ -132,6 +142,34 @@ sub remove_zone {
         or log_fatal "Zone to be deleted was not found. This should never happen";
     return;
 }
+
+sub remove {
+    my ( $self ) = @_;
+
+    # clean the bundle's content first (to ensure de-indexing)
+    foreach my $zone ( $self->get_all_zones ) {
+        $self->remove_zone( $zone->language, $zone->selector );
+    }
+
+    my $position = 0;
+
+    # find the bundle's position (this is quite inefficient, as the info about
+    # bundle's position is stored nowhere), and delete the bundle using Treex::PML API
+  BUNDLE:
+    foreach my $bundle ( $self->get_document->get_bundles ) {
+        if ( $bundle eq $self ) {
+            last BUNDLE;
+        }
+        else {
+            $position++;
+        }
+    }
+
+    $self->get_document->delete_tree($position);
+    bless $self, 'Treex::Core::Node::Removed';
+    return;
+}
+
 
 # --------- ACCESS TO TREES ------------
 
@@ -218,6 +256,18 @@ sub get_position {
     return $position_of_reference;
 }
 
+# --------- ACCESS TO ATTRIBUTES ------------
+
+sub get_attr {
+    my $self = shift;
+    my ($attr_name) = pos_validated_list(
+        \@_,
+        { isa => 'Str' },
+    );
+    return $self->{$attr_name};
+}
+
+
 __PACKAGE__->meta->make_immutable;
 
 1;
@@ -235,7 +285,7 @@ Treex::Core::Bundle - a set of equivalent sentences in the Treex framework
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 
@@ -294,7 +344,11 @@ to distinguish zones for the same language but from a different source.
 
 =over 4
 
-=item my $zone = $bundle->create_zone( $langcode, ?$selector );
+=item my $zone = $bundle->create_zone( $langcode, ?$selector, ?$params_rf );
+
+If the third argument is {overwrite=>1}, then the newly created empty zone
+overwrites the previously existing one (if any). Fatal error appears if
+the zone to be created already exists and this switch is not used.
 
 =item my $zone = $bundle->get_zone( $langcode, ?$selector );
 

@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Labels;
 {
-  $Treex::Core::TredView::Labels::VERSION = '0.07191';
+  $Treex::Core::TredView::Labels::VERSION = '0.08051';
 }
 
 use Moose;
@@ -206,7 +206,12 @@ sub _anode_labels {
     if ($par) {
         $line1 = $self->_colors->get( 'parenthesis', 1 );
     }
-    $line1 .= $node->form;
+    if ( defined($node->form) ){
+        $line1 .= $node->form;
+    }
+    elsif ( defined($node->lemma) ){
+        $line1 .= $self->_colors->get( 'error', 1 ) . $node->lemma;
+    }
 
     my $edge_label = $node->afun || $node->conll_deprel;
     my $color = $edge_label && $edge_label ne 'NR' ? $self->_colors->get( 'afun', 1 ) : $self->_colors->get( 'error', 1 );
@@ -267,6 +272,7 @@ sub _tnode_labels {
     $line2 .= $self->_colors->get( 'subfunctor', 1 ) . '.state'                  if $node->{is_state};
     $line2 .= $self->_colors->get( 'subfunctor', 1 ) . '.dsp_root'               if $node->{is_dsp_root};
     $line2 .= $self->_colors->get( 'member',     1 ) . '.member'                 if $node->{is_member};
+    $line2 .= $self->_colors->get( 'formeme',    1 ) . ' ' . $node->formeme      if $node->formeme;
 
     my @a_nodes = ();
     my $line3_1 = '';
@@ -281,7 +287,7 @@ sub _tnode_labels {
     }
     if (@a_nodes) {
         @a_nodes = sort { $a->{ord} <=> $b->{ord} } @a_nodes;
-        @a_nodes = map { ( $_->{type} eq 'lex' ? $self->_colors->get( 'lex', 1 ) : $self->_colors->get( 'aux', 1 ) ) . $_->{form} } @a_nodes;
+        @a_nodes = map { ( $_->{type} eq 'lex' ? $self->_colors->get( 'lex', 1 ) : $self->_colors->get( 'aux', 1 ) ) . ( $_->{form} // '' ) } @a_nodes;
         $line3_1 = join " ", @a_nodes;
     }
 
@@ -307,17 +313,20 @@ sub _nnode_labels {
 sub _pnode_labels {
     my ( $self, $node ) = @_;
 
-    my $terminal = $node->get_pml_type_name eq 'p-terminal.type' ? 1 : 0;
+#    my $terminal = $node->get_pml_type_name eq 'p-terminal.type' ? 1 : 0;
 
     my $line1 = '';
     my $line2 = '';
-    if ($terminal) {
+    my $edgelabel = $node->edgelabel() ? '/'.$node->edgelabel() : '';
+#    print "$node is_leaf ".$node->is_leaf."\n";
+    if ( $node->is_leaf ) {
         $line1 = $node->{form};
-        $line2 = $node->{tag};
+        $line2 = $node->{tag}.$edgelabel;
         $line2 = '-' if $line2 eq '-NONE-';
     }
     else {
-        $line1 = $self->_colors->get( 'phrase', 1 ) . $node->{phrase} . '#{black}' . join( '', map {"-$_"} TredMacro::ListV( $node->{functions} ) );
+        my $phrase = $node->{phrase} ? $node->{phrase} : '';
+        $line1 = $self->_colors->get( 'phrase', 1 ) . $phrase.$edgelabel . '#{black}' . join( '', map {"-$_"} TredMacro::ListV( $node->{functions} ) );
     }
 
     return [
@@ -337,7 +346,7 @@ Treex::Core::TredView::Labels - Labels of tree nodes in Tred
 
 =head1 VERSION
 
-version 0.07191
+version 0.08051
 
 =head1 DESCRIPTION
 

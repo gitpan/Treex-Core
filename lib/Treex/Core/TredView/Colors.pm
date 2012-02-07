@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Colors;
 {
-  $Treex::Core::TredView::Colors::VERSION = '0.07191';
+  $Treex::Core::TredView::Colors::VERSION = '0.08051';
 }
 
 use Moose;
@@ -46,6 +46,7 @@ sub _build_colors {
         'nodetype'    => '#00008b',
         'sempos'      => '#8b008b',
         'phrase'      => '#00008b',
+        'formeme'     => '#b000b0',
 
         'clause0' => '#ff00ff',         #magenta
         'clause1' => '#ffa500',         #orange

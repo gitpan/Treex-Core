@@ -16,7 +16,8 @@ lib/Treex/Block/Util/ChangeDocumentPath.pm
 lib/Treex/Block/Util/DefinedAttr.pm
 lib/Treex/Block/Util/Eval.pm
 lib/Treex/Block/Util/SetGlobal.pm
-lib/Treex/Block/Write/Redirectable.pm
+lib/Treex/Block/Write/BaseTextWriter.pm
+lib/Treex/Block/Write/BaseWriter.pm
 lib/Treex/Block/Write/Sentences.pm
 lib/Treex/Block/Write/Text.pm
 lib/Treex/Block/Write/Treex.pm
@@ -47,6 +48,7 @@ lib/Treex/Core/Scenario.pm
 lib/Treex/Core/ScenarioParser.pm
 lib/Treex/Core/ScenarioParser.rdg
 lib/Treex/Core/TredView.pm
+lib/Treex/Core/TredView/BackendStorable.pm
 lib/Treex/Core/TredView/Colors.pm
 lib/Treex/Core/TredView/Common.pm
 lib/Treex/Core/TredView/Labels.pm
@@ -75,6 +77,8 @@ t/00-compile.t
 t/a_effective_rel.t
 t/attribute.t
 t/author-critic.t
+t/author-test-eol.t
+t/backrefs.t
 t/base.t
 t/block.t
 t/bundle.t
@@ -98,7 +102,6 @@ t/qparallel.t
 t/release-cpan-changes.t
 t/release-dist-manifest.t
 t/release-distmeta.t
-t/release-eol.t
 t/release-kwalitee.t
 t/release-minimum-version.t
 t/release-mojibake.t
@@ -110,6 +113,7 @@ t/release-portability.t
 t/release-synopsis.t
 t/release-test-version.t
 t/release-unused-vars.t
+t/remove_bundle.t
 t/resource.t
 t/run.t
 t/runall.sh
@@ -119,6 +123,7 @@ t/scenarios/print3.scen
 t/scenarios/print4.scen
 t/scenarios/scen_in_scen.scen
 t/space_in_block_arg.t
+t/storable.t
 t/t_effective_rel.t
 t/test.scen
 t/trees.t
