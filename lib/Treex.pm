@@ -1,6 +1,6 @@
 package Treex;
-{
-  $Treex::VERSION = '0.08051';
+BEGIN {
+  $Treex::VERSION = '0.08083';
 }
 use strict;
 use warnings;
@@ -16,7 +16,7 @@ Treex - Natural Language Processing framework
 
 =head1 VERSION
 
-version 0.08051
+version 0.08083
 
 =head1 INTRODUCTION
 
@@ -191,6 +191,8 @@ Václav Novák
 Jan Ptáček
 
 Rudolf Rosa
+
+Josef Toman
 
 Daniel Zeman
 

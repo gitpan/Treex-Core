@@ -1,6 +1,6 @@
 package Treex::Block::Util::DefinedAttr;
-{
-  $Treex::Block::Util::DefinedAttr::VERSION = '0.08051';
+BEGIN {
+  $Treex::Block::Util::DefinedAttr::VERSION = '0.08083';
 }
 use Moose;
 use Treex::Core::Common;
@@ -76,7 +76,7 @@ Treex::Block::Util::DefinedAttr - Special block for checking C<undef> attributes
 
 =head1 VERSION
 
-version 0.08051
+version 0.08083
 
 =head1 SYNOPSIS
 

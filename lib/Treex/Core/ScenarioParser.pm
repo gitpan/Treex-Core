@@ -1,6 +1,6 @@
 package Treex::Core::ScenarioParser;
-{
-  $Treex::Core::ScenarioParser::VERSION = '0.08051';
+BEGIN {
+  $Treex::Core::ScenarioParser::VERSION = '0.08083';
 }
 use Parse::RecDescent;
 
@@ -8,8 +8,8 @@ use Parse::RecDescent;
 
 
 package Parse::RecDescent::Treex::Core::ScenarioParser;
-{
-  $Parse::RecDescent::Treex::Core::ScenarioParser::VERSION = '0.08051';
+BEGIN {
+  $Parse::RecDescent::Treex::Core::ScenarioParser::VERSION = '0.08083';
 }
 use strict;
 use vars qw($skip $AUTOLOAD  );
@@ -4969,7 +4969,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                   'opcount' => 0,
                                                   'prods' => [
                                                                bless( {
-                                                                        'number' => 0,
+                                                                        'number' => '0',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5008,7 +5008,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                   'opcount' => 0,
                                                   'prods' => [
                                                                bless( {
-                                                                        'number' => 0,
+                                                                        'number' => '0',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5043,7 +5043,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                        'opcount' => 0,
                                                        'prods' => [
                                                                     bless( {
-                                                                             'number' => 0,
+                                                                             'number' => '0',
                                                                              'strcount' => 0,
                                                                              'dircount' => 0,
                                                                              'uncommit' => undef,
@@ -5071,7 +5071,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                              'line' => undef
                                                                            }, 'Parse::RecDescent::Production' ),
                                                                     bless( {
-                                                                             'number' => 1,
+                                                                             'number' => '1',
                                                                              'strcount' => 0,
                                                                              'dircount' => 0,
                                                                              'uncommit' => undef,
@@ -5108,7 +5108,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                           'opcount' => 0,
                                                           'prods' => [
                                                                        bless( {
-                                                                                'number' => 0,
+                                                                                'number' => '0',
                                                                                 'strcount' => 0,
                                                                                 'dircount' => 0,
                                                                                 'uncommit' => undef,
@@ -5147,7 +5147,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                     'opcount' => 0,
                                                     'prods' => [
                                                                  bless( {
-                                                                          'number' => 0,
+                                                                          'number' => '0',
                                                                           'strcount' => 0,
                                                                           'dircount' => 0,
                                                                           'uncommit' => undef,
@@ -5186,7 +5186,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                 'opcount' => 0,
                                                 'prods' => [
                                                              bless( {
-                                                                      'number' => 0,
+                                                                      'number' => '0',
                                                                       'strcount' => 0,
                                                                       'dircount' => 0,
                                                                       'uncommit' => undef,
@@ -5219,7 +5219,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                       'opcount' => 0,
                                                       'prods' => [
                                                                    bless( {
-                                                                            'number' => 0,
+                                                                            'number' => '0',
                                                                             'strcount' => 0,
                                                                             'dircount' => 0,
                                                                             'uncommit' => undef,
@@ -5254,7 +5254,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                    'opcount' => 0,
                                                    'prods' => [
                                                                 bless( {
-                                                                         'number' => 0,
+                                                                         'number' => '0',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,
@@ -5290,7 +5290,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                          'line' => undef
                                                                        }, 'Parse::RecDescent::Production' ),
                                                                 bless( {
-                                                                         'number' => 1,
+                                                                         'number' => '1',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,
@@ -5330,7 +5330,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                       'opcount' => 0,
                                                       'prods' => [
                                                                    bless( {
-                                                                            'number' => 0,
+                                                                            'number' => '0',
                                                                             'strcount' => 0,
                                                                             'dircount' => 0,
                                                                             'uncommit' => undef,
@@ -5378,7 +5378,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                  'opcount' => 0,
                                                  'prods' => [
                                                               bless( {
-                                                                       'number' => 0,
+                                                                       'number' => '0',
                                                                        'strcount' => 0,
                                                                        'dircount' => 0,
                                                                        'uncommit' => undef,
@@ -5412,7 +5412,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                        'line' => undef
                                                                      }, 'Parse::RecDescent::Production' ),
                                                               bless( {
-                                                                       'number' => 1,
+                                                                       'number' => '1',
                                                                        'strcount' => 0,
                                                                        'dircount' => 0,
                                                                        'uncommit' => undef,
@@ -5438,7 +5438,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                        'line' => undef
                                                                      }, 'Parse::RecDescent::Production' ),
                                                               bless( {
-                                                                       'number' => 2,
+                                                                       'number' => '2',
                                                                        'strcount' => 0,
                                                                        'dircount' => 0,
                                                                        'uncommit' => undef,
@@ -5479,7 +5479,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                   'opcount' => 0,
                                                   'prods' => [
                                                                bless( {
-                                                                        'number' => 0,
+                                                                        'number' => '0',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5513,7 +5513,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                         'line' => undef
                                                                       }, 'Parse::RecDescent::Production' ),
                                                                bless( {
-                                                                        'number' => 1,
+                                                                        'number' => '1',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5551,7 +5551,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                         'line' => undef
                                                                       }, 'Parse::RecDescent::Production' ),
                                                                bless( {
-                                                                        'number' => 2,
+                                                                        'number' => '2',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5592,7 +5592,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                   'opcount' => 0,
                                                   'prods' => [
                                                                bless( {
-                                                                        'number' => 0,
+                                                                        'number' => '0',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5631,7 +5631,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                     'opcount' => 0,
                                                     'prods' => [
                                                                  bless( {
-                                                                          'number' => 0,
+                                                                          'number' => '0',
                                                                           'strcount' => 0,
                                                                           'dircount' => 0,
                                                                           'uncommit' => undef,
@@ -5672,7 +5672,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                   'opcount' => 0,
                                                   'prods' => [
                                                                bless( {
-                                                                        'number' => 0,
+                                                                        'number' => '0',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5708,7 +5708,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                         'line' => undef
                                                                       }, 'Parse::RecDescent::Production' ),
                                                                bless( {
-                                                                        'number' => 1,
+                                                                        'number' => '1',
                                                                         'strcount' => 0,
                                                                         'dircount' => 0,
                                                                         'uncommit' => undef,
@@ -5750,7 +5750,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                  'opcount' => 0,
                                                  'prods' => [
                                                               bless( {
-                                                                       'number' => 0,
+                                                                       'number' => '0',
                                                                        'strcount' => 0,
                                                                        'dircount' => 0,
                                                                        'uncommit' => undef,
@@ -5784,7 +5784,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                        'line' => undef
                                                                      }, 'Parse::RecDescent::Production' ),
                                                               bless( {
-                                                                       'number' => 1,
+                                                                       'number' => '1',
                                                                        'strcount' => 0,
                                                                        'dircount' => 0,
                                                                        'uncommit' => undef,
@@ -5821,7 +5821,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                     'opcount' => 0,
                                                     'prods' => [
                                                                  bless( {
-                                                                          'number' => 0,
+                                                                          'number' => '0',
                                                                           'strcount' => 0,
                                                                           'dircount' => 0,
                                                                           'uncommit' => undef,
@@ -5849,7 +5849,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                           'line' => undef
                                                                         }, 'Parse::RecDescent::Production' ),
                                                                  bless( {
-                                                                          'number' => 1,
+                                                                          'number' => '1',
                                                                           'strcount' => 0,
                                                                           'dircount' => 0,
                                                                           'uncommit' => undef,
@@ -5894,7 +5894,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                     'opcount' => 0,
                                                     'prods' => [
                                                                  bless( {
-                                                                          'number' => 0,
+                                                                          'number' => '0',
                                                                           'strcount' => 0,
                                                                           'dircount' => 0,
                                                                           'uncommit' => undef,
@@ -5937,7 +5937,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                     'opcount' => 0,
                                                     'prods' => [
                                                                  bless( {
-                                                                          'number' => 0,
+                                                                          'number' => '0',
                                                                           'strcount' => 0,
                                                                           'dircount' => 0,
                                                                           'uncommit' => undef,
@@ -5979,7 +5979,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                           'line' => undef
                                                                         }, 'Parse::RecDescent::Production' ),
                                                                  bless( {
-                                                                          'number' => 1,
+                                                                          'number' => '1',
                                                                           'strcount' => 0,
                                                                           'dircount' => 0,
                                                                           'uncommit' => undef,
@@ -6013,7 +6013,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                    'opcount' => 0,
                                                    'prods' => [
                                                                 bless( {
-                                                                         'number' => 0,
+                                                                         'number' => '0',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,
@@ -6047,7 +6047,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                          'line' => undef
                                                                        }, 'Parse::RecDescent::Production' ),
                                                                 bless( {
-                                                                         'number' => 1,
+                                                                         'number' => '1',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,
@@ -6087,7 +6087,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                   'opcount' => 0,
                                                   'prods' => [
                                                                bless( {
-                                                                        'number' => 0,
+                                                                        'number' => '0',
                                                                         'strcount' => 1,
                                                                         'dircount' => 1,
                                                                         'uncommit' => undef,
@@ -6151,7 +6151,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                    'opcount' => 0,
                                                    'prods' => [
                                                                 bless( {
-                                                                         'number' => 0,
+                                                                         'number' => '0',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,
@@ -6197,7 +6197,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                          'line' => undef
                                                                        }, 'Parse::RecDescent::Production' ),
                                                                 bless( {
-                                                                         'number' => 1,
+                                                                         'number' => '1',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,
@@ -6243,7 +6243,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                          'line' => undef
                                                                        }, 'Parse::RecDescent::Production' ),
                                                                 bless( {
-                                                                         'number' => 2,
+                                                                         'number' => '2',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,
@@ -6289,7 +6289,7 @@ package Treex::Core::ScenarioParser; sub new { my $self = bless( {
                                                                          'line' => undef
                                                                        }, 'Parse::RecDescent::Production' ),
                                                                 bless( {
-                                                                         'number' => 3,
+                                                                         'number' => '3',
                                                                          'strcount' => 0,
                                                                          'dircount' => 0,
                                                                          'uncommit' => undef,

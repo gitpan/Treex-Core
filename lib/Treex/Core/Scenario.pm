@@ -1,12 +1,13 @@
 package Treex::Core::Scenario;
-{
-  $Treex::Core::Scenario::VERSION = '0.08051';
+BEGIN {
+  $Treex::Core::Scenario::VERSION = '0.08083';
 }
 use Moose;
 use Treex::Core::Common;
 use File::Basename;
 use File::Slurp;
 use File::chdir;
+use Parse::RecDescent 1.967003;
 
 has from_file => (
     is            => 'ro',
@@ -82,10 +83,10 @@ has parser => (
 );
 
 has runner => (
-    is       => 'ro',
-    isa      => 'Treex::Core::Run',
-    writer   => '_set_runner',
-    weak_ref => 1,
+    is            => 'ro',
+    isa           => 'Treex::Core::Run',
+    writer        => '_set_runner',
+    weak_ref      => 1,
     documentation => 'Treex::Core::Run instance in which the scenario is running',
 );
 
@@ -149,7 +150,6 @@ sub _build_parser {
         1;
     } and return $parser;
     log_info("Cannot find precompiled scenario parser, trying to build it from grammar");
-    use Parse::RecDescent;
     my $dir  = $self->_my_dir();             #get module's directory
     my $file = "$dir/ScenarioParser.rdg";    #find grammar file
     log_fatal("Cannot find grammar file") if !-e $file;
@@ -195,8 +195,8 @@ sub construct_scenario_string {
     my $delim       = $multiline ? qq{\n} : q{ };
     my @block_strings;
     foreach my $block_item (@block_items) {
-        my $name       = $block_item->{block_name};
-        my @parameters = map {_add_quotes($_)} @{ $block_item->{block_parameters} };
+        my $name = $block_item->{block_name};
+        my @parameters = map { _add_quotes($_) } @{ $block_item->{block_parameters} };
         $name =~ s{^Treex::Block::}{} or $name = "::$name";    #strip leading Treex::Block:: or add leading ::
         my $params;
         if ( scalar @parameters ) {
@@ -210,9 +210,9 @@ sub construct_scenario_string {
     return join $delim, @block_strings;
 }
 
-sub _add_quotes { # adding quotes only if param. value contains a space
-    my ( $block_parameter ) = @_;
-    my ( $name, $value ) = split /=/,$block_parameter,2;
+sub _add_quotes {    # adding quotes only if param. value contains a space
+    my ($block_parameter) = @_;
+    my ( $name, $value ) = split /=/, $block_parameter, 2;
     if ( $value =~ /\s/ ) {
         return "$name=\"$value\"";
     }
@@ -320,7 +320,7 @@ Treex::Core::Scenario - a larger Treex processing unit, composed of blocks
 
 =head1 VERSION
 
-version 0.08051
+version 0.08083
 
 =head1 SYNOPSIS
 
