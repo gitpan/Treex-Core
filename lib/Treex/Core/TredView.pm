@@ -1,6 +1,6 @@
 package Treex::Core::TredView;
 BEGIN {
-  $Treex::Core::TredView::VERSION = '0.08083';
+  $Treex::Core::TredView::VERSION = '0.08157';
 }
 
 # planned to be used from contrib.mac of tred's extensions
@@ -757,7 +757,7 @@ Treex::Core::TredView - visualization of Treex files in TrEd
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 

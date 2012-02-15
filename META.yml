@@ -65,7 +65,8 @@ requires:
   autodie: 0
   integer: 0
   open: 0
+  overload: 0
   perl: 5.010
   utf8: 0
   vars: 0
-version: 0.08083
+version: 0.08157

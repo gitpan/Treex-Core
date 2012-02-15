@@ -1,6 +1,6 @@
 package Treex::Core::Node::N;
 BEGIN {
-  $Treex::Core::Node::N::VERSION = '0.08083';
+  $Treex::Core::Node::N::VERSION = '0.08157';
 }
 use Moose;
 use Treex::Core::Common;
@@ -12,14 +12,6 @@ sub get_pml_type_name {
     my ($self) = @_;
     return $self->is_root() ? 'n-root.type' : 'n-node.type';
 }
-
-# Nodes on the n-layer have no ordering attribute.
-# (It is not needed, trees are projective,
-#  the order is implied by the ordering of siblings.)
-override 'get_ordering_value' => sub {
-    my ($self) = @_;
-    return;
-};
 
 override '_get_reference_attrs' => sub {
     my ($self) = @_;
@@ -51,7 +43,7 @@ Treex::Core::Node::N
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 

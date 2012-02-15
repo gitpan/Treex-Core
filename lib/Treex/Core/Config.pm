@@ -1,6 +1,6 @@
 package Treex::Core::Config;
 BEGIN {
-  $Treex::Core::Config::VERSION = '0.08083';
+  $Treex::Core::Config::VERSION = '0.08157';
 }
 use strict;
 use warnings;
@@ -9,7 +9,7 @@ use 5.010;    # operator //
 use File::HomeDir 0.97;
 use File::ShareDir;
 use File::Spec;
-use File::Slurp 9999;    # prior versions has different interface
+use File::Slurp 9999;    # prior versions had different interface
 use Cwd qw(realpath);
 use Treex::Core::Log;
 use YAML 0.72 qw(LoadFile DumpFile);
@@ -24,7 +24,7 @@ our %service;                   ## no critic (ProhibitPackageVars)
 our $params_validate = 0;       ## no critic (ProhibitPackageVars)
 
 my $config = __PACKAGE__->_load_config();
-my $running_in_tred; ## no critic (ProhibitUnusedVariables)
+my $running_in_tred;            ## no critic (ProhibitUnusedVariables)
 
 sub _load_config {
     my $self     = shift;
@@ -48,7 +48,7 @@ END {
 
 sub config_dir {
     my $self = shift;
-    my $dirname = $ENV{TREEX_CONFIG} // File::Spec->catdir( File::HomeDir->my_home(), '.treex' );
+    my $dirname = $ENV{TREEX_CONFIG} // File::Spec->catdir( File::HomeDir->my_home(), '.treex' );    # if evironment variable not set defaults to ~/.treex
     if ( !-e $dirname ) {
         mkdir $dirname;
     }
@@ -56,7 +56,7 @@ sub config_dir {
         return $dirname;
     }
     else {
-        return File::HomeDir->my_dist_config( 'Treex-Core', { create => 1 } );
+        return File::HomeDir->my_dist_config( 'Treex-Core', { create => 1 } );    #last fallback, hidden somwhere under ~/.local directory
     }
 }
 
@@ -71,7 +71,7 @@ sub _default_resource_path {
     push @path, File::Spec->catdir( $self->config_dir(), 'share' );
     push @path, File::HomeDir->my_dist_data( 'Treex-Core', { create => 0 } );
     if ( defined $ENV{TMT_ROOT} ) {
-        push @path, realpath( $ENV{TMT_ROOT} . '/share' );
+        push @path, File::Spec->catdir( $ENV{TMT_ROOT}, 'share' );
     }
     return @path if wantarray;
     return \@path;
@@ -104,6 +104,7 @@ sub share_dir {
         return $config->{share_dir};
     }
     else {
+        delete $config->{share_dir};
         my $share_dir;
 
         # return File::HomeDir->my_home."/.treex/share"; # future solution, probably symlink
@@ -113,7 +114,8 @@ sub share_dir {
         else {
             $share_dir = File::Spec->catdir( $self->config_dir(), 'share' );           # by default take ~/.treex/share
         }
-        $config->{share_dir} = $share_dir;
+
+        #$config->{share_dir} = $share_dir;
         return $share_dir;
 
     }
@@ -130,7 +132,8 @@ sub share_url {
 sub tred_dir {
     my $self = shift;
     if ( !defined $config->{tred_dir} || !defined realpath( $config->{tred_dir} ) ) {
-        $config->{tred_dir} = realpath( $self->share_dir() . '/tred/' );
+        delete $config->{tred_dir};
+        return realpath( File::Spec->catdir( $self->share_dir(), 'tred' ) );
     }
     return $config->{tred_dir};
 }
@@ -138,21 +141,26 @@ sub tred_dir {
 sub pml_schema_dir {
     my $self = shift;
     if ( !defined $config->{pml_schema_dir} || !defined realpath( $config->{pml_schema_dir} ) ) {
+        delete $config->{pml_schema_dir};
         if ( $self->_devel_version() ) {
-            $config->{pml_schema_dir} = realpath( $self->lib_core_dir() . "/share/tred_extension/treex/resources/" );
+
+            #$config->{pml_schema_dir} = realpath( $self->lib_core_dir() . "/share/tred_extension/treex/resources/" );
+            return realpath( $self->lib_core_dir() . "/share/tred_extension/treex/resources/" );
         }
         else {
-            $config->{pml_schema_dir} = realpath( File::ShareDir::dist_dir('Treex-Core') . "/tred_extension/treex/resources/" );    #that's different share than former TMT_SHARE
+
+            #$config->{pml_schema_dir} = realpath( File::ShareDir::dist_dir('Treex-Core') . "/tred_extension/treex/resources/" );    #that's different share than former TMT_SHARE
+            return realpath( File::Spec->catdir( File::ShareDir::dist_dir('Treex-Core'), qw(tred_extension treex resources) ) );    #that's different share than former TMT_SHARE
         }
     }
     return $config->{pml_schema_dir};
 }
 
-# tenhle adresar ted vubec v balicku neni!
 sub tred_extension_dir {
     my $self = shift;
     if ( !defined $config->{tred_extension_dir} || !defined realpath( $config->{tred_extension_dir} ) ) {
-        $config->{tred_extension_dir} = realpath( $self->pml_schema_dir() . "/../../" );
+        delete $config->{tred_extension_dir};
+        return realpath( File::Spec->catdir( $self->pml_schema_dir(), q(..), q(..) ) );
     }
     return $config->{tred_extension_dir};
 }
@@ -165,7 +173,8 @@ sub lib_core_dir {
 sub tmp_dir {
     my $self = shift;
     if ( !defined $config->{tmp_dir} || !defined realpath( $config->{tmp_dir} ) ) {
-        $config->{tmp_dir} = $self->_default_tmp_dir();
+        delete $config->{tmp_dir};
+        return $self->_default_tmp_dir();
     }
     return $config->{tmp_dir};
 }
@@ -174,7 +183,7 @@ sub _default_tmp_dir {
     my $self      = shift;
     my $dot_treex = File::HomeDir->my_dist_data( 'Treex-Core', { create => 1 } );
     my $suffix    = 'tmp';
-    my $tmp_dir   = realpath("$dot_treex/$suffix");
+    my $tmp_dir   = File::Spec->catdir( $dot_treex, $suffix );
     if ( !-e $tmp_dir ) {
         mkdir $tmp_dir or log_fatal("Cannot create temporary directory");
     }
@@ -203,7 +212,7 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 SYNOPSIS
 
@@ -215,6 +224,10 @@ version 0.08083
 
 This module provides information about the current installed Treex framework,
 for instance paths to its components.
+By default the configuration is stored in C<$HOME/.treex/config.yaml>.
+You can specify an alternative directory for C<config.yaml>
+by setting the C<$TREEX_CONFIG> environment variable.
+You can edit C<config.yaml>, so it suits your needs.
 
 =head1 FUNCTIONS
 

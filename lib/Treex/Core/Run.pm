@@ -1,6 +1,6 @@
 package Treex::Core::Run;
 BEGIN {
-  $Treex::Core::Run::VERSION = '0.08083';
+  $Treex::Core::Run::VERSION = '0.08157';
 }
 use 5.008;
 use Moose;
@@ -71,13 +71,6 @@ has 'selector' => (
     cmd_aliases   => 'S',
     is            => 'rw', isa => 'Treex::Type::Selector',
     documentation => q{shortcut for adding "Util::SetGlobal selector=xy" at the beginning of the scenario},
-);
-
-has 'filelist' => (
-    traits        => ['Getopt'],
-    cmd_aliases   => 'l',
-    is            => 'rw', isa => 'Str',
-    documentation => 'TODO load a list of treex files from a file',
 );
 
 # treex -h should not print "Unknown option: h" before the usage.
@@ -166,7 +159,6 @@ has 'priority' => (
     documentation => 'Priority for qsub (an integer in the range -1023 to 1024, default=0). Requires -p.',
 );
 
-
 has 'watch' => (
     traits        => ['Getopt'],
     is            => 'ro',
@@ -225,10 +217,16 @@ sub _usage_format {
 
 #gets info about version of treex and perl
 sub get_version {
-    my $perl_v         = $^V;
-    my $perl_x         = $^X;
-    my $treex_v        = $Treex::Core::Run::VERSION || 'DEV';
-    my $treex_x        = which('treex');
+    my $perl_v  = $^V;
+    my $perl_x  = $^X;
+    my $treex_v = $Treex::Core::Run::VERSION || 'DEV';
+    my $treex_x = which('treex');
+
+    # File::Which::which sometimes fails to found treex.
+    if ( !defined $treex_x ) {
+        chomp( $treex_x = `which treex 2> /dev/null` );
+        $treex_x ||= '<treex not found in $PATH>';
+    }
     my $version_string = <<"VERSIONS";
 Treex version: $treex_v from $treex_x
 Perl version: $perl_v from $perl_x
@@ -245,9 +243,6 @@ sub BUILD {
     }
 
     my @file_sources;
-    if ( $self->filelist ) {
-        push @file_sources, "filelist option";
-    }
     if ( $self->filenames ) {
         push @file_sources, "files after --";
     }
@@ -336,11 +331,13 @@ sub _execute {
 }
 
 my %READER_FOR = (
-    'treex' => 'Treex',
+    'treex'    => 'Treex',
     'treex.gz' => 'Treex',
-    'txt'   => 'Text',
+    'txt'      => 'Text',
     'txt.gz'   => 'Text',
     'streex'   => 'Treex',
+    'mrg'      => 'PennMrg',
+    'mrg.gz'   => 'PennMrg',
 
     # TODO:
     # conll  => 'Conll',
@@ -349,10 +346,10 @@ my %READER_FOR = (
 );
 
 sub _get_reader_name_for {
-    my $self  = shift;
-    my @names = @_;
-    my $base_re = join('|', keys %READER_FOR);
-    my $re    = qr{\.($base_re)$};
+    my $self    = shift;
+    my @names   = @_;
+    my $base_re = join( '|', keys %READER_FOR );
+    my $re      = qr{\.($base_re)$};
     my @extensions;
     my $first;
 
@@ -360,10 +357,10 @@ sub _get_reader_name_for {
         if ( $name =~ /$re/ ) {
             my $current = $1;
             $current =~ s/\.gz$//;
-            if (!defined $first) {
+            if ( !defined $first ) {
                 $first = $current;
             }
-            log_fatal 'All files (' . join( ',', @names ) . ') must have the same extension' if ($current ne $first);
+            log_fatal 'All files (' . join( ',', @names ) . ') must have the same extension' if ( $current ne $first );
             push @extensions, $current;
         }
         else {
@@ -398,18 +395,6 @@ sub _execute_locally {
         $mask =~ s/^['"](.+)['"]$/$1/;
         my @files = glob $mask;
         log_fatal "No files matching mask $mask" if @files == 0;
-        $self->set_filenames( \@files );
-    }
-    elsif ( $self->filelist ) {
-        open my $FL, "<:encoding(utf8)", $self->filelist
-            or log_fatal "Cannot open file list " . $self->filelist;
-        my @files;
-        while (<$FL>) {
-            chomp;
-            push @files, $_;
-        }
-        close $FL or log_fatal "Cannot close file list " . $self->filelist;
-        log_fatal q(No files matching mask ') . $self->glob . q('\n) if @files == 0;
         $self->set_filenames( \@files );
     }
 
@@ -524,7 +509,7 @@ sub _create_job_scripts {
     # You cannot use interactive input from terminal to "treex -p".
     # (If you really need it, use perl -npe 1 | treex -p ...)
     my $input = '';
-    if ( ! IO::Interactive::is_interactive(*STDIN) ) {
+    if ( !IO::Interactive::is_interactive(*STDIN) ) {
         my $stdin_file = "$workdir/input";
         $input = "cat $stdin_file | ";
         ## no critic (ProhibitExplicitStdin)
@@ -572,7 +557,7 @@ sub _run_job_scripts {
         }
         else {
             my $qsub_opts = '-cwd -e output/ -S /bin/bash ' . $self->qsub;
-            if ($self->priority){
+            if ( $self->priority ) {
                 $qsub_opts .= ' -p ' . $self->priority;
             }
             open my $QSUB, "cd $workdir && qsub $qsub_opts $script_filename |" or log_fatal $!;    ## no critic (ProhibitTwoArgOpen)
@@ -755,7 +740,7 @@ sub _check_job_errors {
         log_info "********************** FATAL ERRORS FOUND IN JOB $fatal_job ******************\n";
         log_info "$fatal_lines\n";
         log_info "********************** END OF JOB $fatal_job FATAL ERRORS LOG ****************\n";
-        if ($self->survive){
+        if ( $self->survive ) {
             log_warn("fatal error ignored due to the --survive option, be careful");
             return;
         }
@@ -808,7 +793,7 @@ sub _execute_on_cluster {
     }
 
     foreach my $subdir (qw(output scripts)) {
-        mkdir $self->workdir . "/$subdir" or log_fatal $!;
+        mkdir $self->workdir . "/$subdir" or log_fatal 'Could not create directory ' . $self->workdir . "/$subdir : " . $!;
     }
 
     # catching Ctrl-C interruption
@@ -921,7 +906,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 SYNOPSIS
 
@@ -962,61 +947,8 @@ create new runner and runs scenario given in parameters
 
 =head1 USAGE
 
- usage: treex [-?dEegjLlpqSsv] [long options...] scenario [-- treex_files]
- scenario is a sequence of blocks or *.scen files
- options:
- 	-? --usage --help            Prints this usage information.
- 	-s --save                    save all documents
- 	-q --quiet                   Warning, info and debug messages are
- 	                             suppressed. Only fatal errors are
- 	                             reported.
- 	--cleanup                    Delete all temporary files.
- 	-e --error_level             Possible values: ALL, DEBUG, INFO, WARN,
- 	                             FATAL
- 	-E --forward_error_level     messages with this level or higher will
- 	                             be forwarded from the distributed jobs
- 	                             to the main STDERR
- 	-L --language --lang         shortcut for adding "Util::SetGlobal
- 	                             language=xy" at the beginning of the
- 	                             scenario
- 	-S --selector                shortcut for adding "Util::SetGlobal
- 	                             selector=xy" at the beginning of the
- 	                             scenario
- 	-l --filelist                TODO load a list of treex files from a
- 	                             file
- 	-g --glob                    Input file mask whose expansion is to
- 	                             Perl, e.g. --glob '*.treex'
- 	-p --parallel                Parallelize the task on SGE cluster
- 	                             (using qsub).
- 	-j --jobs                    Number of jobs for parallelization,
- 	                             default 10. Requires -p.
- 	--jobindex                   Not to be used manually. If number of
- 	                             jobs is set to J and modulo set to M,
- 	                             only I-th files fulfilling I mod J == M
- 	                             are processed.
- 	--outdir                     Not to be used manually. Dictory for
- 	                             collecting standard and error outputs in
- 	                             parallelized processing.
- 	--qsub                       Additional parameters passed to qsub.
- 	                             Requires -p.
- 	--local                      Run jobs locally (might help with
- 	                             multi-core machines). Requires -p.
- 	--priority                   Priority for qsub (an integer in the
- 	                             range -1023 to 1024, default=0).
- 	                             Requires -p.
- 	--watch                      re-run when the given file is changed
- 	                             TODO better doc
- 	--workdir                    working directory for temporary files in
- 	                             parallelized processing (if not
- 	                             specified, directories such as
- 	                             001-cluster-run, 002-cluster-run etc.
- 	                             are created)
- 	-d --dump_scenario           Just dump (print to STDOUT) the given
- 	                             scenario and exit.
- 	--survive                    Continue collecting jobs' outputs even
- 	                             if some of them crashed (risky, use with
- 	                             care!).
- 	-v --version                 Print treex and perl version
+ Can't locate Treex/Core/Run.pm in @INC (@INC contains: /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/5.12.2/i686-linux-thread-multi /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/5.12.2 /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/site_perl/5.12.2/i686-linux-thread-multi /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/site_perl/5.12.2 /net/projects/hadoop/perl /home/kraut/hadoop/tutorial /opt/lib/perl5/site_perl/5.12.2/i686-linux-thread-multi /opt/lib/perl5/site_perl/5.12.2 /opt/lib/perl5/vendor_perl/5.12.2/i686-linux-thread-multi /opt/lib/perl5/vendor_perl/5.12.2 /opt/lib/perl5/5.12.2/i686-linux-thread-multi /opt/lib/perl5/5.12.2 .) at bin/treex line 5.
+ BEGIN failed--compilation aborted at bin/treex line 5.
 
 =head1 AUTHOR
 

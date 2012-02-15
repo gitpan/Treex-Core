@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Styles;
 BEGIN {
-  $Treex::Core::TredView::Styles::VERSION = '0.08083';
+  $Treex::Core::TredView::Styles::VERSION = '0.08157';
 }
 
 use Moose;
@@ -166,7 +166,10 @@ sub _pnode_style {
     }
     else {
         $style .= '#{Line-dash:.}';
-        $style .= '#{Oval-fill:' . ( $node->{tag} eq '-NONE-' ? $self->_colors->get('trace') : $self->_colors->get('terminal') ) . '}';
+        my $ctype = $node->tag eq '-NONE-' ? 'trace'
+                  : $node->is_head         ? 'terminal_head'
+                  :                          'terminal';
+        $style .= '#{Oval-fill:' . $self->_colors->get($ctype) . '}';
     }
 
     return $style;
@@ -271,7 +274,7 @@ Treex::Core::TredView::Styles - Styling of trees in Tred (how they look)
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 

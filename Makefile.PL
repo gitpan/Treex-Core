@@ -78,10 +78,11 @@ my %WriteMakefileArgs = (
     'autodie' => '0',
     'integer' => '0',
     'open' => '0',
+    'overload' => '0',
     'utf8' => '0',
     'vars' => '0'
   },
-  'VERSION' => '0.08083',
+  'VERSION' => '0.08157',
   'test' => {
     'TESTS' => 't/*.t'
   }

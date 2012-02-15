@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Colors;
 BEGIN {
-  $Treex::Core::TredView::Colors::VERSION = '0.08083';
+  $Treex::Core::TredView::Colors::VERSION = '0.08157';
 }
 
 use Moose;
@@ -25,6 +25,7 @@ sub _build_colors {
         'tnode'            => '#4488ff',
         'tnode_coord'      => '#ccddff',
         'terminal'         => '#ffff66',
+        'terminal_head'    => '#90ee90',
         'nonterminal_head' => '#90ee90',
         'nonterminal'      => '#ffffe0',
         'trace'            => '#aaaaaa',

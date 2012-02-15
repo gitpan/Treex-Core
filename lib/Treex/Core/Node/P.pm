@@ -1,6 +1,6 @@
 package Treex::Core::Node::P;
 BEGIN {
-  $Treex::Core::Node::P::VERSION = '0.08083';
+  $Treex::Core::Node::P::VERSION = '0.08157';
 }
 use Moose;
 use Treex::Core::Common;
@@ -9,7 +9,7 @@ extends 'Treex::Core::Node';
 # dirty: merging terminal and nonterminal nodes' attributes
 
 # common:
-has [qw(is_head is_collins_head head_selection_rule index coindex edgelabel)] => ( is => 'rw' );
+has [qw(is_head index coindex edgelabel)] => ( is => 'rw' );
 
 # terminal specific
 has [qw(form lemma tag)] => ( is => 'rw' );
@@ -30,14 +30,6 @@ sub get_pml_type_name {
         return;
     }
 }
-
-# Nodes on the p-layer have no ordering attribute.
-# (It is not needed, trees are projective,
-#  the order is implied by the ordering of siblings.)
-override 'get_ordering_value' => sub {
-    my ($self) = @_;
-    return;
-};
 
 sub is_terminal {
   my $self = shift @_;
@@ -168,6 +160,13 @@ sub stringify_as_mrg {
     return "($string)";
 }
 
+sub stringify_as_text {
+    my ($self) = @_;
+    my @children = $self->get_children();
+    return $self->form // '<?>' if !@children;
+    return join ' ', map { $_->stringify_as_text() } @children;
+}
+
 #------------------------------------------------------------------------------
 # Recursively copy children from myself to another node.
 # This function is specific to the P layer because it contains the list of
@@ -195,7 +194,7 @@ sub copy_ptree
         foreach my $attribute (
             'form', 'lemma', 'tag', # terminal
             'phrase', 'functions', # nonterminal
-            'edgelabel', 'is_head', 'is_collins_head', 'head_selection_rule', 'index', 'coindex' # common
+            'edgelabel', 'is_head', 'index', 'coindex' # common
             )
         {
             my $value = $child0->get_attr($attribute);
@@ -225,22 +224,52 @@ Treex::Core::Node::P
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 
 Representation of nodes of phrase structure (constituency) trees.
 
-=over 4
+=head1 METHODS
 
-=item copy_ptree()
+=head2 $node->is_terminal()
 
-Recursively copy children from myself to another node.
+Is C<$node> a terminal node?
+Does its C<get_pml_type_name eq 'p-terminal.type'>?
+
+=head2 my $child_phrase = $node->create_nonterminal_child()
+
+Create a new non-terminal child node,
+i.e. a node representing a constituent (phrase). 
+
+=head2 my $child_terminal = $node->create_terminal_child()
+
+Create a new terminal child node,
+i.e. a node representing a token. 
+
+=head2 my $node->create_from_mrg($mrg_string)
+
+Fill C<$node>'s attributes and create its subtree
+from the serialized string in the PennTB C<mrg> format.
+E.g.: I<(NP (DT a) (JJ nonexecutive) (NN director))>.
+
+=head2 my $mrg_string = $node->stringify_as_mrg()
+
+Serialize the tree structure of C<$node> and its subtree
+as a string in the PennTB C<mrg> format.
+E.g.: I<(NP (DT a) (JJ nonexecutive) (NN director))>.
+
+=head2 my $tokenized_text = $node->stringify_as_text()
+
+Get the text representing C<$node>'s subtree.
+The text is tokenized, i.e. all tokens are separated by a space.
+
+=head2 $node->copy_ptree($target_node)
+
+Recursively copy children from C<$node> to C<$target_node>.
 This method is specific to the P layer because it contains the list of
 attributes. If we could figure out the list automatically, the method would
 become general enough to reside directly in Node.pm.
-
-=back
 
 =head1 AUTHOR
 

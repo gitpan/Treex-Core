@@ -98,6 +98,7 @@ t/ordered.t
 t/p_penn_treebank_string_format.t
 t/parallel.t
 t/qparallel.t
+t/release-cpan-changes.t
 t/release-dist-manifest.t
 t/release-distmeta.t
 t/release-has-version.t
@@ -105,7 +106,6 @@ t/release-kwalitee.t
 t/release-minimum-version.t
 t/release-no-tabs.t
 t/release-pod-coverage.t
-t/release-pod-spell.t
 t/release-pod-syntax.t
 t/release-portability.t
 t/release-synopsis.t

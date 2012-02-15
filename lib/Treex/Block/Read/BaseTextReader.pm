@@ -1,6 +1,6 @@
 package Treex::Block::Read::BaseTextReader;
 BEGIN {
-  $Treex::Block::Read::BaseTextReader::VERSION = '0.08083';
+  $Treex::Block::Read::BaseTextReader::VERSION = '0.08157';
 }
 use Moose;
 use Treex::Core::Common;
@@ -83,7 +83,7 @@ Treex::Block::Read::BaseTextReader - abstract ancestor for document readers
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 

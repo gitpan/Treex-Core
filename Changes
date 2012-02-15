@@ -1,5 +1,9 @@
 Revision history of the Treex-Core distribution:
 
+0.08157     2012-02-15
+
+    - bugfixes
+
 0.08051     2012-02-07
 
     - new backend (storable based) available 

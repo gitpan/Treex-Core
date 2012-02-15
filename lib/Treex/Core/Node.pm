@@ -1,15 +1,37 @@
 package Treex::Core::Node;
 BEGIN {
-  $Treex::Core::Node::VERSION = '0.08083';
+  $Treex::Core::Node::VERSION = '0.08157';
 }
 use Moose;
 use MooseX::NonMoose;
 use Treex::Core::Common;
 use Cwd;
+use Scalar::Util qw(refaddr);
 use Treex::PML;
 
 extends 'Treex::PML::Node';
 with 'Treex::Core::WildAttr';
+
+use overload
+    '""' => 'to_string',
+    '==' => 'equals',
+    '!=' => '_not_equals',
+    'eq' => 'equals',      # deprecated
+    'ne' => '_not_equals', # deprecated
+    'bool' => sub{1},
+
+    # We can A) let Magic Autogeneration to build "derived" overloadings,
+    # or B) we can disable this feature (via fallback=>0)
+    # and define only the needed overloadings
+    # (so all other overloadings will result in fatal errors).
+    # See perldoc overload.
+    # I decided for A, but uncommenting the following lines can catch some misuses.
+    #'!'  => sub{0},
+    #'.' => sub{$_[2] ? $_[1] . $_[0]->to_string : $_[0]->to_string . $_[1]},
+    #fallback => 0,
+;
+# TODO: '<' => 'precedes' (or better '<=>' => ...)
+# 'eq' => sub {log_warn 'You should use ==' && return $_[0]==$_[1]} # similarly for 'ne'
 
 Readonly my $_SWITCHES_REGEX => qr/^(ordered|add_self|(preceding|following|first|last)_only)$/x;
 my $CHECK_FOR_CYCLES = 1;
@@ -38,6 +60,24 @@ sub BUILD {
             . 'instead of Treex::Core::Node...->new().';
     }
     return;
+}
+
+sub to_string {
+    my ($self) = @_;
+    return $self->id // 'node_without_id(addr=' . refaddr($self) . ')';
+}
+
+# Since we have overloaded stringification, we must overload == as well,
+# so you can use "if ($nodeA ==  $nodeB){...}".
+sub equals {
+    my ($self, $node) = @_;
+    #return ref($node) && $node->id eq $self->id;
+    return ref($node) && refaddr($node) == refaddr($self);
+}
+
+sub _not_equals {
+    my ($self, $node) = @_;
+    return !$self->equals($node);
 }
 
 sub _index_my_id {
@@ -635,40 +675,6 @@ sub get_depth {
 sub _normalize_node_ordering {
 }
 
-# Empty DESTROY method is a hack to get rid of the "Deep recursion warning"
-# in Treex::PML::Node::DESTROY and MooseX::NonMoose::Meta::Role::Class::_check_superclass_destructor.
-# Without this hack, you get the warning after creating a node with 99 or more children.
-# Deep recursion on subroutine "Class::MOP::Method::execute" at .../5.12.2/MooseX/NonMoose/Meta/Role/Class.pm line 183.
-sub DESTROY {
-}
-
-#*************************************
-#---- DEPRECATED & QUESTIONABLE ------
-
-sub disconnect {
-    my $self = shift;
-    log_warn( '$node->disconnect is deprecated, use $node->remove', 1 );
-    return $self->remove();
-}
-
-sub get_ordering_value {
-    my $self = shift;
-    log_warn( '$node->get_ordering_value is deprecated, use $node->ord', 1 );
-    return $self->ord;
-}
-
-sub set_ordering_value {
-    my $self = shift;
-    log_warn( '$node->set_ordering_value($ord) is deprecated, it should be private $node->_set_ord($n)', 1 );
-    my ($val) = pos_validated_list(
-        \@_,
-        { isa => 'Num' },    #or isa => 'Int' ??, or Positive Int?
-    );
-    $self->_set_ord($val);
-    return;
-}
-
-# proposal
 sub get_address {
     log_fatal 'Incorrect number of arguments' if @_ != 1;
     my $self     = shift;
@@ -682,12 +688,15 @@ sub get_address {
     return "$file##$position.$id";
 }
 
-# deprecated
-sub get_fposition {
-    my $self = shift;
-    log_warn("Method get_fposition is deprecated use get_address() instead");
-    return $self->get_address();
+# Empty DESTROY method is a hack to get rid of the "Deep recursion warning"
+# in Treex::PML::Node::DESTROY and MooseX::NonMoose::Meta::Role::Class::_check_superclass_destructor.
+# Without this hack, you get the warning after creating a node with 99 or more children.
+# Deep recursion on subroutine "Class::MOP::Method::execute" at .../5.12.2/MooseX/NonMoose/Meta/Role/Class.pm line 183.
+sub DESTROY {
 }
+
+#*************************************
+#---- DEPRECATED & QUESTIONABLE ------
 
 sub generate_new_id {    #TODO move to Core::Document?
     log_fatal 'Incorrect number of arguments' if @_ != 1;
@@ -798,7 +807,7 @@ sub _get_referenced_ids {
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.08083';
+  $Treex::Core::Node::Removed::VERSION = '0.08157';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -865,7 +874,7 @@ sub set_r_attr {
 # ---------------------
 
 
-=for Pod::Coverage BUILD disconnect get_ordering_value set_ordering_value get_fposition
+=for Pod::Coverage BUILD
 
 
 =encoding utf-8
@@ -876,7 +885,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 
@@ -995,11 +1004,11 @@ The removed node cannot be further used.
 
 Returns the root of the node's tree.
 
-=item my $root_node = $node->is_root();
+=item $node->is_root();
 
 Returns C<true> if the node has no parent.
 
-=item my $root_node = $node->is_leaf();
+=item $node->is_leaf();
 
 Returns C<true> if the node has no children.
 
@@ -1150,7 +1159,6 @@ nodes). The new identifier is derived from the identifier of the root
 (C<< $node->root >>), by adding suffix C<x1> (or C<x2>, if C<...x1> has already
 been indexed, etc.) to the root's C<id>.
 
-
 =item my $levels = $node->get_depth();
 
 Return the depth of the node. The root has depth = 0, its children have depth = 1 etc.
@@ -1159,6 +1167,18 @@ Return the depth of the node. The root has depth = 0, its children have depth = 
 
 Return the node address, i.e. file name and node's position within the file,
 similarly to TrEd's C<FPosition()> (but the value is only returned, not  printed).
+
+=item $node->equals($another_node)
+
+This is the internal implementation of overloaded C<==> operator,
+which checks whether C<$node == $another_node> (the object instance must be identical).
+
+=item my $string = $node->to_string()
+
+This is the internal implementation of overloaded stringification,
+so you can use e.g. C<print "There is a node $node.">.
+It returns the id (C<$node->id>), but the behavior may be overridden in subclasses.
+See L<overload> pragma for details about overloading operators in Perl.
 
 =back
 

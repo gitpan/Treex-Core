@@ -1,6 +1,6 @@
 package Treex::Block::Write::BaseTextWriter;
 BEGIN {
-  $Treex::Block::Write::BaseTextWriter::VERSION = '0.08083';
+  $Treex::Block::Write::BaseTextWriter::VERSION = '0.08157';
 }
 use Moose;
 use Treex::Core::Common;
@@ -101,7 +101,7 @@ Treex::Block::Write::BaseTextWriter
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 
@@ -132,12 +132,12 @@ L<Treex::Block::Write::BaseWriter>:
 
 =over
 
-=item C<$self->print_header($document)>
+=item C<<$self->print_header($document)>>
 
 Print a document header. Called before the standard C<process_document> is launched. Will not be
 called if C<process_document> is overridden (and C<super> not called)!
 
-=item C<$self->print_footer($document)>
+=item C<<$self->print_footer($document)>>
 
 Print a document footer. Called after the standard C<process_document> is launched. Will not be
 called if C<process_document> is overridden (and C<super> not called)!

@@ -1,6 +1,6 @@
 package Treex::Core;
 BEGIN {
-  $Treex::Core::VERSION = '0.08083';
+  $Treex::Core::VERSION = '0.08157';
 }
 use strict;
 use warnings;
@@ -15,7 +15,7 @@ __END__
 
 =pod
 
-=encoding utf-8
+=encoding utf8
 
 =head1 NAME
 
@@ -23,7 +23,7 @@ Treex::Core - interface to linguistic structures and processing units in Treex
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 SYNOPSIS
 

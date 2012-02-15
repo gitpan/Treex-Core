@@ -1,6 +1,6 @@
 package Treex::Core::Types;
 BEGIN {
-  $Treex::Core::Types::VERSION = '0.08083';
+  $Treex::Core::Types::VERSION = '0.08157';
 }
 use strict;
 use warnings;
@@ -87,7 +87,7 @@ Treex::Core::Types - types used in Treex framework
 
 =head1 VERSION
 
-version 0.08083
+version 0.08157
 
 =head1 DESCRIPTION
 
