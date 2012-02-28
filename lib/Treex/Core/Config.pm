@@ -1,6 +1,6 @@
 package Treex::Core::Config;
-BEGIN {
-  $Treex::Core::Config::VERSION = '0.08157';
+{
+  $Treex::Core::Config::VERSION = '0.08302_1';
 }
 use strict;
 use warnings;
@@ -56,7 +56,7 @@ sub config_dir {
         return $dirname;
     }
     else {
-        return File::HomeDir->my_dist_config( 'Treex-Core', { create => 1 } );    #last fallback, hidden somwhere under ~/.local directory
+        return File::HomeDir->my_dist_config( 'Treex-Core', { create => 1 } );    #last fallback, hidden somewhere under ~/.local directory
     }
 }
 
@@ -212,7 +212,7 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 SYNOPSIS
 

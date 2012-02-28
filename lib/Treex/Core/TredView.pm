@@ -1,6 +1,6 @@
 package Treex::Core::TredView;
-BEGIN {
-  $Treex::Core::TredView::VERSION = '0.08157';
+{
+  $Treex::Core::TredView::VERSION = '0.08302_1';
 }
 
 # planned to be used from contrib.mac of tred's extensions
@@ -394,6 +394,10 @@ sub precompute_visualization {
                 $root->{_precomputed_node_style} = $self->_styles->node_style($root);
                 $root->{_precomputed_hint}       = '';
 
+                if ( $root->get_zone->sentence ) {
+                    $root->{_precomputed_hint} = 'sentence: ' . $root->get_zone->sentence;
+                }
+
                 foreach my $node ( $root->get_descendants ) {
                     $node->{_precomputed_node_style} = $self->_styles->node_style($node);
                     $node->{_precomputed_hint}       = $self->node_hint( $node, $layer );
@@ -532,7 +536,7 @@ sub anode_hint {
 
     push @lines, "Parenthesis root" if $node->{is_parenthesis_root};
     if ( $node->language eq 'cs' ) {
-        push @lines, "Full lemma: " . $node->{lemma};
+        push @lines, "Full lemma: " . ( $node->{lemma} ? $node->{lemma} : '' );
         push @lines, "Full tag: " . ( $node->{tag} ? $node->{tag} : '' );
     }
 
@@ -757,7 +761,7 @@ Treex::Core::TredView - visualization of Treex files in TrEd
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 

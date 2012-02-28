@@ -1,6 +1,6 @@
 package Treex::Block::Util::SetGlobal;
-BEGIN {
-  $Treex::Block::Util::SetGlobal::VERSION = '0.08157';
+{
+  $Treex::Block::Util::SetGlobal::VERSION = '0.08302_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -31,7 +31,7 @@ Treex::Block::Util::SetGlobal
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 

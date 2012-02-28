@@ -1,10 +1,10 @@
 package Treex::Core::Common;
-BEGIN {
-  $Treex::Core::Common::VERSION = '0.08157';
+{
+  $Treex::Core::Common::VERSION = '0.08302_1';
 }
 use strict;
 use warnings;
-use 5.008;
+use 5.010;
 
 use utf8;
 use Moose::Exporter;
@@ -74,6 +74,7 @@ my ( $import, $unimport, $init_meta ) =
     );
 
 sub import {
+    feature->import(':5.10');
     utf8::import();
     goto &$import;
 }
@@ -90,7 +91,7 @@ Treex::Core::Common - shorten the "C<use>" part of your Perl codes
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 SYNOPSIS
 

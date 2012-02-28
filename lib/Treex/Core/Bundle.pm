@@ -1,6 +1,6 @@
 package Treex::Core::Bundle;
-BEGIN {
-  $Treex::Core::Bundle::VERSION = '0.08157';
+{
+  $Treex::Core::Bundle::VERSION = '0.08302_1';
 }
 
 use Moose;
@@ -285,7 +285,7 @@ Treex::Core::Bundle - a set of equivalent sentences in the Treex framework
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 

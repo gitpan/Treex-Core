@@ -1,6 +1,6 @@
 package Treex::Core::Node::T;
-BEGIN {
-  $Treex::Core::Node::T::VERSION = '0.08157';
+{
+  $Treex::Core::Node::T::VERSION = '0.08302_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -327,7 +327,7 @@ Treex::Core::Node::T
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 

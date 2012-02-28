@@ -1,6 +1,6 @@
 package Treex::Core::Resource;
-BEGIN {
-  $Treex::Core::Resource::VERSION = '0.08157';
+{
+  $Treex::Core::Resource::VERSION = '0.08302_1';
 }
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ use 5.010;
 #use Moose;
 #use Treex::Core::Common;
 use LWP::Simple;    #TODO rewrite using LWP:UserAgent to show progress
-use File::Path qw(make_path);
+use File::Path 2.08 qw(make_path);
 use File::Spec;
 use Treex::Core::Log;
 use Treex::Core::Config;
@@ -87,7 +87,7 @@ Treex::Core::Resource - Access to shared resources
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 SYNOPSIS
 

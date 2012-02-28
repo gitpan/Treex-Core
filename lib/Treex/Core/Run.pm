@@ -1,6 +1,6 @@
 package Treex::Core::Run;
-BEGIN {
-  $Treex::Core::Run::VERSION = '0.08157';
+{
+  $Treex::Core::Run::VERSION = '0.08302_1';
 }
 use 5.008;
 use Moose;
@@ -155,8 +155,8 @@ has 'priority' => (
     traits        => ['Getopt'],
     is            => 'ro',
     isa           => 'Int',
-    default       => 0,
-    documentation => 'Priority for qsub (an integer in the range -1023 to 1024, default=0). Requires -p.',
+    default       => -100,
+    documentation => 'Priority for qsub, an integer in the range -1023 to 0 (or 1024 for admins), default=-100. Requires -p.',
 );
 
 has 'watch' => (
@@ -524,7 +524,8 @@ sub _create_job_scripts {
         my $script_filename = "scripts/job$jobnumber.sh";
         open my $J, ">", "$workdir/$script_filename" or log_fatal $!;
         print $J "#!/bin/bash\n\n";
-        print $J "echo \$HOSTNAME > $current_dir/$workdir/output/job$jobnumber.started\n";
+        print $J 'echo -e "$HOSTNAME\n"`date +"%s"` > ' . ( $workdir =~ /^\// ? $workdir : "$current_dir/$workdir" )
+            . "/output/job$jobnumber.started\n";
         print $J "export PATH=/opt/bin/:\$PATH > /dev/null 2>&1\n\n";
         print $J "cd $current_dir\n\n";
         print $J "source " . Treex::Core::Config->lib_core_dir()
@@ -536,7 +537,7 @@ sub _create_job_scripts {
         }
         print $J $input . "treex --jobindex=$jobnumber --workdir=$workdir --outdir=$workdir/output $opts_and_scen"
             . " 2>> $workdir/output/job$jobnumber.started\n\n";
-        print $J "touch $workdir/output/job$jobnumber.finished\n";
+        print $J "date +'%s' > $workdir/output/job$jobnumber.finished\n";
         close $J;
         chmod 0777, "$workdir/$script_filename";
     }
@@ -724,6 +725,66 @@ sub _wait_for_jobs {
     return;
 }
 
+sub _print_execution_time {
+    my ($self)              = @_;
+
+    my $time_total = 0;
+
+    my %hosts = ();
+
+    # read job log files
+    for my $file_finished (glob $self->workdir . "/output/job???.finished") {
+
+        # derivate file name
+        my $file_started = $file_finished;
+        $file_started =~ s/finished/started/;
+
+        # retrieve start time
+        open(my $fh_started, "<", $file_started) or log_fatal $!;
+        my $hostname = <$fh_started>;
+        chomp $hostname;
+        my $time_start = <$fh_started>;
+        close($fh_started);
+
+        # retrieve finish time
+        open(my $fh_finished, "<", $file_finished) or log_fatal $!;
+        my $time_finish = <$fh_finished>;
+        close($fh_finished);
+
+        # increase total time
+        $time_total += ( $time_finish - $time_start );
+        $hosts{$hostname}{'time'} += ( $time_finish - $time_start );
+        $hosts{$hostname}{'c'}++;
+    }
+
+    # find the slowest and the fastest machine
+    my $min_time = $time_total;
+    my $min_host = "";
+    my $max_time = 0;
+    my $max_host = 0;
+
+    for my $host (keys %hosts) {
+        my $avg = $hosts{$host}{'time'} / $hosts{$host}{'c'};
+        if ( $avg < $min_time ) {
+            $min_time = $avg;
+            $min_host = $host;
+        }
+
+        if ( $avg > $max_time ) {
+            $max_time = $avg;
+            $max_host = $host;
+        }
+    }
+
+    # print out statistics
+    log_info "Total execution time: $time_total";
+    log_info "Execution time per job: " . sprintf("%0.3f", $time_total / $self->jobs);
+    log_info "Slowest machine: $max_host = $max_time";
+    log_info "Fastest machine: $min_host = $min_time";
+
+    return;
+}
+
 # To get utf8 encoding also when using qx (aka backticks):
 # my $command_output = qw($command);
 # we need to
@@ -810,6 +871,8 @@ sub _execute_on_cluster {
     STDERR->autoflush(1);
 
     $self->_wait_for_jobs();
+
+    $self->_print_execution_time();
 
     log_info "All jobs finished.";
 
@@ -906,7 +969,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 SYNOPSIS
 
@@ -947,8 +1010,59 @@ create new runner and runs scenario given in parameters
 
 =head1 USAGE
 
- Can't locate Treex/Core/Run.pm in @INC (@INC contains: /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/5.12.2/i686-linux-thread-multi /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/5.12.2 /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/site_perl/5.12.2/i686-linux-thread-multi /ha/work/projects/perl_repo/Ubuntu/10.04/i686/lib/perl5/site_perl/5.12.2 /net/projects/hadoop/perl /home/kraut/hadoop/tutorial /opt/lib/perl5/site_perl/5.12.2/i686-linux-thread-multi /opt/lib/perl5/site_perl/5.12.2 /opt/lib/perl5/vendor_perl/5.12.2/i686-linux-thread-multi /opt/lib/perl5/vendor_perl/5.12.2 /opt/lib/perl5/5.12.2/i686-linux-thread-multi /opt/lib/perl5/5.12.2 .) at bin/treex line 5.
- BEGIN failed--compilation aborted at bin/treex line 5.
+ usage: treex [-?dEegjLpqSsv] [long options...] scenario [-- treex_files]
+ scenario is a sequence of blocks or *.scen files
+ options:
+ 	-? --usage --help            Prints this usage information.
+ 	-s --save                    save all documents
+ 	-q --quiet                   Warning, info and debug messages are
+ 	                             suppressed. Only fatal errors are
+ 	                             reported.
+ 	--cleanup                    Delete all temporary files.
+ 	-e --error_level             Possible values: ALL, DEBUG, INFO, WARN,
+ 	                             FATAL
+ 	-E --forward_error_level     messages with this level or higher will
+ 	                             be forwarded from the distributed jobs
+ 	                             to the main STDERR
+ 	-L --language --lang         shortcut for adding "Util::SetGlobal
+ 	                             language=xy" at the beginning of the
+ 	                             scenario
+ 	-S --selector                shortcut for adding "Util::SetGlobal
+ 	                             selector=xy" at the beginning of the
+ 	                             scenario
+ 	-g --glob                    Input file mask whose expansion is to
+ 	                             Perl, e.g. --glob '*.treex'
+ 	-p --parallel                Parallelize the task on SGE cluster
+ 	                             (using qsub).
+ 	-j --jobs                    Number of jobs for parallelization,
+ 	                             default 10. Requires -p.
+ 	--jobindex                   Not to be used manually. If number of
+ 	                             jobs is set to J and modulo set to M,
+ 	                             only I-th files fulfilling I mod J == M
+ 	                             are processed.
+ 	--outdir                     Not to be used manually. Dictory for
+ 	                             collecting standard and error outputs in
+ 	                             parallelized processing.
+ 	--qsub                       Additional parameters passed to qsub.
+ 	                             Requires -p.
+ 	--local                      Run jobs locally (might help with
+ 	                             multi-core machines). Requires -p.
+ 	--priority                   Priority for qsub, an integer in the
+ 	                             range -1023 to 0 (or 1024 for admins),
+ 	                             default=-100. Requires -p.
+ 	--watch                      re-run when the given file is changed
+ 	                             TODO better doc
+ 	--workdir                    working directory for temporary files in
+ 	                             parallelized processing (if not
+ 	                             specified, directories such as
+ 	                             001-cluster-run, 002-cluster-run etc.
+ 	                             are created)
+ 	-d --dump_scenario           Just dump (print to STDOUT) the given
+ 	                             scenario and exit.
+ 	--survive                    Continue collecting jobs' outputs even
+ 	                             if some of them crashed (risky, use with
+ 	                             care!).
+ 	-v --version                 Print treex and perl version
 
 =head1 AUTHOR
 

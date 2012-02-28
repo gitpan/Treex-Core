@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/perl
 
 BEGIN {
   unless ($ENV{RELEASE_TESTING}) {
@@ -7,10 +7,14 @@ BEGIN {
   }
 }
 
-
+use 5.006;
+use strict;
+use warnings;
 use Test::More;
 
-eval "use Test::HasVersion";
-plan skip_all => "Test::HasVersion required for testing version numbers"
-  if $@;
-all_pm_version_ok();
+use Test::Requires {
+    'Test::Version' => 0.04,
+};
+
+version_all_ok;
+done_testing;

@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Colors;
-BEGIN {
-  $Treex::Core::TredView::Colors::VERSION = '0.08157';
+{
+  $Treex::Core::TredView::Colors::VERSION = '0.08302_1';
 }
 
 use Moose;
@@ -48,6 +48,8 @@ sub _build_colors {
         'sempos'      => '#8b008b',
         'phrase'      => '#00008b',
         'formeme'     => '#b000b0',
+        'tag'         => '#004048',
+        'tag_feat'    => '#7098A0',
 
         'clause0' => '#ff00ff',         #magenta
         'clause1' => '#ffa500',         #orange

@@ -1,6 +1,6 @@
 package Treex::Core::DocumentReader::Base;
-BEGIN {
-  $Treex::Core::DocumentReader::Base::VERSION = '0.08157';
+{
+  $Treex::Core::DocumentReader::Base::VERSION = '0.08302_1';
 }
 use Moose;
 use Treex::Core::Common;

@@ -1,6 +1,6 @@
 package Treex::Core::Files;
-BEGIN {
-  $Treex::Core::Files::VERSION = '0.08157';
+{
+  $Treex::Core::Files::VERSION = '0.08302_1';
 }
 use Moose;
 use MooseX::SemiAffordanceAccessor;
@@ -83,7 +83,7 @@ Treex::Core::Files - helper class for iterating over filenames
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 SYNOPSIS
 

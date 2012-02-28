@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Labels;
-BEGIN {
-  $Treex::Core::TredView::Labels::VERSION = '0.08157';
+{
+  $Treex::Core::TredView::Labels::VERSION = '0.08302_1';
 }
 
 use Moose;
@@ -227,22 +227,46 @@ sub _anode_labels {
         }
     }
 
-    my $line3_1 = $node->tag ? $node->tag : "";
-    my $line3_2 = $node->lemma;
+    my $line3_1 = $node->tag ? $node->tag : '';
+    my $line3_2 = $node->lemma ? $node->lemma : '';
 
     # DZ: This hack tries to distinguish Dan's CoNLL trees from Pepa's PEDT trees
     #     so that Czech tags don't get crippled in the former.
     # if ( $node->language eq 'cs' ) {
     if ( $node->language eq 'cs' && !$node->conll_cpos ) {
-        $line3_1 = substr( $line3_1, 0, 2 );
+        $line3_1 =  $self->_shorten_czech_tag( $line3_1 );
         $line3_2 =~ s/(.)(?:-[1-9][0-9]*)?(?:(?:`|_[:;,^]).*)?$/$1/;
     }
+
+    $line3_1 = $self->_colors->get( 'tag', 1 ) . $line3_1;
 
     return [
         [$line1],
         [$line2],
         [ $line3_1, $line3_2 ]
     ];
+}
+
+sub _shorten_czech_tag {
+    my ($self, $tag) = @_;
+     
+    # nouns, adjectives, pronouns, declinable numerals: gender, number, case
+    if ($tag =~ m/^(N|C[adhjklnrwyz\?]|P|A)/){ 
+        $tag = substr( $tag, 0, 2 ) . $self->_colors->get( 'tag_feat', 1 ) . substr( $tag, 2, 3 );
+    }
+    # prepositions: just case
+    elsif ($tag =~ m/^R/ ){
+        $tag = substr( $tag, 0, 2 ) . $self->_colors->get( 'tag_feat', 1 ) . substr( $tag, 4, 1 );
+    }
+    # verbs (except infinitives, conditionals): gender, number, person, tense, voice
+    elsif ($tag =~ m/^V[^cf]/ ){
+        $tag = substr( $tag, 0, 2)  . $self->_colors->get( 'tag_feat', 1 ) 
+            . substr( $tag, 2, 2 ) . substr( $tag, 7, 2 ) . substr( $tag, 11, 1 );
+    }
+    else {
+        $tag = substr( $tag, 0, 2 );
+    }
+    return $tag;
 }
 
 sub _tnode_labels {
@@ -346,7 +370,7 @@ Treex::Core::TredView::Labels - Labels of tree nodes in Tred
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 

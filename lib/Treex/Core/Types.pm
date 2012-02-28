@@ -1,6 +1,6 @@
 package Treex::Core::Types;
-BEGIN {
-  $Treex::Core::Types::VERSION = '0.08157';
+{
+  $Treex::Core::Types::VERSION = '0.08302_1';
 }
 use strict;
 use warnings;
@@ -47,8 +47,8 @@ use Locale::Language;
 my %EXTRA_LANG_CODES = (
     'bxr'     => "Buryat",
     'dsb'     => "Lower Sorbian",
-    'ell'     => "ISO 639-3 code for Modern Greek",
-    'grc'     => "ISO 639-2 code for Ancient Greek",
+    'ell'     => "Modern Greek", # ISO 639-3
+    'grc'     => "Ancient Greek",# ISO 639-2 code
     'hsb'     => "Upper Sorbian",
     'hak'     => "Hakka",
     'kaa'     => "Karakalpak",
@@ -58,10 +58,10 @@ my %EXTRA_LANG_CODES = (
     'nan'     => "Taiwanese",
     'rmy'     => "Romany",
     'sah'     => "Yakut",
-    'und'     => "ISO 639-2 code for undetermined/unknown language",
+    'und'     => "unknown", # ISO 639-2 code for undetermined/unknown language
     'xal'     => "Kalmyk",
     'yue'     => "Cantonese",
-    'mul'     => "ISO 639-2 code for multiple languages",
+    'mul'     => "multiple languages", # ISO 639-2 code
 );
 
 my %IS_LANG_CODE = map { $_ => 1 } ( all_language_codes(), keys %EXTRA_LANG_CODES );
@@ -87,7 +87,7 @@ Treex::Core::Types - types used in Treex framework
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 

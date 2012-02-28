@@ -1,6 +1,6 @@
 package Treex::Block::Read::BaseReader;
-BEGIN {
-  $Treex::Block::Read::BaseReader::VERSION = '0.08157';
+{
+  $Treex::Block::Read::BaseReader::VERSION = '0.08302_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -101,7 +101,7 @@ sub new_document {
     $self->_set_doc_number( $self->doc_number + 1 );
 
     my $document;
-    if ( defined $load_from and $load_from =~ /\.streex/ ) {
+    if ( defined $load_from and $load_from =~ /\.streex$/ ) {
         $document = Treex::Core::Document->retrieve_storable($load_from);
         $document->set_storable(1);
     }
@@ -136,7 +136,7 @@ Treex::Block::Read::BaseReader - abstract ancestor for document readers
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 

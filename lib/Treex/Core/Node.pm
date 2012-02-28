@@ -1,6 +1,6 @@
 package Treex::Core::Node;
-BEGIN {
-  $Treex::Core::Node::VERSION = '0.08157';
+{
+  $Treex::Core::Node::VERSION = '0.08302_1';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -231,7 +231,8 @@ sub remove {
     my $document = $self->get_document();
 
     # Remove the subtree from the document's indexing table
-    foreach my $node ( $self, $self->get_descendants ) {
+    my @to_remove = ( $self, $self->get_descendants );
+    foreach my $node ( @to_remove) {
         if ( defined $node->id ) {
             $document->_remove_references_to_node( $node );
             $document->index_node_by_id( $node->id, undef );
@@ -248,7 +249,9 @@ sub remove {
 
     # By reblessing we make sure that
     # all methods called on removed nodes will result in fatal errors.
-    bless $self, 'Treex::Core::Node::Deleted';
+    foreach my $node (@to_remove){
+        bless $node, 'Treex::Core::Node::Deleted';
+    }
     return;
 }
 
@@ -806,8 +809,8 @@ sub _get_referenced_ids {
 # TODO: How to do this in an elegant way?
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
-BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.08157';
+{
+  $Treex::Core::Node::Removed::VERSION = '0.08302_1';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -885,7 +888,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.08157
+version 0.08302_1
 
 =head1 DESCRIPTION
 
