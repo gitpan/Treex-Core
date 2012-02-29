@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Common;
 {
-  $Treex::Core::TredView::Common::VERSION = '0.08302_1';
+  $Treex::Core::TredView::Common::VERSION = '0.08330_1';
 }
 
 use Moose;
@@ -37,7 +37,7 @@ Treex::Core::TredView::Common - Common methods related to TredView
 
 =head1 VERSION
 
-version 0.08302_1
+version 0.08330_1
 
 =head1 DESCRIPTION
 

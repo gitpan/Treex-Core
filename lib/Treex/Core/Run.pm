@@ -1,12 +1,12 @@
 package Treex::Core::Run;
 {
-  $Treex::Core::Run::VERSION = '0.08302_1';
+  $Treex::Core::Run::VERSION = '0.08330_1';
 }
 use 5.008;
 use Moose;
 use Treex::Core::Common;
 use Treex::Core;
-use MooseX::SemiAffordanceAccessor;
+use MooseX::SemiAffordanceAccessor 0.09;
 with 'MooseX::Getopt';
 
 use Cwd;
@@ -136,14 +136,6 @@ has 'outdir' => (
     documentation => 'Not to be used manually. Dictory for collecting standard and error outputs in parallelized processing.',
 );
 
-has 'qsub' => (
-    traits        => ['Getopt'],
-    is            => 'ro',
-    isa           => 'Str',
-    default       => '',
-    documentation => 'Additional parameters passed to qsub. Requires -p.',
-);
-
 has 'local' => (
     traits        => ['Getopt'],
     is            => 'ro',
@@ -157,6 +149,24 @@ has 'priority' => (
     isa           => 'Int',
     default       => -100,
     documentation => 'Priority for qsub, an integer in the range -1023 to 0 (or 1024 for admins), default=-100. Requires -p.',
+);
+
+has 'mem' => (
+    traits        => ['Getopt'],
+    cmd_aliases   => [ 'm', 'memory' ],
+    is            => 'ro',
+    isa           => 'Str',
+    default       => '2G',
+    documentation => 'How much memory should be allocated for cluster jobs, default=2G. Requires -p. '
+        . 'Translates to "qsub -hard -l mem_free=$mem -l act_mem_free=$mem -l h_vmem=$mem".',
+);
+
+has 'qsub' => (
+    traits        => ['Getopt'],
+    is            => 'ro',
+    isa           => 'Str',
+    default       => '',
+    documentation => 'Additional parameters passed to qsub. Requires -p. See --priority and --mem.',
 );
 
 has 'watch' => (
@@ -557,16 +567,18 @@ sub _run_job_scripts {
             system "$workdir/$script_filename &";
         }
         else {
-            my $qsub_opts = '-cwd -e output/ -S /bin/bash ' . $self->qsub;
-            if ( $self->priority ) {
-                $qsub_opts .= ' -p ' . $self->priority;
-            }
+            my $mem       = $self->mem;
+            my $qsub_opts = '-cwd -e output/ -S /bin/bash';
+            $qsub_opts .= " -hard -l mem_free=$mem -l act_mem_free=$mem -l h_vmem=$mem";
+            $qsub_opts .= ' -p ' . $self->priority;
+            $qsub_opts .= ' ' . $self->qsub;
+
             open my $QSUB, "cd $workdir && qsub $qsub_opts $script_filename |" or log_fatal $!;    ## no critic (ProhibitTwoArgOpen)
 
             my $firstline = <$QSUB>;
             close $QSUB;
-            chomp $firstline;
-            if ( $firstline =~ /job (\d+)/ ) {
+            chomp $firstline if ( defined $firstline );
+            if ( defined $firstline && $firstline =~ /job (\d+)/ ) {
                 push @{ $self->sge_job_numbers }, $1;
             }
             else {
@@ -726,28 +738,28 @@ sub _wait_for_jobs {
 }
 
 sub _print_execution_time {
-    my ($self)              = @_;
+    my ($self) = @_;
 
     my $time_total = 0;
 
     my %hosts = ();
 
     # read job log files
-    for my $file_finished (glob $self->workdir . "/output/job???.finished") {
+    for my $file_finished ( glob $self->workdir . "/output/job???.finished" ) {
 
         # derivate file name
         my $file_started = $file_finished;
         $file_started =~ s/finished/started/;
 
         # retrieve start time
-        open(my $fh_started, "<", $file_started) or log_fatal $!;
+        open( my $fh_started, "<", $file_started ) or log_fatal $!;
         my $hostname = <$fh_started>;
         chomp $hostname;
         my $time_start = <$fh_started>;
         close($fh_started);
 
         # retrieve finish time
-        open(my $fh_finished, "<", $file_finished) or log_fatal $!;
+        open( my $fh_finished, "<", $file_finished ) or log_fatal $!;
         my $time_finish = <$fh_finished>;
         close($fh_finished);
 
@@ -763,7 +775,7 @@ sub _print_execution_time {
     my $max_time = 0;
     my $max_host = 0;
 
-    for my $host (keys %hosts) {
+    for my $host ( keys %hosts ) {
         my $avg = $hosts{$host}{'time'} / $hosts{$host}{'c'};
         if ( $avg < $min_time ) {
             $min_time = $avg;
@@ -778,7 +790,7 @@ sub _print_execution_time {
 
     # print out statistics
     log_info "Total execution time: $time_total";
-    log_info "Execution time per job: " . sprintf("%0.3f", $time_total / $self->jobs);
+    log_info "Execution time per job: " . sprintf( "%0.3f", $time_total / $self->jobs );
     log_info "Slowest machine: $max_host = $max_time";
     log_info "Fastest machine: $min_host = $min_time";
 
@@ -969,7 +981,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.08302_1
+version 0.08330_1
 
 =head1 SYNOPSIS
 
@@ -1047,9 +1059,9 @@ create new runner and runs scenario given in parameters
  	                             Requires -p.
  	--local                      Run jobs locally (might help with
  	                             multi-core machines). Requires -p.
- 	--priority                   Priority for qsub, an integer in the
- 	                             range -1023 to 0 (or 1024 for admins),
- 	                             default=-100. Requires -p.
+ 	--priority                   Priority for qsub (an integer in the
+ 	                             range -1023 to 1024, default=0).
+ 	                             Requires -p.
  	--watch                      re-run when the given file is changed
  	                             TODO better doc
  	--workdir                    working directory for temporary files in

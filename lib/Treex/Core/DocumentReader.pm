@@ -1,11 +1,11 @@
 package Treex::Core::DocumentReader;
 {
-  $Treex::Core::DocumentReader::VERSION = '0.08302_1';
+  $Treex::Core::DocumentReader::VERSION = '0.08330_1';
 }
 use Moose::Role;
 
 # with Moose >= 2.00, this must be present also in roles
-use MooseX::SemiAffordanceAccessor;
+use MooseX::SemiAffordanceAccessor 0.09;
 
 requires 'next_document';
 
@@ -94,7 +94,7 @@ Treex::Core::DocumentReader - interface for all document readers
 
 =head1 VERSION
 
-version 0.08302_1
+version 0.08330_1
 
 =head1 DESCRIPTION
 

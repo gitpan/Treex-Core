@@ -1,6 +1,6 @@
 package Treex::Core::Common;
 {
-  $Treex::Core::Common::VERSION = '0.08302_1';
+  $Treex::Core::Common::VERSION = '0.08330_1';
 }
 use strict;
 use warnings;
@@ -9,7 +9,7 @@ use 5.010;
 use utf8;
 use Moose::Exporter;
 use Moose::Util::TypeConstraints;
-use MooseX::SemiAffordanceAccessor::Role::Attribute;
+use MooseX::SemiAffordanceAccessor::Role::Attribute 0.09;
 use Treex::Core::Log;
 use Treex::Core::Config;
 use Treex::Core::Resource;
@@ -91,7 +91,7 @@ Treex::Core::Common - shorten the "C<use>" part of your Perl codes
 
 =head1 VERSION
 
-version 0.08302_1
+version 0.08330_1
 
 =head1 SYNOPSIS
 

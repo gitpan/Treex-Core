@@ -49,8 +49,8 @@ requires:
   MooseX::Getopt: 0
   MooseX::NonMoose: 0
   MooseX::Params::Validate: 0
-  MooseX::SemiAffordanceAccessor: 0
-  MooseX::SemiAffordanceAccessor::Role::Attribute: 0
+  MooseX::SemiAffordanceAccessor: 0.09
+  MooseX::SemiAffordanceAccessor::Role::Attribute: 0.09
   Parse::RecDescent: 1.967003
   PerlIO::via::gzip: 0
   Readonly: 0
@@ -73,4 +73,4 @@ requires:
   utf8: 0
   vars: 0
   warnings: 0
-version: 0.08302_1
+version: 0.08330_1

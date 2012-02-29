@@ -1,6 +1,6 @@
 package Treex::Block::Util::Eval;
 {
-  $Treex::Block::Util::Eval::VERSION = '0.08302_1';
+  $Treex::Block::Util::Eval::VERSION = '0.08330_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -136,7 +136,7 @@ Treex::Block::Util::Eval - Special block for evaluating code given by parameters
 
 =head1 VERSION
 
-version 0.08302_1
+version 0.08330_1
 
 =head1 SYNOPSIS
 
@@ -150,7 +150,12 @@ version 0.08302_1
 
 =head1 DESCRIPTION
 
+Evaluate an arbitrary Perl code for each document/block/tree/node on the specified layer (according to which parameter 
+is given). The corresponding object is accessible through a variable of the same name. 
 
+=head1 AUTHOR
+
+Martin Popel <popel@ufal.mff.cuni.cz>
 
 =head1 COPYRIGHT AND LICENSE
 
