@@ -1,6 +1,6 @@
 package Treex::Core::DocumentReader;
-{
-  $Treex::Core::DocumentReader::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::DocumentReader::VERSION = '0.08397';
 }
 use Moose::Role;
 
@@ -94,7 +94,7 @@ Treex::Core::DocumentReader - interface for all document readers
 
 =head1 VERSION
 
-version 0.08330_1
+version 0.08397
 
 =head1 DESCRIPTION
 

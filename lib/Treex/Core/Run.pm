@@ -1,6 +1,6 @@
 package Treex::Core::Run;
-{
-  $Treex::Core::Run::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::Run::VERSION = '0.08397';
 }
 use 5.008;
 use Moose;
@@ -981,7 +981,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.08330_1
+version 0.08397
 
 =head1 SYNOPSIS
 
@@ -1022,7 +1022,7 @@ create new runner and runs scenario given in parameters
 
 =head1 USAGE
 
- usage: treex [-?dEegjLpqSsv] [long options...] scenario [-- treex_files]
+ usage: treex [-?dEegjLmpqSsv] [long options...] scenario [-- treex_files]
  scenario is a sequence of blocks or *.scen files
  options:
  	-? --usage --help            Prints this usage information.
@@ -1055,13 +1055,18 @@ create new runner and runs scenario given in parameters
  	--outdir                     Not to be used manually. Dictory for
  	                             collecting standard and error outputs in
  	                             parallelized processing.
- 	--qsub                       Additional parameters passed to qsub.
- 	                             Requires -p.
  	--local                      Run jobs locally (might help with
  	                             multi-core machines). Requires -p.
- 	--priority                   Priority for qsub (an integer in the
- 	                             range -1023 to 1024, default=0).
- 	                             Requires -p.
+ 	--priority                   Priority for qsub, an integer in the
+ 	                             range -1023 to 0 (or 1024 for admins),
+ 	                             default=-100. Requires -p.
+ 	--memory -m --mem            How much memory should be allocated for
+ 	                             cluster jobs, default=2G. Requires -p.
+ 	                             Translates to "qsub -hard -l
+ 	                             mem_free=$mem -l act_mem_free=$mem -l
+ 	                             h_vmem=$mem".
+ 	--qsub                       Additional parameters passed to qsub.
+ 	                             Requires -p. See --priority and --mem.
  	--watch                      re-run when the given file is changed
  	                             TODO better doc
  	--workdir                    working directory for temporary files in

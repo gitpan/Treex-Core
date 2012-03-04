@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Colors;
-{
-  $Treex::Core::TredView::Colors::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::TredView::Colors::VERSION = '0.08397';
 }
 
 use Moose;

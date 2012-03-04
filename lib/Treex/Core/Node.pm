@@ -1,6 +1,6 @@
 package Treex::Core::Node;
-{
-  $Treex::Core::Node::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::Node::VERSION = '0.08397';
 }
 use Moose;
 use MooseX::NonMoose;
@@ -809,8 +809,8 @@ sub _get_referenced_ids {
 # TODO: How to do this in an elegant way?
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
-{
-  $Treex::Core::Node::Removed::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::Node::Removed::VERSION = '0.08397';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -888,7 +888,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.08330_1
+version 0.08397
 
 =head1 DESCRIPTION
 

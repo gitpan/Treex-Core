@@ -1,6 +1,6 @@
 package Treex::Core::Block;
-{
-  $Treex::Core::Block::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::Block::VERSION = '0.08397';
 }
 use Moose;
 use Treex::Core::Common;
@@ -182,7 +182,7 @@ Treex::Core::Block - the basic data-processing unit in the Treex framework
 
 =head1 VERSION
 
-version 0.08330_1
+version 0.08397
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package Treex::Block::Read::Sentences;
-{
-  $Treex::Block::Read::Sentences::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Block::Read::Sentences::VERSION = '0.08397';
 }
 use Moose;
 use Treex::Core::Common;
@@ -31,7 +31,7 @@ Treex::Block::Read::Sentences
 
 =head1 VERSION
 
-version 0.08330_1
+version 0.08397
 
 =head1 DESCRIPTION
 

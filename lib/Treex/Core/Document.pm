@@ -1,6 +1,6 @@
 package Treex::Core::Document;
-{
-  $Treex::Core::Document::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::Document::VERSION = '0.08397';
 }
 
 use Moose;
@@ -563,7 +563,7 @@ Treex::Core::Document - representation of a text and its linguistic analyses in 
 
 =head1 VERSION
 
-version 0.08330_1
+version 0.08397
 
 =head1 DESCRIPTION
 

@@ -24,32 +24,18 @@ find(
   'lib',
 );
 
-sub _find_scripts {
-    my $dir = shift @_;
-
-    my @found_scripts = ();
+my @scripts;
+if ( -d 'bin' ) {
     find(
       sub {
         return unless -f;
         my $found = $File::Find::name;
         # nothing to skip
-        open my $FH, '<', $_ or do {
-          note( "Unable to open $found in ( $! ), skipping" );
-          return;
-        };
-        my $shebang = <$FH>;
-        return unless $shebang =~ /^#!.*?\bperl\b\s*$/;
-        push @found_scripts, $found;
+        push @scripts, $found;
       },
-      $dir,
+      'bin',
     );
-
-    return @found_scripts;
 }
-
-my @scripts;
-do { push @scripts, _find_scripts($_) if -d $_ }
-    for qw{ bin script scripts };
 
 my $plan = scalar(@modules) + scalar(@scripts);
 $plan ? (plan tests => $plan) : (plan skip_all => "no tests to run");

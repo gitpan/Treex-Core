@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Styles;
-{
-  $Treex::Core::TredView::Styles::VERSION = '0.08330_1';
+BEGIN {
+  $Treex::Core::TredView::Styles::VERSION = '0.08397';
 }
 
 use Moose;
@@ -274,7 +274,7 @@ Treex::Core::TredView::Styles - Styling of trees in Tred (how they look)
 
 =head1 VERSION
 
-version 0.08330_1
+version 0.08397
 
 =head1 DESCRIPTION
 
