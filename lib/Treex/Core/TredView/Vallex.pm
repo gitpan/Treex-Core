@@ -1,6 +1,6 @@
 package Treex::Core::TredView::Vallex;
 BEGIN {
-  $Treex::Core::TredView::Vallex::VERSION = '0.08397';
+  $Treex::Core::TredView::Vallex::VERSION = '0.08399';
 }
 
 use Moose;
@@ -241,7 +241,7 @@ Treex::Core::TredView::Vallex - Browsing valency lexicons
 
 =head1 VERSION
 
-version 0.08397
+version 0.08399
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 package Treex::Core::Resource;
 BEGIN {
-  $Treex::Core::Resource::VERSION = '0.08397';
+  $Treex::Core::Resource::VERSION = '0.08399';
 }
 use strict;
 use warnings;
@@ -87,7 +87,7 @@ Treex::Core::Resource - Access to shared resources
 
 =head1 VERSION
 
-version 0.08397
+version 0.08399
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package Treex::Core::Config;
 BEGIN {
-  $Treex::Core::Config::VERSION = '0.08397';
+  $Treex::Core::Config::VERSION = '0.08399';
 }
 use strict;
 use warnings;
@@ -212,7 +212,7 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.08397
+version 0.08399
 
 =head1 SYNOPSIS
 

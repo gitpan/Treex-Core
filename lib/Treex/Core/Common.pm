@@ -1,6 +1,6 @@
 package Treex::Core::Common;
 BEGIN {
-  $Treex::Core::Common::VERSION = '0.08397';
+  $Treex::Core::Common::VERSION = '0.08399';
 }
 use strict;
 use warnings;
@@ -91,7 +91,7 @@ Treex::Core::Common - shorten the "C<use>" part of your Perl codes
 
 =head1 VERSION
 
-version 0.08397
+version 0.08399
 
 =head1 SYNOPSIS
 

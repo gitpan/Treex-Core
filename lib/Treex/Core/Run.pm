@@ -1,6 +1,6 @@
 package Treex::Core::Run;
 BEGIN {
-  $Treex::Core::Run::VERSION = '0.08397';
+  $Treex::Core::Run::VERSION = '0.08399';
 }
 use 5.008;
 use Moose;
@@ -981,7 +981,7 @@ Treex::Core::Run + treex - applying Treex blocks and/or scenarios on data
 
 =head1 VERSION
 
-version 0.08397
+version 0.08399
 
 =head1 SYNOPSIS
 

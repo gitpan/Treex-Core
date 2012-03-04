@@ -69,4 +69,4 @@ requires:
   perl: 5.010
   utf8: 0
   vars: 0
-version: 0.08397
+version: 0.08399
