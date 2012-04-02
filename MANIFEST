@@ -48,6 +48,7 @@ lib/Treex/Core/Scenario.pm
 lib/Treex/Core/ScenarioParser.pm
 lib/Treex/Core/ScenarioParser.rdg
 lib/Treex/Core/TredView.pm
+lib/Treex/Core/TredView/AnnotationCommand.pm
 lib/Treex/Core/TredView/BackendStorable.pm
 lib/Treex/Core/TredView/Colors.pm
 lib/Treex/Core/TredView/Common.pm
@@ -77,6 +78,7 @@ t/00-compile.t
 t/a_effective_rel.t
 t/attribute.t
 t/author-critic.t
+t/author-test-eol.t
 t/backrefs.t
 t/base.t
 t/block.t
@@ -90,6 +92,7 @@ t/dump_scen.t
 t/error.scen
 t/eval_block.t
 t/files.t
+t/following_node.t
 t/grammar.t
 t/log.t
 t/n_tree.t
@@ -101,14 +104,16 @@ t/qparallel.t
 t/release-cpan-changes.t
 t/release-dist-manifest.t
 t/release-distmeta.t
-t/release-has-version.t
 t/release-kwalitee.t
 t/release-minimum-version.t
+t/release-mojibake.t
 t/release-no-tabs.t
 t/release-pod-coverage.t
+t/release-pod-linkcheck.t
 t/release-pod-syntax.t
 t/release-portability.t
 t/release-synopsis.t
+t/release-test-version.t
 t/release-unused-vars.t
 t/remove_bundle.t
 t/resource.t

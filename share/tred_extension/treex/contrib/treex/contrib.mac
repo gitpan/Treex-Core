@@ -14,6 +14,12 @@ print "Initializing Treex extension\n";
 
 BEGIN { import TredMacro; }
 
+# the following line is used to avoid memory leaks caused
+# by keeping history for undo in tred (only with treex files);
+# ideally it should be done only when switching to this mode,
+# and reverted when exiting it
+$TrEd::Config::maxUndo = 0;
+
 use strict;
 our ($grp, $root);
 
@@ -132,6 +138,10 @@ sub toggle_alignment {
     $tredview->toggle_alignment();
 }
 
+sub toggle_tree_wrapping {
+    $tredview->toggle_tree_wrapping($this);
+}
+
 sub OpenValLexicon {
     $tredview->vallex->OpenValLexicon();
 }
@@ -152,6 +162,24 @@ sub after_edit_node_hook {
     $tredview->recompute_visualization($root);
 }
 
+
+my $command;
+
+sub annotation_command {
+
+    if (defined $command) {
+        ($command) = split ' ',$command;
+        $command .= ' ';
+    }
+
+    $command=QueryString("Enter annotation command:","command",$command);
+    if (defined($command)) {
+        $tredview->run_annotation_command($command,$this);
+    }
+}
+
+
+#bind annotation_command to space
 #bind recompute_visualization to q
 #bind ConfDialog to c menu Configuration
 #bind shift_labels1_layer to 1 menu Change content of label no.1 for current layer
@@ -170,6 +198,7 @@ sub after_edit_node_hook {
 #bind reset_labels_tree to Ctrl+r menu Reset label settings of all nodes in current tree
 #bind toggle_clause_collapsing to l
 #bind toggle_alignment to a menu Toggle alignment arrows
+#bind toggle_tree_wrapping to w menu Wrap tree
 
 #bind OpenValLexicon to Ctrl+Shift+Return menu Browse valency frame lexicon
 #bind ChooseValFrame to Ctrl+Return menu Select and assign valency frame

@@ -1,6 +1,6 @@
 package Treex;
-BEGIN {
-  $Treex::VERSION = '0.08399';
+{
+  $Treex::VERSION = '0.08590_1';
 }
 use strict;
 use warnings;
@@ -16,7 +16,7 @@ Treex - Natural Language Processing framework
 
 =head1 VERSION
 
-version 0.08399
+version 0.08590_1
 
 =head1 INTRODUCTION
 
@@ -137,6 +137,8 @@ are refactored using Moose.
 distributions are hoped to appear soon too.
 
 =head1 REFERENCES
+
+L<Treex website|http://ufal.mff.cuni.cz/treex>
 
 Selected TectoMT/Treex-related publications:
 

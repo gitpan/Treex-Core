@@ -1,7 +1,10 @@
 package Treex::Core::Node;
-BEGIN {
-  $Treex::Core::Node::VERSION = '0.08399';
+{
+  $Treex::Core::Node::VERSION = '0.08590_1';
 }
+
+use namespace::autoclean;
+
 use Moose;
 use MooseX::NonMoose;
 use Treex::Core::Common;
@@ -12,26 +15,30 @@ use Treex::PML;
 extends 'Treex::PML::Node';
 with 'Treex::Core::WildAttr';
 
-use overload
-    '""' => 'to_string',
-    '==' => 'equals',
-    '!=' => '_not_equals',
-    'eq' => 'equals',      # deprecated
-    'ne' => '_not_equals', # deprecated
-    'bool' => sub{1},
-
-    # We can A) let Magic Autogeneration to build "derived" overloadings,
-    # or B) we can disable this feature (via fallback=>0)
-    # and define only the needed overloadings
-    # (so all other overloadings will result in fatal errors).
-    # See perldoc overload.
-    # I decided for A, but uncommenting the following lines can catch some misuses.
-    #'!'  => sub{0},
-    #'.' => sub{$_[2] ? $_[1] . $_[0]->to_string : $_[0]->to_string . $_[1]},
-    #fallback => 0,
-;
-# TODO: '<' => 'precedes' (or better '<=>' => ...)
-# 'eq' => sub {log_warn 'You should use ==' && return $_[0]==$_[1]} # similarly for 'ne'
+# overloading does not work with namespace::autoclean
+# see https://rt.cpan.org/Public/Bug/Display.html?id=50938
+# We may want to use https://metacpan.org/module/namespace::sweep instead.
+#
+# use overload
+#     '""' => 'to_string',
+#     '==' => 'equals',
+#     '!=' => '_not_equals',
+#     'eq' => 'equals',      # deprecated
+#     'ne' => '_not_equals', # deprecated
+#     'bool' => sub{1},
+#
+#     # We can A) let Magic Autogeneration to build "derived" overloadings,
+#     # or B) we can disable this feature (via fallback=>0)
+#     # and define only the needed overloadings
+#     # (so all other overloadings will result in fatal errors).
+#     # See perldoc overload.
+#     # I decided for A, but uncommenting the following lines can catch some misuses.
+#     #'!'  => sub{0},
+#     #'.' => sub{$_[2] ? $_[1] . $_[0]->to_string : $_[0]->to_string . $_[1]},
+#     #fallback => 0,
+# ;
+# # TODO: '<' => 'precedes' (or better '<=>' => ...)
+# # 'eq' => sub {log_warn 'You should use ==' && return $_[0]==$_[1]} # similarly for 'ne'
 
 Readonly my $_SWITCHES_REGEX => qr/^(ordered|add_self|(preceding|following|first|last)_only)$/x;
 my $CHECK_FOR_CYCLES = 1;
@@ -215,7 +222,11 @@ sub get_zone {
         $zone = $self->get_root->_get_zone;    ## no critic (ProtectPrivateSubs)
     }
 
-    log_fatal "a node can't reveal its zone" if !$zone;
+    if (!$zone) {
+#        $self->get_document->save("pokus2.treex.gz");
+    }
+
+    log_fatal "a node (" . $self->id . ") can't reveal its zone" if !$zone;
     return $zone;
 
 }
@@ -806,11 +817,62 @@ sub _get_referenced_ids {
     return $ret;
 }
 
+
+# ---------------------
+
+# changing the functionality of Treex::PML::Node's following() so that it traverses all
+# nodes in all trees in all zones (needed for search in TrEd)
+
+sub following {
+    my ( $self ) = @_;
+
+    my $pml_following =  Treex::PML::Node::following(@_);
+
+    if ( $pml_following ) {
+        return $pml_following;
+    }
+
+    else {
+        my $bundle =  ( ref($self) eq 'Treex::Core::Bundle' ) ? $self : $self->get_bundle;
+
+        my @all_trees = map {
+            ref($_) ne 'Treex::PML::Struct'
+            ? $_->get_all_trees
+            : ()
+        } $bundle->get_all_zones;
+
+        if ( ref($self) eq 'Treex::Core::Bundle' ) {
+            return $all_trees[0];
+        }
+
+        else {
+            my $my_root = $self->get_root;
+            foreach my $index ( 0..$#all_trees ) {
+                if ( $all_trees[$index] eq $my_root ) {
+                    return $all_trees[$index+1];
+                }
+            }
+            log_fatal "Node belongs to no tree: this should never happen";
+        }
+    }
+}
+
+sub descendants {
+    my ( $self ) = @_;
+    return ( map { $_->_descendants_and_self() } $self->children );
+}
+
+sub _descendants_and_self {
+    my ( $self ) = @_;
+    return ( $self, map { $_->_descendants_and_self() } $self->children );
+}
+
+
 # TODO: How to do this in an elegant way?
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
-BEGIN {
-  $Treex::Core::Node::Removed::VERSION = '0.08399';
+{
+  $Treex::Core::Node::Removed::VERSION = '0.08590_1';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -874,7 +936,6 @@ sub set_r_attr {
     return $fs->set_attr( $attr_name, $attr_values[0]->id );
 }
 
-# ---------------------
 
 
 =for Pod::Coverage BUILD
@@ -888,7 +949,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.08399
+version 0.08590_1
 
 =head1 DESCRIPTION
 
@@ -1149,7 +1210,7 @@ Removes all alignment links leading to nodes which have been deleted.
 
 Returns an array of nodes referencing this node with the given reference type (e.g. 'alignment', 'a/lex.rf' etc.).
 
-=back 
+=back
 
 =head2 Other methods
 

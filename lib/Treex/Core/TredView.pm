@@ -1,6 +1,6 @@
 package Treex::Core::TredView;
-BEGIN {
-  $Treex::Core::TredView::VERSION = '0.08399';
+{
+  $Treex::Core::TredView::VERSION = '0.08590_1';
 }
 
 # planned to be used from contrib.mac of tred's extensions
@@ -70,6 +70,8 @@ has _ptb_coindex_map => (
 has 'clause_collapsing' => ( is => 'rw', isa => 'Bool', default => 0 );
 has 'show_alignment'    => ( is => 'rw', isa => 'Bool', default => 1 );
 
+has 'tree_type_to_wrap'    => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
+
 sub _spread_nodes {
     my ( $self, $node ) = @_;
 
@@ -113,7 +115,7 @@ sub get_nodelist_hook {
     $self->{'_ptb_coindex_map'} = {};
     my %nodes;
 
-    foreach my $tree ( map { $_->get_all_trees } $bundle->get_all_zones ) {
+    foreach my $tree ( map { ref($_) eq 'Treex::Core::BundleZone' ? $_->get_all_trees : () } $bundle->get_all_zones ) {
         my $label = $self->tree_layout->get_tree_label($tree);
         my @nodes;
         if ( $tree->get_layer eq 'p' ) {
@@ -124,6 +126,11 @@ sub get_nodelist_hook {
                 $self->{'_ptb_coindex_map'}->{ $node->{'coindex'} } = $node if defined $node->{'coindex'};
             }
         }
+
+        elsif ( $self->tree_type_to_wrap->{$self->_tree_type_signature($tree)} ) {
+            @nodes = $tree;
+        }
+
         elsif ( $tree->does('Treex::Core::Node::Ordered') ) {
             @nodes = $tree->get_descendants( { add_self => 1, ordered => 1 } );
         }
@@ -321,7 +328,7 @@ sub precompute_tree_depths {
     my ( $self, $bundle ) = @_;
 
     foreach my $zone ( $bundle->get_all_zones ) {
-        foreach my $tree ( $zone->get_all_trees ) {
+        foreach my $tree ( ref($zone) eq 'Treex::Core::BundleZone' ? $zone->get_all_trees : () ) {
             my $max_depth = 1;
             my @front = ( 1, $tree );
 
@@ -349,7 +356,7 @@ sub precompute_tree_shifts {
     my %forest = ();
 
     foreach my $zone ( $bundle->get_all_zones ) {
-        foreach my $tree ( $zone->get_all_trees ) {
+        foreach my $tree ( ref($zone) eq 'Treex::Core::BundleZone' ? $zone->get_all_trees : () ) {
             $forest{ $self->tree_layout->get_tree_label($tree) } = $tree;
         }
     }
@@ -386,7 +393,7 @@ sub precompute_visualization {
 
     foreach my $zone ( $bundle->get_all_zones ) {
         foreach my $layer (@layers) {
-            if ( $zone->has_tree($layer) ) {
+            if ( ref($zone) eq 'Treex::Core::BundleZone' && $zone->has_tree($layer) ) {
                 my $root   = $zone->get_tree($layer);
                 my $limits = $self->labels->get_limits($layer);
 
@@ -749,6 +756,28 @@ sub toggle_alignment {
     return;
 }
 
+sub toggle_tree_wrapping {
+    my ( $self, $node ) = @_;
+    my $signature = $self->_tree_type_signature($node);
+    $self->tree_type_to_wrap->{$signature} = not $self->tree_type_to_wrap->{$signature};
+    print "Toggle wrapping of trees of type: $signature\n";
+
+}
+
+sub _tree_type_signature {
+    my ( $self, $node) = @_;
+    my $zone = $node->get_root->get_zone;
+    return join "-", ( ref($node), $zone->language, $zone->selector()||'');
+}
+
+use Treex::Core::TredView::AnnotationCommand;
+sub run_annotation_command {
+    my ( $self, $command, $node ) = @_;
+    Treex::Core::TredView::AnnotationCommand::run( $command, $node );
+    $self->recompute_visualization($node->get_bundle);
+}
+
+
 1;
 
 __END__
@@ -761,7 +790,7 @@ Treex::Core::TredView - visualization of Treex files in TrEd
 
 =head1 VERSION
 
-version 0.08399
+version 0.08590_1
 
 =head1 DESCRIPTION
 

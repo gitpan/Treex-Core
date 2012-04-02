@@ -1,6 +1,6 @@
 package Treex::Core::Config;
-BEGIN {
-  $Treex::Core::Config::VERSION = '0.08399';
+{
+  $Treex::Core::Config::VERSION = '0.08590_1';
 }
 use strict;
 use warnings;
@@ -24,7 +24,8 @@ our %service;                   ## no critic (ProhibitPackageVars)
 our $params_validate = 0;       ## no critic (ProhibitPackageVars)
 
 my $config = __PACKAGE__->_load_config();
-my $running_in_tred;            ## no critic (ProhibitUnusedVariables)
+my $dirty  = 0;                             #indicates that configuration has changed. N/A yet, no method changes config to something else than default
+my $running_in_tred;                        ## no critic (ProhibitUnusedVariables)
 
 sub _load_config {
     my $self     = shift;
@@ -32,14 +33,20 @@ sub _load_config {
     my $from     = $args{from} // $self->config_file();
     my $yaml     = read_file( $from, { err_mode => 'silent' } );
     my $toReturn = YAML::Load($yaml);
-    return $toReturn // {};     #rather than undef return empty hashref
+    return $toReturn // {};                 #rather than undef return empty hashref
 }
 
 sub _save_config {
     my $self = shift;
     my %args = @_;
     my $to   = $args{to} // $self->config_file();
-    return DumpFile( $to, $config );
+    return if ( -e $to && !$dirty );        #skip when config file already exists and no changes made from this run of treex so we won't overwrite existing configuration
+    return if ( !scalar %{$config} );       #skip when config is empty
+    eval {
+        DumpFile( $to, $config );
+        1;
+    } or log_warn(qq(Couldn't save config file $to));
+    return;
 }
 
 END {
@@ -212,7 +219,7 @@ Treex::Core::Config - centralized info about Treex configuration
 
 =head1 VERSION
 
-version 0.08399
+version 0.08590_1
 
 =head1 SYNOPSIS
 
@@ -229,17 +236,11 @@ You can specify an alternative directory for C<config.yaml>
 by setting the C<$TREEX_CONFIG> environment variable.
 You can edit C<config.yaml>, so it suits your needs.
 
-=head1 FUNCTIONS
+=head1 METHODS
+
+=head2 Following methods returns values which are present in config file
 
 =over 4
-
-=item config_dir()
-
-returns directory where configuration of Treex will reside (currently just F<path> file)
-
-=item default_resource_dir()
-
-returns default path for resources, it uses dist data for C<Treex-Core> and if $TMT_ROOT variable set also $TMT_ROOT/share
 
 =item resource_path()
 
@@ -248,16 +249,6 @@ return list of directories where resources will be searched
 =item tmp_dir()
 
 return temporary directory, should be used instead of /tmp or similar
-
-=item _devel_version()
-
-returns C<true> iff the current Treex instance is running from the svn working copy
-(which means that it is the development version, not installed from CPAN)
-
-=item lib_core_dir()
-
-returns the directory in which this module is located (and where
-the other L<Treex::Core> modules are expected too)
 
 =item share_dir()
 
@@ -275,13 +266,35 @@ return the directory in which the PML schemata for .treex files are located
 
 the directory in which the tree editor TrEd is installed
 
-
 =item tred_extension_dir()
 
 the directory in which the TrEd extension for Treex files is stored
 
 =back
 
+=head2 Rest of methods is not configurable by config file
+
+=over 4
+
+=item config_dir()
+
+returns directory where configuration of Treex will reside (currently just F<path> file)
+
+=item default_resource_dir()
+
+returns default path for resources, it uses dist data for C<Treex-Core> and if $TMT_ROOT variable set also $TMT_ROOT/share
+
+=item _devel_version()
+
+returns C<true> iff the current Treex instance is running from the svn working copy
+(which means that it is the development version, not installed from CPAN)
+
+=item lib_core_dir()
+
+returns the directory in which this module is located (and where
+the other L<Treex::Core> modules are expected too)
+
+=back
 
 =head1 AUTHOR
 

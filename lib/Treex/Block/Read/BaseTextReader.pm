@@ -1,6 +1,6 @@
 package Treex::Block::Read::BaseTextReader;
-BEGIN {
-  $Treex::Block::Read::BaseTextReader::VERSION = '0.08399';
+{
+  $Treex::Block::Read::BaseTextReader::VERSION = '0.08590_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -27,6 +27,7 @@ sub BUILD {
 }
 
 sub next_filehandle {
+
     my ($self) = @_;
     my $filename = $self->next_filename();
     return if !defined $filename;
@@ -41,6 +42,7 @@ sub next_filehandle {
 }
 
 sub next_document_text {
+    
     my ($self) = @_;
     my $FH = $self->_current_fh;
     if ( !$FH ) {
@@ -66,6 +68,7 @@ sub next_document_text {
             $self->_set_current_fh($FH);
             last LINE if !$self->merge_files;
         }
+        
         $text .= <$FH>;
     }
     return $text;
@@ -83,7 +86,7 @@ Treex::Block::Read::BaseTextReader - abstract ancestor for document readers
 
 =head1 VERSION
 
-version 0.08399
+version 0.08590_1
 
 =head1 DESCRIPTION
 
@@ -106,7 +109,7 @@ and you can use C<next_document_text> and C<new_document> methods.
 If you want to split one file to more documents.
 The default is 0 which means, don't split.
 
-=item merge_file
+=item merge_files
 
 Merge the content of all files (specified in C<from> attribute) into one stream.
 Useful in combination with C<lines_per_doc> to get equally-sized documents

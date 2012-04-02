@@ -1,7 +1,10 @@
 package Treex::Core::Node::T;
-BEGIN {
-  $Treex::Core::Node::T::VERSION = '0.08399';
+{
+  $Treex::Core::Node::T::VERSION = '0.08590_1';
 }
+
+use namespace::autoclean;
+
 use Moose;
 use Treex::Core::Common;
 extends 'Treex::Core::Node';
@@ -327,7 +330,7 @@ Treex::Core::Node::T
 
 =head1 VERSION
 
-version 0.08399
+version 0.08590_1
 
 =head1 DESCRIPTION
 
