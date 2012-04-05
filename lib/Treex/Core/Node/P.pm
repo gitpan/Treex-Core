@@ -1,6 +1,6 @@
 package Treex::Core::Node::P;
 {
-  $Treex::Core::Node::P::VERSION = '0.08590_1';
+  $Treex::Core::Node::P::VERSION = '0.08633_1';
 }
 
 use namespace::autoclean;
@@ -227,7 +227,7 @@ Treex::Core::Node::P
 
 =head1 VERSION
 
-version 0.08590_1
+version 0.08633_1
 
 =head1 DESCRIPTION
 

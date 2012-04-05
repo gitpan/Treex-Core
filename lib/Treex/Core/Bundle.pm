@@ -1,6 +1,6 @@
 package Treex::Core::Bundle;
 {
-  $Treex::Core::Bundle::VERSION = '0.08590_1';
+  $Treex::Core::Bundle::VERSION = '0.08633_1';
 }
 
 use namespace::autoclean;
@@ -292,7 +292,7 @@ Treex::Core::Bundle - a set of equivalent sentences in the Treex framework
 
 =head1 VERSION
 
-version 0.08590_1
+version 0.08633_1
 
 =head1 DESCRIPTION
 

@@ -64,7 +64,6 @@ my %WriteMakefileArgs = (
     "MooseX::Params::Validate" => 0,
     "MooseX::SemiAffordanceAccessor" => "0.09",
     "MooseX::SemiAffordanceAccessor::Role::Attribute" => "0.09",
-    "Parse::RecDescent" => "1.967003",
     "PerlIO::via::gzip" => 0,
     "Readonly" => 0,
     "Scalar::Util" => 0,
@@ -88,7 +87,7 @@ my %WriteMakefileArgs = (
     "vars" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.08590_1",
+  "VERSION" => "0.08633_1",
   "test" => {
     "TESTS" => "t/*.t"
   }

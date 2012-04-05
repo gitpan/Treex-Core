@@ -1,6 +1,6 @@
 package Treex::Block::Write::Treex;
 {
-  $Treex::Block::Write::Treex::VERSION = '0.08590_1';
+  $Treex::Block::Write::Treex::VERSION = '0.08633_1';
 }
 use Moose;
 use Treex::Core::Common;
@@ -73,7 +73,7 @@ Treex::Block::Write::Treex
 
 =head1 VERSION
 
-version 0.08590_1
+version 0.08633_1
 
 =head1 DESCRIPTION
 

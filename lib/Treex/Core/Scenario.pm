@@ -1,13 +1,13 @@
 package Treex::Core::Scenario;
 {
-  $Treex::Core::Scenario::VERSION = '0.08590_1';
+  $Treex::Core::Scenario::VERSION = '0.08633_1';
 }
 use Moose;
 use Treex::Core::Common;
 use File::Basename;
 use File::Slurp;
 use File::chdir;
-use Parse::RecDescent 1.967003;
+#use Parse::RecDescent 1.967003; now using standalone version
 
 has from_file => (
     is            => 'ro',
@@ -153,15 +153,21 @@ sub _build_parser {
     my $dir  = $self->_my_dir();             #get module's directory
     my $file = "$dir/ScenarioParser.rdg";    #find grammar file
     log_fatal("Cannot find grammar file") if !-e $file;
+
+    #in fact we should never reach this
+    log_warn('We should NOT reach this place. Treex distribution may be corrupted.');
+
     my $grammar = read_file($file);          #load it
     eval {
         log_info("Trying to precompile it for you");
+        require Parse::RecDescent;
         local $CWD = $dir;
-        Parse::RecDescent->Precompile( $grammar, 'Treex::Core::ScenarioParser' );
+        Parse::RecDescent->Precompile( {-standalone => 1 }, $grammar, 'Treex::Core::ScenarioParser' );
         $parser = $self->_load_parser();
         1;
     } or eval {
         log_info("Cannot precompile, loading directly from grammar. Consider precompiling it manually");
+        require Parse::RecDescent;
         $parser = Parse::RecDescent->new($grammar);    #create parser
         1;
     } or log_fatal("Cannot create Scenario parser");
@@ -341,7 +347,7 @@ Treex::Core::Scenario - a larger Treex processing unit, composed of blocks
 
 =head1 VERSION
 
-version 0.08590_1
+version 0.08633_1
 
 =head1 SYNOPSIS
 
