@@ -1,6 +1,6 @@
 package Treex::Core::TredView::AnnotationCommand;
 {
-  $Treex::Core::TredView::AnnotationCommand::VERSION = '0.08633_1';
+  $Treex::Core::TredView::AnnotationCommand::VERSION = '0.08663';
 }
 
 use Treex::Core::Log;
@@ -28,7 +28,7 @@ Treex::Core::TredView::AnnotationCommand - simple command-line annotation interf
 
 =head1 VERSION
 
-version 0.08633_1
+version 0.08663
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,9 @@
 Revision history of the Treex-Core distribution:
 
+0.08663     2012-04-07
+
+    - previous changes released as stable version
+
 0.08633_1     2012-04-05
 
     - standalone version of Parse::RecDescent used
