@@ -1,6 +1,6 @@
 package Treex::Core::Node;
 {
-  $Treex::Core::Node::VERSION = '0.08663';
+  $Treex::Core::Node::VERSION = '0.08664';
 }
 
 use namespace::autoclean;
@@ -872,7 +872,7 @@ sub _descendants_and_self {
 # Unless we find a better way, we must disable two perlcritics
 package Treex::Core::Node::Removed;
 {
-  $Treex::Core::Node::Removed::VERSION = '0.08663';
+  $Treex::Core::Node::Removed::VERSION = '0.08664';
 }    ## no critic (ProhibitMultiplePackages)
 use Treex::Core::Log;
 
@@ -949,7 +949,7 @@ Treex::Core::Node - smallest unit that holds information in Treex
 
 =head1 VERSION
 
-version 0.08663
+version 0.08664
 
 =head1 DESCRIPTION
 

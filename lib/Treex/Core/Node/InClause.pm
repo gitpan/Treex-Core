@@ -1,6 +1,6 @@
 package Treex::Core::Node::InClause;
 {
-  $Treex::Core::Node::InClause::VERSION = '0.08663';
+  $Treex::Core::Node::InClause::VERSION = '0.08664';
 }
 use Moose::Role;
 
@@ -84,7 +84,7 @@ Treex::Core::Node::InClause
 
 =head1 VERSION
 
-version 0.08663
+version 0.08664
 
 =head1 DESCRIPTION
 

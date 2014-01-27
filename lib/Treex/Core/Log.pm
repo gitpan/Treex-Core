@@ -1,6 +1,6 @@
 package Treex::Core::Log;
 {
-  $Treex::Core::Log::VERSION = '0.08663';
+  $Treex::Core::Log::VERSION = '0.08664';
 }
 use strict;
 use warnings;
@@ -46,7 +46,7 @@ Readonly my %ERROR_LEVEL_VALUE => map {$ERROR_LEVEL_NAMES[$_] => $_} (0 .. $#ERR
 
 
 use Moose::Util::TypeConstraints;
-enum 'ErrorLevel' => keys %ERROR_LEVEL_VALUE;
+enum 'ErrorLevel' => [keys %ERROR_LEVEL_VALUE];
 
 # how many characters of a string-eval are to be shown in the output
 $Carp::MaxEvalLen = 100;
@@ -209,7 +209,7 @@ Treex::Core::Log - logger tailored for the needs of Treex
 
 =head1 VERSION
 
-version 0.08663
+version 0.08664
 
 =head1 SYNOPSIS
 

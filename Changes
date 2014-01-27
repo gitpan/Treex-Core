@@ -1,5 +1,10 @@
 Revision history of the Treex-Core distribution:
 
+0.08664     2014-01-27
+
+     - enum 'ErrorLevel' => [keys %ERROR_LEVEL_VALUE];
+     - enum in newer Moose must take arrayref to prevent a deprecated warning and make the tests pass
+
 0.08663     2012-04-07
 
     - previous changes released as stable version
